@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\UserNotificationPreference;
 use App\Http\Requests\StoreUserNotificationPreferenceRequest;
 use App\Http\Requests\UpdateUserNotificationPreferenceRequest;
+use App\Models\UserNotificationPreference;
 
 class UserNotificationPreferenceController extends Controller
 {

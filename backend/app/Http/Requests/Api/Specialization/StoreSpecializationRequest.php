@@ -2,28 +2,52 @@
 
 namespace App\Http\Requests\Api\Specialization;
 
-use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreSpecializationRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
+
     public function authorize(): bool
     {
-        return false;
+        return auth()->check()
+            && auth()->user()->hasRole('platform_admin');
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, ValidationRule|array<mixed>|string>
-     */
+
     public function rules(): array
     {
         return [
-            //
+
+            'name' => [
+                'required',
+                'string',
+                'max:100',
+                'unique:specializations,name'
+            ],
+
+
+            'description' => [
+                'nullable',
+                'string'
+            ],
+
         ];
     }
+
+
+
+    public function messages(): array
+    {
+        return [
+
+            'name.required'
+                => 'Specialization name is required.',
+
+
+            'name.unique'
+                => 'This specialization already exists.',
+
+        ];
+    }
+
 }

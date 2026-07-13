@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\TelehealthAttendance;
 use App\Http\Requests\StoreTelehealthAttendanceRequest;
 use App\Http\Requests\UpdateTelehealthAttendanceRequest;
+use App\Models\TelehealthAttendance;
 
 class TelehealthAttendanceController extends Controller
 {

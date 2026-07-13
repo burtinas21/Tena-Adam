@@ -2,11 +2,12 @@
 
 namespace App\Models;
 
+use Database\Factories\SymptomAnalyticFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class SymptomAnalytic extends Model
 {
-    /** @use HasFactory<\Database\Factories\SymptomAnalyticFactory> */
+    /** @use HasFactory<SymptomAnalyticFactory> */
     use HasFactory;
 }

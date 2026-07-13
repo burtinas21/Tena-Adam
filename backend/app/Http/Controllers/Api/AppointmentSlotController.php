@@ -1,66 +1,88 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Controller;
 use App\Models\AppointmentSlot;
-use App\Http\Requests\StoreAppointmentSlotRequest;
-use App\Http\Requests\UpdateAppointmentSlotRequest;
+use App\Models\HealthcareProvider;
+use App\Services\AppointmentSlotService;
+use Illuminate\Http\Request;
+use Carbon\Carbon;
 
 class AppointmentSlotController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function __construct(
+        private AppointmentSlotService $service
+    ) {}
+
+ 
+    public function generate(Request $request)
     {
-        //
+        $request->validate([
+            'doctor_id' => ['required', 'uuid'],
+            'date' => ['required', 'date']
+        ]);
+
+        $doctor = HealthcareProvider::findOrFail($request->doctor_id);
+
+        $slots = $this->service->generateSlots(
+            $doctor,
+            Carbon::parse($request->date)
+        );
+
+        return response()->json([
+            'message' => 'Slots generated successfully',
+            'data' => $slots
+        ]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+    public function block(Request $request)
     {
-        //
+        $request->validate([
+            'doctor_id' => ['required', 'uuid'],
+            'date' => ['required', 'date']
+        ]);
+
+        $doctor = HealthcareProvider::findOrFail($request->doctor_id);
+
+        $this->service->blockSlotsForLeave(
+            $doctor,
+            Carbon::parse($request->date)
+        );
+
+        return response()->json([
+            'message' => 'Slots blocked successfully'
+        ]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(StoreAppointmentSlotRequest $request)
+    public function book(AppointmentSlot $slot)
     {
-        //
+        $slot = $this->service->bookSlot($slot);
+
+        return response()->json([
+            'message' => 'Slot booked successfully',
+            'data' => $slot
+        ]);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(AppointmentSlot $appointmentSlot)
+    public function release(AppointmentSlot $slot)
     {
-        //
+        $slot = $this->service->releaseSlot($slot);
+
+        return response()->json([
+            'message' => 'Slot released successfully',
+            'data' => $slot
+        ]);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(AppointmentSlot $appointmentSlot)
+  
+    public function complete(AppointmentSlot $slot)
     {
-        //
-    }
+        $slot = $this->service->completeSlot($slot);
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(UpdateAppointmentSlotRequest $request, AppointmentSlot $appointmentSlot)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(AppointmentSlot $appointmentSlot)
-    {
-        //
+        return response()->json([
+            'message' => 'Slot completed successfully',
+            'data' => $slot
+        ]);
     }
 }

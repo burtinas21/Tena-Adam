@@ -4,63 +4,48 @@ namespace App\Policies;
 
 use App\Models\User;
 use App\Models\Vital;
-use Illuminate\Auth\Access\Response;
 
 class VitalPolicy
 {
-    /**
-     * Determine whether the user can view any models.
-     */
-    public function viewAny(User $user): bool
-    {
-        return false;
-    }
-
-    /**
-     * Determine whether the user can view the model.
-     */
     public function view(User $user, Vital $vital): bool
     {
+        if ($user->hasRole('platform_admin')) return true;
+
+        if ($user->hasRole('hospital_admin')) {
+            return $user->hospitalStaff()
+                ->where('hospital_id', $vital->encounter?->hospital_id)
+                ->exists();
+        }
+
+        if ($user->hasRole('doctor')) {
+            return $vital->encounter?->doctor_id === $user->id;
+        }
+
+        if ($user->hasRole('patient')) {
+            return $vital->patient_id === $user->id;
+        }
+
         return false;
     }
 
-    /**
-     * Determine whether the user can create models.
-     */
     public function create(User $user): bool
     {
-        return false;
+        return $user->hasRole('doctor');
     }
 
-    /**
-     * Determine whether the user can update the model.
-     */
     public function update(User $user, Vital $vital): bool
     {
+        if ($user->hasRole('platform_admin')) return true;
+
+        if ($user->hasRole('doctor')) {
+            return $vital->encounter?->doctor_id === $user->id;
+        }
+
         return false;
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
     public function delete(User $user, Vital $vital): bool
     {
-        return false;
-    }
-
-    /**
-     * Determine whether the user can restore the model.
-     */
-    public function restore(User $user, Vital $vital): bool
-    {
-        return false;
-    }
-
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
-    public function forceDelete(User $user, Vital $vital): bool
-    {
-        return false;
+        return $user->hasRole('platform_admin');
     }
 }

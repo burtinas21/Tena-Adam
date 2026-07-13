@@ -2,45 +2,67 @@
 
 namespace App\Http\Requests;
 
-
 use Illuminate\Foundation\Http\FormRequest;
-
-
 
 class RegisterRequest extends FormRequest
 {
+    public function authorize(): bool
+    {
+        return true;
+    }
 
+    public function rules(): array
+    {
 
-public function authorize()
-{
+        return [
 
-return true;
+            'first_name' => [
+                'required',
+                'string',
+                'max:100',
+            ],
 
-}
+            'last_name' => [
+                'required',
+                'string',
+                'max:100',
+            ],
 
+            'email' => [
+                'required',
+                'email',
+                'unique:users,email',
+            ],
 
+            'phone' => [
+                'nullable',
+                'string',
+                'max:20',
+            ],
 
-public function rules()
-{
+            'password' => [
+                'required',
+                'string',
+                'min:8',
+                'confirmed',
+            ],
 
+            'date_of_birth' => [
+                'required',
+                'date',
+            ],
 
-return [
+            'gender' => [
+                'required',
+                'in:Male,Female,Other',
+            ],
 
-'first_name'=>'required|string|max:100',
+            'accept_terms' => [
+                'required',
+                'accepted',
+            ],
 
-'last_name'=>'required|string|max:100',
+        ];
 
-'email'=>'required|email|unique:users',
-
-'phone'=>'nullable|string|max:20',
-
-'password'=>'required|min:8|confirmed'
-
-
-];
-
-
-}
-
-
+    }
 }

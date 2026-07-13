@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\SymptomDepartmentMapping;
 use App\Http\Requests\StoreSymptomDepartmentMappingRequest;
 use App\Http\Requests\UpdateSymptomDepartmentMappingRequest;
+use App\Models\SymptomDepartmentMapping;
 
 class SymptomDepartmentMappingController extends Controller
 {

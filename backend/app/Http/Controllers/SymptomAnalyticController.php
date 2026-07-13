@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\SymptomAnalytic;
 use App\Http\Requests\StoreSymptomAnalyticRequest;
 use App\Http\Requests\UpdateSymptomAnalyticRequest;
+use App\Models\SymptomAnalytic;
 
 class SymptomAnalyticController extends Controller
 {

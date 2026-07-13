@@ -18,7 +18,7 @@ return new class extends Migration
 
             $table->primary([
                 'role_id',
-                'permission_id'
+                'permission_id',
             ]);
 
             $table->foreign('role_id')

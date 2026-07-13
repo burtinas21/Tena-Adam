@@ -2,65 +2,123 @@
 
 namespace App\Policies;
 
-use App\Models\HealthcareProvider;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
+use App\Models\HealthcareProvider;
 
 class HealthcareProviderPolicy
 {
-    /**
-     * Determine whether the user can view any models.
-     */
+
     public function viewAny(User $user): bool
     {
-        return false;
+        // Platform admin, hospital admin, doctors, and patients can all list providers
+        return $user->hasRole('platform_admin') ||
+            $user->hasRole('hospital_admin') ||
+            $user->hasRole('doctor') ||
+            $user->hasRole('patient');
     }
+  
 
-    /**
-     * Determine whether the user can view the model.
-     */
-    public function view(User $user, HealthcareProvider $healthcareProvider): bool
+
+    public function view(
+        User $user,
+        HealthcareProvider $provider
+    ): bool
     {
-        return false;
+        if ($user->hasRole('platform_admin')) {
+            return true;
+        }
+
+        // Patients can view any doctor profile (needed for browsing and booking)
+        if ($user->hasRole('patient')) {
+            return true;
+        }
+
+        return $user
+            ->hospitals()
+            ->where(
+                'hospital_id',
+                $provider->hospital_id
+            )
+            ->exists();
+
     }
 
-    /**
-     * Determine whether the user can create models.
-     */
+
+
     public function create(User $user): bool
     {
-        return false;
+
+        return $user->hasRole('hospital_admin');
+
     }
 
-    /**
-     * Determine whether the user can update the model.
-     */
-    public function update(User $user, HealthcareProvider $healthcareProvider): bool
+
+
+   public function update(
+User $user,
+HealthcareProvider $provider
+): bool
+{
+
+
+if(
+$user->hasRole('doctor')
+&&
+$user->id === $provider->id
+)
+{
+
+return true;
+
+}
+
+
+if(
+$user->hasRole('hospital_admin')
+)
+{
+
+return $user
+->hospitalStaff()
+->where(
+'hospital_id',
+$provider->hospital_id
+)
+->exists();
+
+
+}
+
+
+return false;
+
+
+}
+
+
+
+    public function delete(
+        User $user,
+        HealthcareProvider $provider
+    ): bool
     {
-        return false;
+
+
+        if($user->hasRole('platform_admin'))
+        {
+            return true;
+        }
+
+
+        return $user
+            ->hospitals()
+            ->where(
+                'hospital_id',
+                $provider->hospital_id
+            )
+            ->exists();
+
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
-    public function delete(User $user, HealthcareProvider $healthcareProvider): bool
-    {
-        return false;
-    }
 
-    /**
-     * Determine whether the user can restore the model.
-     */
-    public function restore(User $user, HealthcareProvider $healthcareProvider): bool
-    {
-        return false;
-    }
-
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
-    public function forceDelete(User $user, HealthcareProvider $healthcareProvider): bool
-    {
-        return false;
-    }
 }

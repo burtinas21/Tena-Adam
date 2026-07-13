@@ -1,66 +1,144 @@
 <?php
 
-namespace App\Http\Controllers\Api;
+namespace App\Http\Controllers\API;
+
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\Department\StoreDepartmentRequest;
+use App\Http\Requests\Api\Department\UpdateDepartmentRequest;
+use App\Http\Resources\DepartmentResource;
 use App\Models\Department;
-use Illuminate\Http\Request;
+use App\Services\DepartmentService;
+
 
 class DepartmentController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
-    {
-        //
-    }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
+public function __construct(
+    protected DepartmentService $departmentService
+){}
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Department $department)
-    {
-        //
-    }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Department $department)
-    {
-        //
-    }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Department $department)
-    {
-        //
-    }
+public function index()
+{
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Department $department)
-    {
-        //
-    }
+
+$this->authorize(
+    'viewAny',
+    Department::class
+);
+
+
+return DepartmentResource::collection(
+
+    $this->departmentService->all()
+
+);
+
+
+}
+
+
+
+
+public function store(StoreDepartmentRequest $request)
+{
+
+
+$this->authorize(
+    'create',
+    Department::class
+);
+
+
+$department =
+$this->departmentService->create(
+    $request->validated()
+);
+
+
+return new DepartmentResource($department);
+
+
+}
+
+
+
+
+public function show(Department $department)
+{
+
+
+$this->authorize(
+    'view',
+    $department
+);
+
+
+return new DepartmentResource($department);
+
+
+}
+
+
+
+
+
+public function update(
+UpdateDepartmentRequest $request,
+Department $department
+)
+{
+
+
+$this->authorize(
+    'update',
+    $department
+);
+
+
+$department =
+$this->departmentService->update(
+    $department,
+    $request->validated()
+);
+
+
+return new DepartmentResource($department);
+
+
+}
+
+
+
+
+public function destroy(Department $department)
+{
+
+
+$this->authorize(
+    'delete',
+    $department
+);
+
+
+$this->departmentService
+->delete($department);
+
+
+
+return response()->json([
+
+'message'
+=>
+'Department deleted successfully'
+
+]);
+
+
+}
+
+
 }

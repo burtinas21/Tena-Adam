@@ -3,64 +3,79 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Prescription;
-use Illuminate\Http\Request;
+use App\Http\Requests\Prescription\StorePrescriptionRequest;
+use App\Http\Requests\Prescription\UpdatePrescriptionRequest;
+use App\Http\Resources\PrescriptionResource;
+use App\Services\PrescriptionService;
+use Illuminate\Http\JsonResponse;
 
 class PrescriptionController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function __construct(
+        private PrescriptionService $service
+    ) {}
+
+    /*
+    |--------------------------------------------------------------------------
+    | Store Prescription
+    |--------------------------------------------------------------------------
+    */
+    public function store(StorePrescriptionRequest $request): JsonResponse
     {
-        //
+        $prescription = $this->service->createPrescription(
+            $request->validated()
+        );
+
+        return response()->json([
+            'message' => 'Prescription created successfully',
+            'data'    => new PrescriptionResource($prescription),
+        ], 201);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+    /*
+    |--------------------------------------------------------------------------
+    | Update Prescription
+    |--------------------------------------------------------------------------
+    */
+    public function update(UpdatePrescriptionRequest $request, string $id): JsonResponse
     {
-        //
+        $prescription = $this->service->updatePrescription(
+            $id,
+            $request->validated()
+        );
+
+        return response()->json([
+            'message' => 'Prescription updated successfully',
+            'data'    => new PrescriptionResource($prescription),
+        ]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    /*
+    |--------------------------------------------------------------------------
+    | Show Prescription
+    |--------------------------------------------------------------------------
+    */
+    public function show(string $id): JsonResponse
     {
-        //
+        $prescription = $this->service->findPrescription($id);
+
+        return response()->json([
+            'data' => new PrescriptionResource($prescription),
+        ]);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Prescription $prescription)
+    /*
+    |--------------------------------------------------------------------------
+    | Cancel Prescription
+    |--------------------------------------------------------------------------
+    */
+    public function cancel(string $id): JsonResponse
     {
-        //
-    }
+        $prescription = $this->service->cancelPrescription($id);
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Prescription $prescription)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Prescription $prescription)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Prescription $prescription)
-    {
-        //
+        return response()->json([
+            'message' => 'Prescription cancelled successfully',
+            'data'    => new PrescriptionResource($prescription),
+        ]);
     }
 }

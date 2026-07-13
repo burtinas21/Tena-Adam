@@ -6,20 +6,37 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('appointment_slots', function (Blueprint $table) {
-            $table->id();
+
+            $table->uuid('id')->primary();
+
+            $table->uuid('doctor_id');
+
+            $table->dateTime('start_time');
+
+            $table->dateTime('end_time');
+
+            $table->enum('status', [
+                'available',
+                'booked',
+                'blocked',
+                'completed',
+                'cancelled'
+            ])->default('available');
+
             $table->timestamps();
+
+            $table->unique(['doctor_id', 'start_time']);
+
+            $table->foreign('doctor_id')
+                ->references('id')
+                ->on('healthcare_providers')
+                ->cascadeOnDelete();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('appointment_slots');

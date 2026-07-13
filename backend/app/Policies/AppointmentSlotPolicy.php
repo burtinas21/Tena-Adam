@@ -2,65 +2,54 @@
 
 namespace App\Policies;
 
-use App\Models\AppointmentSlot;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
+use App\Models\AppointmentSlot;
 
 class AppointmentSlotPolicy
 {
-    /**
-     * Determine whether the user can view any models.
-     */
     public function viewAny(User $user): bool
     {
-        return false;
+        return
+            $user->hasRole('platform_admin') ||
+            $user->hasRole('hospital_admin') ||
+            $user->hasRole('doctor') ||
+            $user->hasRole('patient');
     }
 
-    /**
-     * Determine whether the user can view the model.
-     */
-    public function view(User $user, AppointmentSlot $appointmentSlot): bool
-    {
-        return false;
+    public function view(
+        User $user,
+        AppointmentSlot $slot
+    ): bool {
+
+        return true;
     }
 
-    /**
-     * Determine whether the user can create models.
-     */
     public function create(User $user): bool
     {
-        return false;
+        return
+            $user->hasRole('hospital_admin') ||
+            $user->hasRole('platform_admin');
     }
 
-    /**
-     * Determine whether the user can update the model.
-     */
-    public function update(User $user, AppointmentSlot $appointmentSlot): bool
-    {
-        return false;
+
+    public function update(
+        User $user,
+        AppointmentSlot $slot
+    ): bool {
+
+        return
+            $user->hasRole('hospital_admin') ||
+            $user->hasRole('platform_admin');
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
-    public function delete(User $user, AppointmentSlot $appointmentSlot): bool
-    {
-        return false;
-    }
+ 
+    public function delete(
+        User $user,
+        AppointmentSlot $slot
+    ): bool {
 
-    /**
-     * Determine whether the user can restore the model.
-     */
-    public function restore(User $user, AppointmentSlot $appointmentSlot): bool
-    {
-        return false;
-    }
-
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
-    public function forceDelete(User $user, AppointmentSlot $appointmentSlot): bool
-    {
-        return false;
+        return
+            $user->hasRole('hospital_admin') ||
+            $user->hasRole('platform_admin');
     }
 }

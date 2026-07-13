@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Refund;
 use App\Http\Requests\StoreRefundRequest;
 use App\Http\Requests\UpdateRefundRequest;
+use App\Models\Refund;
 
 class RefundController extends Controller
 {

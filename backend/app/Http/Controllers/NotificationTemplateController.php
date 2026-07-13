@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\NotificationTemplate;
 use App\Http\Requests\StoreNotificationTemplateRequest;
 use App\Http\Requests\UpdateNotificationTemplateRequest;
+use App\Models\NotificationTemplate;
 
 class NotificationTemplateController extends Controller
 {

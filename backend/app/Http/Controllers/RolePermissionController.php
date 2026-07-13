@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\RolePermission;
 use App\Http\Requests\StoreRolePermissionRequest;
 use App\Http\Requests\UpdateRolePermissionRequest;
+use App\Models\RolePermission;
 
 class RolePermissionController extends Controller
 {

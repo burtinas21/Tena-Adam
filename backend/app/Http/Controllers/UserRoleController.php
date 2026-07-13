@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\UserRole;
 use App\Http\Requests\StoreUserRoleRequest;
 use App\Http\Requests\UpdateUserRoleRequest;
+use App\Models\UserRole;
 
 class UserRoleController extends Controller
 {

@@ -2,65 +2,196 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Controller;
 use App\Models\Specialization;
-use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
+
+use App\Services\SpecializationService;
+
+use App\Http\Requests\Api\Specialization\StoreSpecializationRequest;
+use App\Http\Requests\Api\Specialization\UpdateSpecializationRequest;
+
+use App\Http\Resources\SpecializationResource;
+
 
 class SpecializationController extends Controller
 {
+
+
+    public function __construct(
+        private SpecializationService $service
+    ) {}
+
+
+
+
     /**
-     * Display a listing of the resource.
+     * Display all specializations
      */
     public function index()
     {
-        //
+
+        $this->authorize(
+            'viewAny',
+            Specialization::class
+        );
+
+
+        return SpecializationResource::collection(
+            $this->service->getAll()
+        );
+
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
+
+
+
+
 
     /**
-     * Store a newly created resource in storage.
+     * Store specialization
      */
-    public function store(Request $request)
+    public function store(
+        StoreSpecializationRequest $request
+    )
     {
-        //
+
+
+        $this->authorize(
+            'create',
+            Specialization::class
+        );
+
+
+
+        $specialization =
+            $this->service->create(
+                $request->validated()
+            );
+
+
+
+        return response()->json([
+
+            'message'
+                => 'Specialization created successfully',
+
+            'data'
+                => new SpecializationResource(
+                    $specialization
+                )
+
+        ],201);
+
+
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Specialization $specialization)
-    {
-        //
-    }
+
+
+
+
+
 
     /**
-     * Show the form for editing the specified resource.
+     * Show one specialization
      */
-    public function edit(Specialization $specialization)
+    public function show(
+        Specialization $specialization
+    )
     {
-        //
+
+
+        $this->authorize(
+            'view',
+            $specialization
+        );
+
+
+        return new SpecializationResource(
+            $this->service->find($specialization)
+        );
+
+
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Specialization $specialization)
-    {
-        //
-    }
+
+
+
+
+
 
     /**
-     * Remove the specified resource from storage.
+     * Update specialization
      */
-    public function destroy(Specialization $specialization)
+    public function update(
+        UpdateSpecializationRequest $request,
+        Specialization $specialization
+    )
     {
-        //
+
+
+        $this->authorize(
+            'update',
+            $specialization
+        );
+
+
+
+        $updated =
+            $this->service->update(
+                $specialization,
+                $request->validated()
+            );
+
+
+
+        return response()->json([
+
+            'message'
+                => 'Specialization updated successfully',
+
+            'data'
+                => new SpecializationResource($updated)
+
+        ]);
+
     }
+
+
+
+
+
+
+
+    /**
+     * Delete specialization
+     */
+    public function destroy(
+        Specialization $specialization
+    )
+    {
+
+
+        $this->authorize(
+            'delete',
+            $specialization
+        );
+
+
+
+        $this->service->delete(
+            $specialization
+        );
+
+
+
+        return response()->json([
+
+            'message'
+                => 'Specialization deleted successfully'
+
+        ]);
+
+    }
+
+
 }

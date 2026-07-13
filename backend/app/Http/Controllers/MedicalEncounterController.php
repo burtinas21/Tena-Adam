@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\MedicalEncounter;
 use App\Http\Requests\StoreMedicalEncounterRequest;
 use App\Http\Requests\UpdateMedicalEncounterRequest;
+use App\Models\MedicalEncounter;
 
 class MedicalEncounterController extends Controller
 {

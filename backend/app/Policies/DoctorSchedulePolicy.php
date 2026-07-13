@@ -2,65 +2,80 @@
 
 namespace App\Policies;
 
-use App\Models\DoctorSchedule;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
+use App\Models\DoctorSchedule;
 
 class DoctorSchedulePolicy
 {
-    /**
-     * Determine whether the user can view any models.
-     */
     public function viewAny(User $user): bool
     {
+        return
+            $user->hasRole('platform_admin') ||
+            $user->hasRole('hospital_admin') ||
+            $user->hasRole('doctor')         ||
+            $user->hasRole('receptionist');
+    }
+
+    public function view(
+        User $user,
+        DoctorSchedule $schedule
+    ): bool {
+
+        if ($user->hasRole('platform_admin')) {
+            return true;
+        }
+
+        if ($user->hasRole('hospital_admin')) {
+
+            return $user->hospitalStaff()
+                ->where(
+                    'hospital_id',
+                    $schedule->doctor->hospital_id
+                )
+                ->exists();
+        }
+
+        if ($user->hasRole('doctor')) {
+
+            return $schedule->doctor_id === $user->id;
+        }
+
         return false;
     }
 
-    /**
-     * Determine whether the user can view the model.
-     */
-    public function view(User $user, DoctorSchedule $doctorSchedule): bool
-    {
-        return false;
-    }
-
-    /**
-     * Determine whether the user can create models.
-     */
     public function create(User $user): bool
     {
-        return false;
+        return
+            $user->hasRole('hospital_admin') ||
+            $user->hasRole('doctor');
     }
 
-    /**
-     * Determine whether the user can update the model.
-     */
-    public function update(User $user, DoctorSchedule $doctorSchedule): bool
+    public function update(User $user, DoctorSchedule $schedule): bool
     {
-        return false;
+        if ($user->hasRole('platform_admin')) {
+            return true;
+        }
+
+        if ($user->hasRole('hospital_admin')) {
+            return true;
+        }
+
+        // doctor can update ONLY own schedule
+        return $user->hasRole('doctor')
+            && $schedule->doctor_id === $user->id;
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
-    public function delete(User $user, DoctorSchedule $doctorSchedule): bool
-    {
-        return false;
+    public function delete(User $user, DoctorSchedule $schedule): bool
+{
+    if ($user->hasRole('platform_admin')) {
+        return true;
     }
 
-    /**
-     * Determine whether the user can restore the model.
-     */
-    public function restore(User $user, DoctorSchedule $doctorSchedule): bool
-    {
-        return false;
+    if ($user->hasRole('hospital_admin')) {
+        return true;
     }
 
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
-    public function forceDelete(User $user, DoctorSchedule $doctorSchedule): bool
-    {
-        return false;
-    }
+    return $user->hasRole('doctor')
+        && $schedule->doctor_id === $user->id;
+}
 }

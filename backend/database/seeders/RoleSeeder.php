@@ -10,35 +10,54 @@ class RoleSeeder extends Seeder
 {
     public function run(): void
     {
-        Role::insert([
+        $roles = [
 
             [
-                'id' => Str::uuid(),
-                'name' => 'platform_admin',
-                'description' => 'Full platform access',
-                'is_default' => false,
-            ],
-
-            [
-                'id' => Str::uuid(),
-                'name' => 'hospital_admin',
-                'description' => 'Hospital management',
-                'is_default' => false,
-            ],
-
-            [
-                'id' => Str::uuid(),
-                'name' => 'doctor',
-                'description' => 'Doctor role',
-                'is_default' => false,
-            ],
-
-            [
-                'id' => Str::uuid(),
                 'name' => 'patient',
-                'description' => 'Patient role',
+                'description' => 'Patient',
                 'is_default' => true,
-            ]
-        ]);
+            ],
+
+            [
+                'name' => 'doctor',
+                'description' => 'Healthcare Provider',
+                'is_default' => false,
+            ],
+
+            [
+                'name' => 'hospital_admin',
+                'description' => 'Hospital Administrator',
+                'is_default' => false,
+            ],
+
+            [
+                'name' => 'platform_admin',
+                'description' => 'Platform Administrator',
+                'is_default' => false,
+            ],
+
+            [
+                'name' => 'receptionist',
+                'description' => 'Hospital Receptionist',
+                'is_default' => false,
+            ],
+
+        ];
+
+        foreach ($roles as $role) {
+
+            Role::updateOrCreate(
+
+                ['name' => $role['name']],
+
+                [
+                    'id' => Str::uuid(),
+                    'description' => $role['description'],
+                    'is_default' => $role['is_default'],
+                ]
+
+            );
+
+        }
     }
 }

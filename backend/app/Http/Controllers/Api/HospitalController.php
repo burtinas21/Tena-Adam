@@ -1,66 +1,135 @@
 <?php
 
-namespace App\Http\Controllers\Api;
+namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\Hospital\StoreHospitalRequest;
+use App\Http\Requests\Api\Hospital\UpdateHospitalRequest;
+use App\Http\Resources\HospitalResource;
 use App\Models\Hospital;
-use Illuminate\Http\Request;
+use App\Services\HospitalService;
+
 
 class HospitalController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+
+    public function __construct(
+        protected HospitalService $hospitalService
+    ){}
+
+
     public function index()
     {
-        //
+
+        $this->authorize(
+            'viewAny',
+            Hospital::class
+        );
+
+
+        return HospitalResource::collection(
+            $this->hospitalService->all()
+        );
+
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+
+
+    public function store(
+        StoreHospitalRequest $request
+    )
     {
-        //
+
+        $this->authorize(
+            'create',
+            Hospital::class
+        );
+
+
+        $hospital =
+            $this->hospitalService->create(
+                $request->validated()
+            );
+
+
+        return new HospitalResource($hospital);
+
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
 
-    /**
-     * Display the specified resource.
-     */
+
+
     public function show(Hospital $hospital)
     {
-        //
+
+        $this->authorize(
+            'view',
+            $hospital
+        );
+
+
+        return new HospitalResource(
+
+            $hospital->load([
+                'departments.healthcareProviders',
+                'facilities'
+            ])
+
+        );
+
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Hospital $hospital)
+
+
+
+
+    public function update(
+        UpdateHospitalRequest $request,
+        Hospital $hospital
+    )
     {
-        //
+
+        $this->authorize(
+            'update',
+            $hospital
+        );
+
+
+        $hospital =
+            $this->hospitalService->update(
+                $hospital,
+                $request->validated()
+            );
+
+
+        return new HospitalResource($hospital);
+
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Hospital $hospital)
-    {
-        //
-    }
 
-    /**
-     * Remove the specified resource from storage.
-     */
+
+
     public function destroy(Hospital $hospital)
     {
-        //
+
+        $this->authorize(
+            'delete',
+            $hospital
+        );
+
+
+        $this->hospitalService
+            ->delete($hospital);
+
+
+        return response()->json([
+
+            'message'
+            =>
+            'Hospital deleted successfully'
+
+        ]);
+
     }
+
 }

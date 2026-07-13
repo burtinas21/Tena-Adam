@@ -1,104 +1,86 @@
 <?php
 
-namespace App\Http\Controllers\Api;
-
+namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
-
 use App\Http\Requests\LoginRequest;
-
 use App\Http\Requests\RegisterRequest;
-
-use App\Services\AuthService;
-
+use App\Services\Contracts\AuthServiceInterface;
+use Illuminate\Http\Request;
 
 class AuthController extends Controller
 {
+    public function __construct(
 
+        protected AuthServiceInterface $authService
 
-    protected AuthService $authService;
-
-
-
-    public function __construct(AuthService $authService)
-    {
-
-        $this->authService = $authService;
-
-    }
-
-
-
-
+    ) {}
 
     public function register(RegisterRequest $request)
     {
 
-
-        $result = $this->authService->register(
-            $request->validated()
-        );
-
-
+        $user = $this->authService
+            ->register(
+                $request->validated()
+            );
 
         return response()->json([
 
+            'message' => 'Registration successful',
 
-            'message'=>'Registration successful',
+            'user' => $user,
 
-
-            'data'=>$result
-
-
-        ],201);
-
+        ], 201);
 
     }
-
-
-
-
 
     public function login(LoginRequest $request)
     {
 
+        $user = $this->authService
+            ->login(
+                $request->validated()
+            );
 
-        $result = $this->authService->login(
-            $request->validated()
-        );
-
-
-
-        if(!$result)
-        {
-
+        if (! $user) {
 
             return response()->json([
 
-                'message'=>'Invalid credentials'
+                'message' => 'Invalid credentials',
 
-            ],401);
-
+            ], 401);
 
         }
 
-
+        $token = $user->createToken(
+            'smart-care-token'
+        )->plainTextToken;
 
         return response()->json([
 
+            'message' => 'Login successful',
 
-            'message'=>'Login successful',
+            'token' => $token,
 
-
-            'data'=>$result
-
+            'user' => $user,
 
         ]);
 
-
-
     }
 
+    public function logout(Request $request)
+    {
 
+        $this->authService
+            ->logout(
+                $request->user()
+            );
 
+        return response()->json([
+
+            'message' => 'Logged out successfully',
+
+        ]);
+
+    }
 }

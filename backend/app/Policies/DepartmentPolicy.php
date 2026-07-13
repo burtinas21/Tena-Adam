@@ -4,63 +4,120 @@ namespace App\Policies;
 
 use App\Models\Department;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class DepartmentPolicy
 {
-    /**
-     * Determine whether the user can view any models.
-     */
+
+
     public function viewAny(User $user): bool
     {
-        return false;
+
+        if($user->hasRole('platform_admin')){
+
+            return true;
+
+        }
+
+
+        return $user->hospitals()->exists();
+
     }
 
-    /**
-     * Determine whether the user can view the model.
-     */
-    public function view(User $user, Department $department): bool
-    {
-        return false;
+
+
+    public function view(
+        User $user,
+        Department $department
+    ): bool {
+
+
+        if($user->hasRole('platform_admin')){
+
+            return true;
+
+        }
+
+
+
+        return $user->hospitals()
+            ->where(
+                'hospitals.id',
+                $department->hospital_id
+            )
+            ->exists();
+
     }
 
-    /**
-     * Determine whether the user can create models.
-     */
+
+
+
     public function create(User $user): bool
     {
-        return false;
+
+        if($user->hasRole('platform_admin')){
+
+            return true;
+
+        }
+
+
+        return $user->hasRole(
+            'hospital_admin'
+        );
+
     }
 
-    /**
-     * Determine whether the user can update the model.
-     */
-    public function update(User $user, Department $department): bool
+
+
+
+    public function update(
+        User $user,
+        Department $department
+    ): bool
     {
-        return false;
+
+
+        if($user->hasRole('platform_admin')){
+
+            return true;
+
+        }
+
+
+        return $user->hospitals()
+            ->where(
+                'hospitals.id',
+                $department->hospital_id
+            )
+            ->exists();
+
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
-    public function delete(User $user, Department $department): bool
+
+
+
+    public function delete(
+        User $user,
+        Department $department
+    ): bool
     {
-        return false;
+
+
+        if($user->hasRole('platform_admin')){
+
+            return true;
+
+        }
+
+
+        return $user->hospitals()
+            ->where(
+                'hospitals.id',
+                $department->hospital_id
+            )
+            ->exists();
+
     }
 
-    /**
-     * Determine whether the user can restore the model.
-     */
-    public function restore(User $user, Department $department): bool
-    {
-        return false;
-    }
 
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
-    public function forceDelete(User $user, Department $department): bool
-    {
-        return false;
-    }
 }

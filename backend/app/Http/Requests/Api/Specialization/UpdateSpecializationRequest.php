@@ -2,28 +2,51 @@
 
 namespace App\Http\Requests\Api\Specialization;
 
-use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateSpecializationRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
+
+
     public function authorize(): bool
     {
-        return false;
+        return auth()->check()
+            && auth()->user()->hasRole('platform_admin');
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, ValidationRule|array<mixed>|string>
-     */
+
+
     public function rules(): array
     {
+
+        $specialization = $this->route('specialization');
+
+
         return [
-            //
+
+            'name' => [
+
+                'required',
+                'string',
+                'max:100',
+
+                Rule::unique('specializations','name')
+                    ->ignore($specialization->id)
+
+            ],
+
+
+            'description' => [
+
+                'nullable',
+                'string'
+
+            ],
+
         ];
+
     }
+
+
 }

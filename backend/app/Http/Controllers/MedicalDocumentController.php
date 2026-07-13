@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\MedicalDocument;
 use App\Http\Requests\StoreMedicalDocumentRequest;
 use App\Http\Requests\UpdateMedicalDocumentRequest;
+use App\Models\MedicalDocument;
 
 class MedicalDocumentController extends Controller
 {

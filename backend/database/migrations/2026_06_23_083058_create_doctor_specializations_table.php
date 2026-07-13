@@ -12,14 +12,26 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('doctor_specializations', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('doctor_id');
+            $table->uuid('specialization_id');
+
             $table->timestamps();
+
+            $table->primary(['doctor_id', 'specialization_id']);
+
+            $table->foreign('doctor_id')
+                ->references('id')
+                ->on('healthcare_providers')
+                ->cascadeOnDelete();
+
+            $table->foreign('specialization_id')
+                ->references('id')
+                ->on('specializations')
+                ->cascadeOnDelete();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
+
     public function down(): void
     {
         Schema::dropIfExists('doctor_specializations');

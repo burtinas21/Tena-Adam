@@ -2,65 +2,46 @@
 
 namespace App\Policies;
 
-use App\Models\Queue;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
+use App\Models\Queue;
 
 class QueuePolicy
 {
-    /**
-     * Determine whether the user can view any models.
-     */
-    public function viewAny(User $user): bool
+        public function generateQueue(User $user): bool
     {
-        return false;
+        return $user->hasAnyRole([
+            'hospital_admin',
+            'platform_admin',
+            'receptionist'
+        ]);
     }
-
-    /**
-     * Determine whether the user can view the model.
-     */
-    public function view(User $user, Queue $queue): bool
+        public function callNext(User $user, Queue $queue = null): bool
     {
-        return false;
+        return $user->hasRole('doctor')
+            || $user->hasAnyRole(['hospital_admin', 'platform_admin']);
     }
-
-    /**
-     * Determine whether the user can create models.
-     */
-    public function create(User $user): bool
+        public function complete(User $user, Queue $queue): bool
     {
-        return false;
+        return $user->hasRole('doctor')
+            || $user->hasAnyRole(['hospital_admin', 'platform_admin']);
     }
-
-    /**
-     * Determine whether the user can update the model.
-     */
-    public function update(User $user, Queue $queue): bool
+        public function skip(User $user, Queue $queue): bool
     {
-        return false;
+        return $user->hasRole('doctor')
+            || $user->hasAnyRole(['hospital_admin', 'platform_admin']);
     }
-
-    /**
-     * Determine whether the user can delete the model.
-     */
-    public function delete(User $user, Queue $queue): bool
+        public function recall(User $user, Queue $queue): bool
     {
-        return false;
+        return $user->hasRole('doctor')
+            || $user->hasAnyRole(['hospital_admin', 'platform_admin']);
     }
-
-    /**
-     * Determine whether the user can restore the model.
-     */
-    public function restore(User $user, Queue $queue): bool
+        public function view(User $user, Queue $queue = null): bool
     {
-        return false;
-    }
-
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
-    public function forceDelete(User $user, Queue $queue): bool
-    {
-        return false;
+        return $user->hasAnyRole([
+            'doctor',
+            'hospital_admin',
+            'platform_admin',
+            'receptionist'
+        ]);
     }
 }

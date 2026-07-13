@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\PatientEmergencyContact;
 use App\Http\Requests\StorePatientEmergencyContactRequest;
 use App\Http\Requests\UpdatePatientEmergencyContactRequest;
+use App\Models\PatientEmergencyContact;
 
 class PatientEmergencyContactController extends Controller
 {

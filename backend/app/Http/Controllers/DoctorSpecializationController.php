@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\DoctorSpecialization;
 use App\Http\Requests\StoreDoctorSpecializationRequest;
 use App\Http\Requests\UpdateDoctorSpecializationRequest;
+use App\Models\DoctorSpecialization;
 
 class DoctorSpecializationController extends Controller
 {

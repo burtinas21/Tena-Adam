@@ -2,18 +2,17 @@
 
 namespace App\Services;
 
-
+use App\Models\Patient;
+use App\Models\Role;
 use App\Models\User;
+use App\Services\Contracts\AuthServiceInterface;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
-
-class AuthService
+class AuthService implements AuthServiceInterface
 {
-
-
     public function register(array $data)
     {
-
 
         $user = User::create([
 
@@ -25,83 +24,79 @@ class AuthService
 
             'phone' => $data['phone'] ?? null,
 
-            'role' => 'patient',
-
-            'password' => Hash::make($data['password'])
+            'password' => Hash::make(
+                $data['password']
+            ),
 
         ]);
 
+        /*
+        Assign Patient Role
+        */
 
-
-        $token = $user
-            ->createToken('smart-care-token')
-            ->plainTextToken;
-
-
-
-        return [
-
-            'user'=>$user,
-
-            'token'=>$token
-
-        ];
-
-    }
-
-
-
-
-
-    public function login(array $data)
-    {
-
-
-        $user = User::where(
-            'email',
-            $data['email']
+        $patientRole = Role::where(
+            'name',
+            'patient'
         )->first();
 
+        $user->roles()->attach(
+            $patientRole->id
+        );
 
 
-        if(!$user)
-        {
+        Patient::create([
 
-            return null;
+            'id' => $user->id,
 
-        }
+            'date_of_birth' => $data['date_of_birth'],
 
+            'gender' => $data['gender'],
 
+            'patient_status' => 'pending',
 
-        if(!Hash::check(
-            $data['password'],
-            $user->password
-        ))
+            'registered_by' => $user->id,
 
-        {
+        ]);
 
-            return null;
-
-        }
-
-
-
-        $token = $user
-            ->createToken('smart-care-token')
-            ->plainTextToken;
-
-
-
-        return [
-
-            'user'=>$user,
-
-            'token'=>$token
-
-        ];
-
+        return $user;
 
     }
 
+    public function login(array $data)
+{
+    if (! Auth::attempt($data)) {
+        return null;
+    }
 
+    $user = Auth::user();
+
+    $user->update([
+        'last_login' => now(),
+    ]);
+
+    // Load roles relationship
+    $user->load('roles');
+
+    // For doctors, also load their healthcare provider profile
+    // so the frontend can display their profile picture in the navbar
+    if ($user->hasRole('doctor')) {
+        $user->load('healthcareProvider');
+    }
+
+    // For hospital admins and receptionists, load their hospital(s)
+    // so the frontend can read hospital_id directly from the user object
+    if ($user->hasRole('hospital_admin') || $user->hasRole('receptionist')) {
+        $user->load('hospitalStaff');
+        $user->load('hospitals');
+    }
+
+    return $user;
+}
+
+    public function logout($user)
+    {
+
+        $user->tokens()->delete();
+
+    }
 }

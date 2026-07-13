@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Prescription;
 use App\Http\Requests\StorePrescriptionRequest;
 use App\Http\Requests\UpdatePrescriptionRequest;
+use App\Models\Prescription;
 
 class PrescriptionController extends Controller
 {

@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\ReviewRating;
 use App\Http\Requests\StoreReviewRatingRequest;
 use App\Http\Requests\UpdateReviewRatingRequest;
+use App\Models\ReviewRating;
 
 class ReviewRatingController extends Controller
 {

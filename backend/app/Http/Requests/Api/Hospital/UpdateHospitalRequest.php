@@ -2,28 +2,62 @@
 
 namespace App\Http\Requests\Api\Hospital;
 
-use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateHospitalRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
+
     public function authorize(): bool
     {
-        return false;
+
+        return auth()->user()
+            ->hasRole('platform_admin');
+
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, ValidationRule|array<mixed>|string>
-     */
+
+
     public function rules(): array
     {
+
         return [
-            //
+
+            'name' =>
+            [
+                'required',
+                'string',
+                'max:255',
+            ],
+
+
+            'address' =>
+            [
+                'required',
+                'string',
+            ],
+
+
+            'city' =>
+            [
+                'required',
+                'string',
+            ],
+
+
+            'phone' =>
+            [
+                'nullable',
+                'string'
+            ],
+
+
+            'email' =>
+            [
+                'nullable',
+                'email'
+            ],
+
         ];
+
     }
 }

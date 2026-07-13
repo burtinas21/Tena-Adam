@@ -2,28 +2,56 @@
 
 namespace App\Http\Requests\Api\Department;
 
-use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateDepartmentRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
+
     public function authorize(): bool
     {
-        return false;
+
+        return auth()->user()
+            ->hasRole('hospital_admin');
+
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, ValidationRule|array<mixed>|string>
-     */
+
+
     public function rules(): array
     {
+
         return [
-            //
+
+            'name'=>[
+                'required',
+                'string',
+                'max:100'
+            ],
+
+
+            'description'=>[
+                'nullable',
+                'string'
+            ],
+
+
+            'head_doctor_id'=>[
+                'nullable',
+                'exists:healthcare_providers,id'
+            ],
+
+
+            'parent_department_id'=>[
+                'nullable',
+                'exists:departments,id'
+            ],
+
+
+            'is_active'=>[
+                'boolean'
+            ],
+
         ];
+
     }
 }

@@ -4,63 +4,70 @@ namespace App\Policies;
 
 use App\Models\Prescription;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class PrescriptionPolicy
 {
     /**
-     * Determine whether the user can view any models.
+     * View any prescriptions
      */
     public function viewAny(User $user): bool
     {
-        return false;
+        return $user->hasAnyRole([
+            'platform_admin',
+            'hospital_admin',
+            'doctor',
+            'patient',
+            'receptionist'
+        ]);
     }
 
     /**
-     * Determine whether the user can view the model.
+     * View a specific prescription
      */
     public function view(User $user, Prescription $prescription): bool
     {
+        if ($user->hasRole('platform_admin')) return true;
+
+        if ($user->hasRole('hospital_admin') || $user->hasRole('receptionist')) {
+            $hospitalId = $user->hospitalStaff()->value('hospital_id');
+            return $hospitalId === $prescription->encounter?->hospital_id;
+        }
+
+        if ($user->hasRole('doctor')) {
+            return $prescription->encounter?->doctor_id === $user->id;
+        }
+
+        if ($user->hasRole('patient')) {
+            return $prescription->encounter?->patient_id === $user->id;
+        }
+
         return false;
     }
 
-    /**
-     * Determine whether the user can create models.
-     */
     public function create(User $user): bool
     {
-        return false;
+        return $user->hasRole('doctor');
     }
-
-    /**
-     * Determine whether the user can update the model.
-     */
     public function update(User $user, Prescription $prescription): bool
     {
+        if ($user->hasRole('platform_admin')) return true;
+
+        if ($user->hasRole('doctor')) {
+            return $prescription->encounter?->doctor_id === $user->id
+                && $prescription->status === 'active';
+        }
+
         return false;
     }
-
-    /**
-     * Determine whether the user can delete the model.
-     */
     public function delete(User $user, Prescription $prescription): bool
     {
-        return false;
-    }
+        if ($user->hasRole('platform_admin')) return true;
 
-    /**
-     * Determine whether the user can restore the model.
-     */
-    public function restore(User $user, Prescription $prescription): bool
-    {
-        return false;
-    }
+        if ($user->hasRole('doctor')) {
+            return $prescription->encounter?->doctor_id === $user->id
+                && $prescription->status === 'active';
+        }
 
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
-    public function forceDelete(User $user, Prescription $prescription): bool
-    {
         return false;
     }
 }
