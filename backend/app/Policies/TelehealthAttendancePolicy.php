@@ -12,7 +12,7 @@ class TelehealthAttendancePolicy
      */
     public function viewAny(User $user): bool
     {
-        return false;
+        return $user->hasAnyRole(['platform_admin', 'hospital_admin', 'doctor', 'patient']);
     }
 
     /**
@@ -20,7 +20,9 @@ class TelehealthAttendancePolicy
      */
     public function view(User $user, TelehealthAttendance $telehealthAttendance): bool
     {
-        return false;
+        // Can view own attendance record, or doctor/admin of the session
+        return $user->id === $telehealthAttendance->user_id
+            || $user->hasAnyRole(['platform_admin', 'hospital_admin', 'doctor']);
     }
 
     /**
@@ -28,7 +30,8 @@ class TelehealthAttendancePolicy
      */
     public function create(User $user): bool
     {
-        return false;
+        // Any authenticated user (doctor or patient) can join a session
+        return $user->hasAnyRole(['doctor', 'patient', 'hospital_admin', 'platform_admin']);
     }
 
     /**
@@ -36,7 +39,9 @@ class TelehealthAttendancePolicy
      */
     public function update(User $user, TelehealthAttendance $telehealthAttendance): bool
     {
-        return false;
+        // Only the attendee themselves can mark themselves as left
+        return $user->id === $telehealthAttendance->user_id
+            || $user->hasAnyRole(['platform_admin', 'hospital_admin']);
     }
 
     /**

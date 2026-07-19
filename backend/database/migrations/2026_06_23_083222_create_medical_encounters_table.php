@@ -37,15 +37,15 @@ return new class extends Migration
             // Consultation Information
             $table->dateTime('encounter_date');
 
-            $table->text('chief_complaint');
+            $table->text('chief_complaint')->nullable();
 
             $table->text('history')->nullable();
 
             $table->text('physical_exam')->nullable();
 
-            $table->text('assessment');
+            $table->text('assessment')->nullable();
 
-            $table->text('diagnosis');
+            $table->text('diagnosis')->nullable();
 
             $table->string('diagnosis_icd10', 20)->nullable();
 

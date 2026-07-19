@@ -7,59 +7,80 @@ use App\Models\User;
 
 class TelehealthSessionPolicy
 {
-    /**
-     * Determine whether the user can view any models.
-     */
-    public function viewAny(User $user): bool
+    public function view(User $user, TelehealthSession $session): bool
     {
+        if ($user->hasAnyRole([
+            'platform_admin',
+            'hospital_admin',
+        ])) {
+            return true;
+        }
+
+        if (
+            $user->hasRole('doctor') &&
+            $user->healthcareProvider &&
+            $user->healthcareProvider->id === $session->appointment->doctor_id
+        ) {
+            return true;
+        }
+
+        if (
+            $user->hasRole('patient') &&
+            $user->patient &&
+            $user->patient->id === $session->appointment->patient_id
+        ) {
+            return true;
+        }
+
         return false;
     }
-
-    /**
-     * Determine whether the user can view the model.
-     */
-    public function view(User $user, TelehealthSession $telehealthSession): bool
-    {
-        return false;
-    }
-
-    /**
-     * Determine whether the user can create models.
-     */
     public function create(User $user): bool
     {
-        return false;
+        return $user->hasRole('doctor')
+            || $user->hasAnyRole([
+                'hospital_admin',
+                'platform_admin',
+            ]);
     }
 
-    /**
-     * Determine whether the user can update the model.
-     */
-    public function update(User $user, TelehealthSession $telehealthSession): bool
+   
+    public function update(User $user, TelehealthSession $session): bool
     {
-        return false;
+        if (
+            $user->hasRole('doctor') &&
+            $user->healthcareProvider &&
+            $user->healthcareProvider->id === $session->appointment->doctor_id
+        ) {
+            return true;
+        }
+
+        return $user->hasAnyRole([
+            'hospital_admin',
+            'platform_admin',
+        ]);
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
-    public function delete(User $user, TelehealthSession $telehealthSession): bool
+    public function start(User $user, TelehealthSession $session): bool
     {
-        return false;
+        return $this->update($user, $session);
     }
 
-    /**
-     * Determine whether the user can restore the model.
-     */
-    public function restore(User $user, TelehealthSession $telehealthSession): bool
+    public function complete(User $user, TelehealthSession $session): bool
     {
-        return false;
+        return $this->update($user, $session);
     }
 
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
-    public function forceDelete(User $user, TelehealthSession $telehealthSession): bool
+
+    public function cancel(User $user, TelehealthSession $session): bool
     {
-        return false;
+        return $this->update($user, $session);
+    }
+
+    public function delete(User $user, TelehealthSession $session): bool
+    {
+        return $user->hasAnyRole([
+            'hospital_admin',
+            'platform_admin',
+        ]);
     }
 }

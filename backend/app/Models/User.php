@@ -2,6 +2,7 @@
 
 namespace App\Models;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use App\Notifications\ResetPasswordNotification;
 use Illuminate\Auth\Passwords\CanResetPassword;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -95,6 +96,16 @@ class User extends Authenticatable
 
             ->exists();
 
+    }
+
+    /**
+     * Check if the user has any of the given roles.
+     */
+    public function hasAnyRole(array $roles): bool
+    {
+        return $this->roles()
+            ->whereIn('name', $roles)
+            ->exists();
     }
 
     public function hasPermission($permission)
@@ -192,6 +203,48 @@ public function approvedLeaves(): HasMany
 
         'approved_by'
 
+    );
+}
+public function telehealthAttendance()
+{
+    return $this->hasMany(TelehealthAttendance::class, 'user_id');
+}
+public function isAdmin(): bool
+{
+    return $this->hasAnyRole(['platform_admin', 'hospital_admin']);
+}
+public function notifications(): HasMany
+{
+    return $this->hasMany(
+        Notification::class,
+        'user_id'
+    );
+}
+public function notificationPreference(): HasOne
+{
+    return $this->hasOne(
+        UserNotificationPreference::class,
+        'user_id'
+    );
+}
+public function reports(): HasMany
+{
+    return $this->hasMany(
+        Report::class,
+        'created_by'
+    );
+}
+public function uploadedMedicalDocuments()
+{
+    return $this->hasMany(
+        MedicalDocument::class,
+        'uploaded_by'
+    );
+}
+public function auditLogs(): HasMany
+{
+    return $this->hasMany(
+        AuditLog::class
     );
 }
 }

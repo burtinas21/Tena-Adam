@@ -40,8 +40,8 @@ export default {
       roles: ["receptionist"],
     },
     {
-      title: "Help Center",
-      route: "/help",
+      title: "Notification",
+      route: "/receptionist/notification",
       icon: HelpCircle,
       roles: ["receptionist"],
     },

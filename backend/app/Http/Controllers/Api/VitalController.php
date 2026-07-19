@@ -3,55 +3,88 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Vital\StoreVitalRequest;
-use App\Http\Requests\Vital\UpdateVitalRequest;
+use App\Http\Requests\StoreVitalRequest;
+use App\Http\Requests\UpdateVitalRequest;
 use App\Http\Resources\VitalResource;
-use App\Services\VitalsService;
+use App\Models\Vital;
+use App\Services\VitalService;
 use Illuminate\Http\JsonResponse;
 
 class VitalController extends Controller
 {
     public function __construct(
-        private VitalsService $service
+        private VitalService $service
     ) {}
 
-    /*
-    |--------------------------------------------------------------------------
-    | Store Vitals
-    |--------------------------------------------------------------------------
-    */
-    public function store(StoreVitalRequest $request): JsonResponse
-    {
-        $vital = $this->service->storeVitals($request->validated());
+    /**
+     * Store vital signs.
+     */
+    public function store(
+        StoreVitalRequest $request
+    ): VitalResource {
 
-        return response()->json([
-            'message' => 'Vitals recorded successfully',
-            'data'    => new VitalResource($vital),
-        ], 201);
+        $this->authorize('create', Vital::class);
+
+        $vital = $this->service->createVital(
+            $request->validated()
+        );
+
+        return new VitalResource($vital);
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Update Vitals
-    |--------------------------------------------------------------------------
-    */
-    public function update(UpdateVitalRequest $request, string $id): JsonResponse
-    {
-        $vital = $this->service->updateVitals($id, $request->validated());
+    /**
+     * Display a vital record.
+     */
+    public function show(
+        Vital $vital
+    ): VitalResource {
 
-        return response()->json([
-            'message' => 'Vitals updated successfully',
-            'data'    => new VitalResource($vital),
-        ]);
+        $this->authorize('view', $vital);
+
+        return new VitalResource(
+
+            $this->service->findVital(
+                $vital->id
+            )
+
+        );
     }
 
- 
-    public function show(string $id): JsonResponse
-    {
-        $vital = $this->service->findVitals($id);
+    /**
+     * Update vital signs.
+     */
+    public function update(
+        UpdateVitalRequest $request,
+        Vital $vital
+    ): VitalResource {
+
+        $this->authorize('update', $vital);
+
+        return new VitalResource(
+
+            $this->service->updateVital(
+                $vital->id,
+                $request->validated()
+            )
+
+        );
+    }
+
+    /**
+     * Delete vital signs.
+     */
+    public function destroy(
+        Vital $vital
+    ): JsonResponse {
+
+        $this->authorize('delete', $vital);
+
+        $this->service->deleteVital(
+            $vital->id
+        );
 
         return response()->json([
-            'data' => new VitalResource($vital),
+            'message' => 'Vital record deleted successfully.'
         ]);
     }
 }

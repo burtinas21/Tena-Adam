@@ -2,28 +2,62 @@
 
 namespace App\Http\Requests\Api\Telehealth;
 
-use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateTelehealthSessionRequest extends FormRequest
 {
     /**
-     * Determine if the user is authorized to make this request.
+     * Determine if the user is authorized.
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, ValidationRule|array<mixed>|string>
+     * Validation rules.
      */
     public function rules(): array
     {
         return [
-            //
+            'session_url' => [
+                'sometimes',
+                'url',
+                'max:500',
+            ],
+
+            'platform' => [
+                'sometimes',
+                'in:google_meet,zoom,microsoft_teams,custom',
+            ],
+
+            'room_id' => [
+                'nullable',
+                'string',
+                'max:100',
+            ],
+
+            'meeting_id' => [
+                'nullable',
+                'string',
+                'max:100',
+            ],
+
+            'recording_url' => [
+                'nullable',
+                'url',
+                'max:500',
+            ],
+
+            'recording_consent' => [
+                'nullable',
+                'boolean',
+            ],
+
+            'status' => [
+                'sometimes',
+                'in:scheduled,active,completed,cancelled',
+            ],
         ];
     }
 }

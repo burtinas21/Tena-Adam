@@ -118,9 +118,9 @@ import {
 } from "lucide-vue-next";
 
 // Core Local Child Dashboard Component Files Imports
-import MiniStatCard from "../../components/hospitaldashboard/QuickActionList.vue";
-import RecentActivityList from "../../components/hospitaldashboard/MiniStatCard.vue";
-import QuickActionList from "../../components/hospitaldashboard/RecentActivityList.vue";
+import MiniStatCard from "../../components/hospitaldashboard/MiniStatCard.vue";
+import RecentActivityList from "../../components/hospitaldashboard/RecentActivityList.vue";
+import QuickActionList from "../../components/hospitaldashboard/QuickActionList.vue";
 import DeptPerformance from "../../components/hospitaldashboard/DeptPerformance.vue";
 import QueueTable from "../../components/hospitaldashboard/QueueTable.vue";
 </script>

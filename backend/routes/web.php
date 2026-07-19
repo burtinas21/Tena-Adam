@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Mail;
+use App\Http\Controllers\Api\GoogleAuthController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -18,3 +19,5 @@ Route::get('/test-mail', function () {
 
     return 'Email sent successfully!';
 });
+// Route::get('/google/redirect', [GoogleAuthController::class, 'redirectToGoogle']);
+// Route::get('/oauth2callback', [GoogleAuthController::class, 'handleCallback']);

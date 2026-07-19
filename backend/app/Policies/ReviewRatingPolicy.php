@@ -2,64 +2,79 @@
 
 namespace App\Policies;
 
-use App\Models\ReviewRating;
 use App\Models\User;
+use App\Models\ReviewRating;
 
 class ReviewRatingPolicy
 {
-    /**
-     * Determine whether the user can view any models.
-     */
+
     public function viewAny(User $user): bool
     {
-        return false;
+        return
+            $user->hasRole('platform_admin') ||
+            $user->hasRole('hospital_admin') ||
+            $user->hasRole('doctor') ||
+            $user->hasRole('patient');
     }
 
-    /**
-     * Determine whether the user can view the model.
-     */
-    public function view(User $user, ReviewRating $reviewRating): bool
-    {
-        return false;
+
+    public function view(
+        User $user,
+        ReviewRating $review
+    ): bool {
+
+        if ($user->hasRole('platform_admin')) {
+            return true;
+        }
+
+
+        if ($user->hasRole('doctor')) {
+
+            return $review->doctor_id === $user->id;
+
+        }
+
+
+        if ($user->hasRole('patient')) {
+
+            return $review->patient_id === $user->id;
+
+        }
+
+
+        return $user->hasRole('hospital_admin');
     }
 
-    /**
-     * Determine whether the user can create models.
-     */
+
     public function create(User $user): bool
     {
-        return false;
+        return $user->hasRole('patient');
     }
 
-    /**
-     * Determine whether the user can update the model.
-     */
-    public function update(User $user, ReviewRating $reviewRating): bool
-    {
-        return false;
+
+    public function update(
+        User $user,
+        ReviewRating $review
+    ): bool {
+
+        return
+            $user->hasRole('patient')
+            &&
+            $review->patient_id === $user->id;
+
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
-    public function delete(User $user, ReviewRating $reviewRating): bool
-    {
-        return false;
+
+    public function delete(
+        User $user,
+        ReviewRating $review
+    ): bool {
+
+        return
+            $user->hasRole('patient')
+            &&
+            $review->patient_id === $user->id;
+
     }
 
-    /**
-     * Determine whether the user can restore the model.
-     */
-    public function restore(User $user, ReviewRating $reviewRating): bool
-    {
-        return false;
-    }
-
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
-    public function forceDelete(User $user, ReviewRating $reviewRating): bool
-    {
-        return false;
-    }
 }

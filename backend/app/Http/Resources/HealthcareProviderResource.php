@@ -32,35 +32,46 @@ class HealthcareProviderResource extends JsonResource
 
             'is_telehealth_available' => $this->is_telehealth_available,
 
-            'user' => [
+            // Aggregates — loaded via withAvg/withCount or loadAvg/loadCount
+            'average_rating' => round($this->reviews_avg_rating ?? 0, 1),
 
-                'id' => $this->user->id,
+            'total_reviews' => $this->reviews_count ?? 0,
 
-                'first_name' => $this->user->first_name,
+            // User — always present (provider requires a user)
+            'user' => $this->when($this->relationLoaded('user') && $this->user, [
+                'id'         => $this->user?->id,
+                'first_name' => $this->user?->first_name,
+                'last_name'  => $this->user?->last_name,
+                'email'      => $this->user?->email,
+                'phone'      => $this->user?->phone,
+            ]),
 
-                'last_name' => $this->user->last_name,
+            // Department — nullable
+            'department' => $this->when(
+                $this->relationLoaded('department') && $this->department,
+                fn () => [
+                    'id'   => $this->department->id,
+                    'name' => $this->department->name,
+                ]
+            ),
 
-                'email' => $this->user->email,
+            // Hospital — nullable
+            'hospital' => $this->when(
+                $this->relationLoaded('hospital') && $this->hospital,
+                fn () => [
+                    'id'   => $this->hospital->id,
+                    'name' => $this->hospital->name,
+                ]
+            ),
 
-                'phone' => $this->user->phone,
-
-            ],
-
-            'department' => [
-
-                'id' => $this->department->id,
-
-                'name' => $this->department->name,
-
-            ],
-
-            'hospital' => [
-
-                'id' => $this->hospital->id,
-
-                'name' => $this->hospital->name,
-
-            ],
+            // Specializations — only included when the relation is loaded
+            'specializations' => $this->when(
+                $this->relationLoaded('specializations'),
+                fn () => $this->specializations->map(fn ($s) => [
+                    'id'   => $s->id,
+                    'name' => $s->name,
+                ])->values()
+            ),
 
             'created_at' => $this->created_at,
 

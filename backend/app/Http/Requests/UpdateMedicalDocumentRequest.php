@@ -2,28 +2,40 @@
 
 namespace App\Http\Requests;
 
-use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateMedicalDocumentRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
-        return false;
+        $document = $this->route('medicalDocument');
+
+        return auth()->user()->can(
+            'update',
+            $document
+        );
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
         return [
-            //
+
+            'file' => [
+                'nullable',
+                'file',
+                'max:10240',
+            ],
+
+            'document_type' => [
+                'sometimes',
+                'in:lab_report,xray,mri,ct_scan,prescription,other',
+            ],
+
+            'description' => [
+                'nullable',
+                'string',
+            ],
+
         ];
     }
 }

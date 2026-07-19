@@ -1,29 +1,50 @@
 <?php
 
-namespace App\Http\Requests;
+namespace App\Http\Requests\Api\Notification;
 
-use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateUserNotificationPreferenceRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
         return [
-            //
+
+            'email_enabled' => [
+                'sometimes',
+                'boolean',
+            ],
+
+            'sms_enabled' => [
+                'sometimes',
+                'boolean',
+            ],
+
+            'push_enabled' => [
+                'sometimes',
+                'boolean',
+            ],
+
+            'appointment_reminders' => [
+                'sometimes',
+                'boolean',
+            ],
+
+            'queue_updates' => [
+                'sometimes',
+                'boolean',
+            ],
+
+            'promotional' => [
+                'sometimes',
+                'boolean',
+            ],
+
         ];
     }
 }

@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Models\Patient;
 use Illuminate\Support\Str;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use App\Models\TelehealthSession;
 
 class Appointment extends Model
 {
@@ -113,6 +115,26 @@ public function medicalEncounter()
     return $this->hasOne(
         MedicalEncounter::class,
         'appointment_id'
+    );
+}
+
+
+
+
+/**
+ * Telehealth session.
+ */
+public function telehealthSession(): HasOne
+{
+    return $this->hasOne(
+        TelehealthSession::class,
+        'appointment_id'
+    );
+}
+public function review()
+{
+    return $this->hasOne(
+        ReviewRating::class
     );
 }
 }

@@ -3,64 +3,227 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\ReviewRating;
-use Illuminate\Http\Request;
+use App\Services\ReviewRatingService;
+use App\Http\Resources\ReviewRatingResource;
+use App\Http\Requests\Api\Review\StoreReviewRatingRequest;
+use App\Http\Requests\Api\Review\UpdateReviewRatingRequest;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Validation\ValidationException;
+
 
 class ReviewRatingController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
-    {
-        //
+
+    public function __construct(
+        private ReviewRatingService $reviewService
+    ) {
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
+
+    public function store(
+       StoreReviewRatingRequest  $request
+    ): JsonResponse {
+
+        try {
+
+            $review = $this->reviewService
+                ->createReview(
+                    $request->validated()
+                );
+
+
+            return response()->json([
+
+                'success' => true,
+
+                'message' =>
+                    'Review submitted successfully.',
+
+                'data' =>
+                    new ReviewRatingResource($review)
+
+            ],201);
+
+
+        } catch (ValidationException $e) {
+
+
+            return response()->json([
+
+                'success'=>false,
+
+                'errors'=>$e->errors()
+
+            ],422);
+
+        }
+
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
+
+
+    public function doctorReviews(
+        string $doctorId
+    ): JsonResponse {
+
+
+        $reviews = $this->reviewService
+            ->getDoctorReviews($doctorId);
+
+
+        return response()->json([
+
+            'success'=>true,
+
+            'data'=>
+                ReviewRatingResource::collection(
+                    $reviews
+                )
+
+        ]);
+
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(ReviewRating $reviewRating)
-    {
-        //
+
+
+
+    public function patientReviews(
+        string $patientId
+    ): JsonResponse {
+
+
+        $reviews = $this->reviewService
+            ->getPatientReviews($patientId);
+
+
+        return response()->json([
+
+            'success'=>true,
+
+            'data'=>
+                ReviewRatingResource::collection(
+                    $reviews
+                )
+
+        ]);
+
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(ReviewRating $reviewRating)
-    {
-        //
+
+
+
+    public function update(
+        UpdateReviewRatingRequest $request,
+        string $reviewId
+    ): JsonResponse {
+
+
+        try {
+
+
+            $review = $this->reviewService
+                ->updateReview(
+
+                    $reviewId,
+
+                    $request->validated()
+
+                );
+
+
+            return response()->json([
+
+                'success'=>true,
+
+                'message'=>
+                    'Review updated successfully.',
+
+                'data'=>
+                    new ReviewRatingResource($review)
+
+            ]);
+
+
+
+        } catch (ValidationException $e) {
+
+
+            return response()->json([
+
+                'success'=>false,
+
+                'errors'=>$e->errors()
+
+            ],422);
+
+        }
+
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, ReviewRating $reviewRating)
-    {
-        //
+
+
+
+    public function destroy(
+        string $reviewId
+    ): JsonResponse {
+
+
+        try {
+
+
+            $this->reviewService
+                ->deleteReview($reviewId);
+
+
+            return response()->json([
+
+                'success'=>true,
+
+                'message'=>
+                    'Review deleted successfully.'
+
+            ]);
+
+
+
+        } catch (ValidationException $e) {
+
+
+            return response()->json([
+
+                'success'=>false,
+
+                'errors'=>$e->errors()
+
+            ],422);
+
+        }
+
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(ReviewRating $reviewRating)
-    {
-        //
+
+
+
+
+    public function doctorRating(
+        string $doctorId
+    ): JsonResponse {
+
+
+        $rating = $this->reviewService
+            ->getDoctorAverageRating(
+                $doctorId
+            );
+
+
+        return response()->json([
+
+            'success'=>true,
+
+            'data'=>$rating
+
+        ]);
+
     }
+
 }

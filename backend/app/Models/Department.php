@@ -105,4 +105,13 @@ public function appointments()
         'department_id'
     );
 }
+public function symptomMappings()
+    {
+        return $this->hasMany(SymptomDepartmentMapping::class);
+    }
+
+    public function analytics()
+    {
+        return $this->hasMany(SymptomAnalytic::class, 'recommended_department_id');
+    }
 }

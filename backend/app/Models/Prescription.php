@@ -4,15 +4,21 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Str;
 
 class Prescription extends Model
 {
     use HasFactory;
 
+    protected $table = 'prescriptions';
+
     public $incrementing = false;
+
     protected $keyType = 'string';
 
     protected $fillable = [
+        'id',
         'encounter_id',
         'medication_id',
         'medication_name',
@@ -26,47 +32,30 @@ class Prescription extends Model
         'status',
     ];
 
-    /*
-    |--------------------------------------------------------------------------
-    | Relationships
-    |--------------------------------------------------------------------------
-    */
-
-    // Prescription belongs to one medical encounter
-    public function encounter()
+    protected static function boot(): void
     {
-        return $this->belongsTo(MedicalEncounter::class, 'encounter_id');
+        parent::boot();
+
+        static::creating(function ($model) {
+
+            if (empty($model->id)) {
+                $model->id = (string) Str::uuid();
+            }
+
+        });
     }
-
-    // Prescription may reference a catalog medication
-    public function medication()
+    public function encounter(): BelongsTo
     {
-        return $this->belongsTo(Medication::class, 'medication_id');
-    }
-
-    // Prescription belongs to a patient (via encounter)
-    public function patient()
-    {
-        return $this->hasOneThrough(
-            Patient::class,
+        return $this->belongsTo(
             MedicalEncounter::class,
-            'id',          // FK on encounters
-            'id',          // FK on patients
-            'encounter_id',// Local key
-            'patient_id'   // Encounter → Patient
+            'encounter_id'
         );
     }
-
-    // Prescription belongs to a doctor (via encounter)
-    public function doctor()
+    public function medication(): BelongsTo
     {
-        return $this->hasOneThrough(
-            HealthcareProvider::class,
-            MedicalEncounter::class,
-            'id',
-            'id',
-            'encounter_id',
-            'doctor_id'
+        return $this->belongsTo(
+            Medication::class,
+            'medication_id'
         );
     }
 }

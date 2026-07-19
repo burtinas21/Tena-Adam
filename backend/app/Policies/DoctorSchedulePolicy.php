@@ -56,9 +56,15 @@ class DoctorSchedulePolicy
             return true;
         }
 
-        if ($user->hasRole('hospital_admin')) {
-            return true;
-        }
+       if ($user->hasRole('hospital_admin')) {
+
+    return $user->hospitalStaff()
+        ->where(
+            'hospital_id',
+            $schedule->doctor->hospital_id
+        )
+        ->exists();
+}
 
         // doctor can update ONLY own schedule
         return $user->hasRole('doctor')
@@ -71,9 +77,15 @@ class DoctorSchedulePolicy
         return true;
     }
 
-    if ($user->hasRole('hospital_admin')) {
-        return true;
-    }
+  if ($user->hasRole('hospital_admin')) {
+
+    return $user->hospitalStaff()
+        ->where(
+            'hospital_id',
+            $schedule->doctor->hospital_id
+        )
+        ->exists();
+}
 
     return $user->hasRole('doctor')
         && $schedule->doctor_id === $user->id;

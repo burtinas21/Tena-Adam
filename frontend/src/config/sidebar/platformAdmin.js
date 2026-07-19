@@ -5,6 +5,9 @@ import {
   ShieldCheck,
   BarChart3,
   ScrollText,
+  Bell,
+  FileBarChart,
+  Stethoscope,
 } from "lucide-vue-next";
 
 export default {
@@ -66,7 +69,6 @@ export default {
       roles: ["platform_admin"],
     },
 
-
     // {
     //   title: "Hospital Network",
 
@@ -78,9 +80,9 @@ export default {
     // },
 
     {
-      title: "Statistics",
+      title: "Analytics",
 
-      route: "/platform/statistics",
+      route: "/platform/analytics",
 
       icon: BarChart3,
 
@@ -90,9 +92,36 @@ export default {
     {
       title: "Audit Logs",
 
-      route: "/platform/audit",
+      route: "/platform/auditlogs",
 
       icon: ScrollText,
+
+      roles: ["platform_admin"],
+    },
+    {
+      title: "Notifications",
+
+      route: "/platform/notifications",
+
+      icon: Bell,
+
+      roles: ["platform_admin"],
+    },
+    {
+      title: "Reports",
+
+      route: "/platform/reports",
+
+      icon: FileBarChart,
+
+      roles: ["platform_admin"],
+    },
+    {
+      title: "Symptoms",
+
+      route: "/platform/symptoms",
+
+      icon: Stethoscope,
 
       roles: ["platform_admin"],
     },

@@ -134,6 +134,7 @@ class RolePermissionSeeder extends Seeder
             'manage_queue',
 
             'view_reports',
+            'export_reports',
 
             'send_notifications',
             'view_facilities' ,

@@ -12,7 +12,32 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('user_notification_preferences', function (Blueprint $table) {
-            $table->id();
+
+           $table->uuid('id')->primary();
+
+            $table->foreignUuid('user_id')
+                ->unique()
+                ->constrained('users')
+                ->cascadeOnDelete();
+
+            $table->boolean('email_enabled')
+                ->default(true);
+
+            $table->boolean('sms_enabled')
+                ->default(true);
+
+            $table->boolean('push_enabled')
+                ->default(true);
+
+            $table->boolean('appointment_reminders')
+                ->default(true);
+
+            $table->boolean('queue_updates')
+                ->default(true);
+
+            $table->boolean('promotional')
+                ->default(false);
+
             $table->timestamps();
         });
     }

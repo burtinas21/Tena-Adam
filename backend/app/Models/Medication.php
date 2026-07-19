@@ -4,15 +4,21 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 
 class Medication extends Model
 {
     use HasFactory;
 
-    public $incrementing = false;   // UUIDs are not auto-increment
-    protected $keyType = 'string';  // UUID stored as string
+    protected $table = 'medications';
+
+    public $incrementing = false;
+
+    protected $keyType = 'string';
 
     protected $fillable = [
+        'id',
         'name',
         'generic_name',
         'manufacturer',
@@ -23,8 +29,32 @@ class Medication extends Model
         'side_effects',
         'interactions',
     ];
-    public function prescriptions()
+
+    protected $casts = [
+        'requires_prescription' => 'boolean',
+    ];
+
+    protected static function boot(): void
     {
-        return $this->hasMany(Prescription::class, 'medication_id');
+        parent::boot();
+
+        static::creating(function ($model) {
+
+            if (empty($model->id)) {
+                $model->id = (string) Str::uuid();
+            }
+
+        });
+    }
+
+    /**
+     * Medication can appear in many prescriptions.
+     */
+    public function prescriptions(): HasMany
+    {
+        return $this->hasMany(
+            Prescription::class,
+            'medication_id'
+        );
     }
 }

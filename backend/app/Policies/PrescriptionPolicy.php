@@ -34,11 +34,11 @@ class PrescriptionPolicy
         }
 
         if ($user->hasRole('doctor')) {
-            return $prescription->encounter?->doctor_id === $user->id;
+            return $prescription->encounter?->doctor_id === $user->healthcareProvider?->id;
         }
 
         if ($user->hasRole('patient')) {
-            return $prescription->encounter?->patient_id === $user->id;
+            return $prescription->encounter?->patient_id === $user->patient?->id;
         }
 
         return false;
@@ -53,7 +53,7 @@ class PrescriptionPolicy
         if ($user->hasRole('platform_admin')) return true;
 
         if ($user->hasRole('doctor')) {
-            return $prescription->encounter?->doctor_id === $user->id
+            return $prescription->encounter?->doctor_id === $user->healthcareProvider?->id
                 && $prescription->status === 'active';
         }
 
@@ -64,7 +64,22 @@ class PrescriptionPolicy
         if ($user->hasRole('platform_admin')) return true;
 
         if ($user->hasRole('doctor')) {
-            return $prescription->encounter?->doctor_id === $user->id
+            return $prescription->encounter?->doctor_id === $user->healthcareProvider?->id
+                && $prescription->status === 'active';
+        }
+
+        return false;
+    }
+
+    /**
+     * Complete a prescription (mark as dispensed/finished).
+     */
+    public function complete(User $user, Prescription $prescription): bool
+    {
+        if ($user->hasRole('platform_admin')) return true;
+
+        if ($user->hasRole('doctor')) {
+            return $prescription->encounter?->doctor_id === $user->healthcareProvider?->id
                 && $prescription->status === 'active';
         }
 

@@ -3,64 +3,50 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\AuditLogResource;
 use App\Models\AuditLog;
 use Illuminate\Http\Request;
 
 class AuditLogController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Display all audit logs.
      */
-    public function index()
+    public function index(Request $request)
     {
-        //
+        $this->authorize('viewAny', AuditLog::class);
+
+        $logs = AuditLog::with('user')
+            ->latest('created_at')
+            ->paginate(20);
+
+        return AuditLogResource::collection($logs);
     }
 
     /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
-
-    /**
-     * Display the specified resource.
+     * Display one audit log.
      */
     public function show(AuditLog $auditLog)
     {
-        //
+        $this->authorize('view', $auditLog);
+
+        $auditLog->load('user');
+
+        return new AuditLogResource($auditLog);
     }
 
     /**
-     * Show the form for editing the specified resource.
+     * Display logs for a specific user.
      */
-    public function edit(AuditLog $auditLog)
+    public function userLogs(string $userId)
     {
-        //
-    }
+        $this->authorize('viewAny', AuditLog::class);
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, AuditLog $auditLog)
-    {
-        //
-    }
+        $logs = AuditLog::with('user')
+            ->where('user_id', $userId)
+            ->latest('created_at')
+            ->paginate(20);
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(AuditLog $auditLog)
-    {
-        //
+        return AuditLogResource::collection($logs);
     }
 }

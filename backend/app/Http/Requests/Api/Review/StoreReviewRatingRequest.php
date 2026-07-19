@@ -2,28 +2,56 @@
 
 namespace App\Http\Requests\Api\Review;
 
-use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
-class StoreReviewRatingRequest extends FormRequest
+class CreateReviewRatingRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
+
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, ValidationRule|array<mixed>|string>
-     */
+
     public function rules(): array
     {
         return [
-            //
+
+            'patient_id' => [
+                'required',
+                'uuid',
+                'exists:patients,id'
+            ],
+
+            'doctor_id' => [
+                'required',
+                'uuid',
+                'exists:healthcare_providers,id'
+            ],
+
+            'appointment_id' => [
+                'required',
+                'uuid',
+                'exists:appointments,id',
+                'unique:review_ratings,appointment_id'
+            ],
+
+            'rating' => [
+                'required',
+                'integer',
+                'min:1',
+                'max:5'
+            ],
+
+            'comment' => [
+                'nullable',
+                'string'
+            ],
+
+            'is_anonymous' => [
+                'boolean'
+            ],
+
         ];
     }
 }

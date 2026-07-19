@@ -72,6 +72,35 @@ export default [
 
         component: () => import("../views/hospital-admin/leaves.vue"),
       },
+      {
+        path: "reports",
+
+        name: "reports",
+
+        component: () => import("../views/hospital-admin/Reports.vue"),
+      },
+      {
+        path: "telemanagment",
+
+        name: "telemanagment",
+
+        component: () =>
+          import("../views/hospital-admin/TelehealthManagement.vue"),
+      },
+      {
+        path: "notifications",
+
+        name: "notifications",
+
+        component: () => import("../views/hospital-admin/Notifications.vue"),
+      },
+      {
+        path: "symptoms",
+
+        name: "hospital-admin-symptoms",
+
+        component: () => import("../views/hospital-admin/Symptoms.vue"),
+      },
     ],
   },
 ];

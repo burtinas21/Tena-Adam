@@ -7,16 +7,23 @@ use App\Models\AppointmentSlot;
 use App\Models\DoctorSchedule;
 use App\Models\HealthcareProvider;
 use Carbon\Carbon;
+use App\Services\NotificationService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class AppointmentService
+
 {
     private function normalizeTime(string $time): string
     {
         return substr($time, 0, 5);
     }
-
+ protected NotificationService $notificationService;
+public function __construct(
+    NotificationService $notificationService
+) {
+    $this->notificationService = $notificationService;
+}
     public function all()
     {
         $user  = auth()->user();
@@ -179,6 +186,36 @@ class AppointmentService
                 'notes'         => $data['notes'] ?? null,
                 'is_telehealth' => $data['is_telehealth'] ?? false,
             ]);
+            $this->notificationService
+    ->sendAppointmentNotification(
+
+        $appointment
+            ->patient
+            ->user,
+
+        'Appointment Submitted',
+
+        'Your appointment request has been submitted successfully.',
+
+        false
+    );
+
+            // Notify doctor of the new appointment request
+            $this->notificationService->sendAppointmentNotification(
+                $appointment->doctor->user,
+                'New Appointment Request',
+                'A new appointment has been requested and is pending your confirmation.',
+                false
+            );
+
+            // Notify receptionist and hospital admin about the new appointment
+            $patientName = trim(($appointment->patient->user->first_name ?? '') . ' ' . ($appointment->patient->user->last_name ?? ''));
+            $doctorName  = trim(($appointment->doctor->user->first_name ?? '') . ' ' . ($appointment->doctor->user->last_name ?? ''));
+            $this->notificationService->sendStaffAppointmentNotification(
+                $appointment,
+                'New Appointment Booked',
+                "A new appointment has been booked by {$patientName} with Dr. {$doctorName}."
+            );
 
             return $appointment->load([
                 'patient',
@@ -259,6 +296,71 @@ class AppointmentService
             }
 
             $appointment->update($data);
+    if (
+    isset($data['status']) &&
+    $data['status'] === 'confirmed'
+) {
+
+    $this->notificationService
+        ->sendAppointmentNotification(
+
+            $appointment
+                ->patient
+                ->user,
+
+            'Appointment Approved',
+
+            "Your appointment with Dr. "
+            .$appointment->doctor->user->first_name
+            ." has been approved.",
+
+            true
+        );
+
+    // Notify doctor that their appointment is confirmed
+    $this->notificationService->sendAppointmentNotification(
+        $appointment->doctor->user,
+        'Appointment Confirmed',
+        'An appointment has been confirmed and is now on your schedule.',
+        false
+    );
+}
+if (
+    isset($data['status']) &&
+    $data['status'] === 'cancelled'
+) {
+
+    $this->notificationService
+        ->sendAppointmentNotification(
+
+            $appointment
+                ->patient
+                ->user,
+
+            'Appointment Cancelled',
+
+            'Your appointment has been cancelled.',
+
+            true
+        );
+
+    // Notify doctor that the appointment was cancelled
+    $this->notificationService->sendAppointmentNotification(
+        $appointment->doctor->user,
+        'Appointment Cancelled',
+        'An appointment scheduled with you has been cancelled.',
+        false
+    );
+
+    // Notify receptionist and hospital admin about the cancellation
+    $patientName = trim(($appointment->patient->user->first_name ?? '') . ' ' . ($appointment->patient->user->last_name ?? ''));
+    $doctorName  = trim(($appointment->doctor->user->first_name ?? '') . ' ' . ($appointment->doctor->user->last_name ?? ''));
+    $this->notificationService->sendStaffAppointmentNotification(
+        $appointment,
+        'Appointment Cancelled',
+        "The appointment for {$patientName} with Dr. {$doctorName} has been cancelled."
+    );
+}
 
             return $appointment->fresh([
                 'patient',
@@ -389,6 +491,16 @@ class AppointmentService
                 'slot_id'        => $slot->id,
                 'scheduled_time' => $slot->start_time,
             ]);
+
+            // Notify patient that their appointment was reassigned to a different doctor
+            try {
+                $oldDoctor = \App\Models\HealthcareProvider::with('user')->find($appointment->getOriginal('doctor_id'));
+                $oldName   = $oldDoctor ? ($oldDoctor->user->first_name . ' ' . $oldDoctor->user->last_name) : 'previous doctor';
+                $newName   = $slot->doctor->user->first_name . ' ' . $slot->doctor->user->last_name;
+                app(\App\Services\NotificationService::class)->sendAdminRescheduleNotification(
+                    $appointment->fresh(), $oldName, $newName
+                );
+            } catch (\Throwable) { /* silent — never block the reschedule */ }
 
             return $appointment->fresh([
                 'patient',
@@ -589,12 +701,19 @@ class AppointmentService
             'scheduled_time' => $slot->start_time,
 
         ]);
+$this->notificationService
+    ->sendAppointmentNotification(
 
-        /*
-        |--------------------------------------------------------------------------
-        | 14. Return
-        |--------------------------------------------------------------------------
-        */
+        $appointment
+            ->patient
+            ->user,
+
+        'Appointment Rescheduled',
+
+        'Your appointment date has been changed.',
+
+        true
+    );
 
         return $appointment->fresh([
 

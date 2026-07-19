@@ -2,28 +2,52 @@
 
 namespace App\Http\Requests;
 
-use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateReportRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
-        return false;
+        $report = $this->route('report');
+
+        return $this->user()->can('update', $report);
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
         return [
-            //
+
+            'name' => [
+                'sometimes',
+                'string',
+                'max:100',
+            ],
+
+            'type' => [
+                'sometimes',
+                'in:appointment,patient,doctor,revenue,telehealth,custom',
+            ],
+
+            'query' => [
+                'sometimes',
+                'string',
+            ],
+
+            'parameters' => [
+                'sometimes',
+                'array',
+            ],
+
+            'schedule' => [
+                'nullable',
+                'string',
+                'max:50',
+            ],
+
+            'is_active' => [
+                'sometimes',
+                'boolean',
+            ],
         ];
     }
 }

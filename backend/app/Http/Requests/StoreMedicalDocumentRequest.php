@@ -2,28 +2,48 @@
 
 namespace App\Http\Requests;
 
-use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreMedicalDocumentRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
-        return false;
+        return auth()->user()->can(
+            'create',
+            \App\Models\MedicalDocument::class
+        );
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
         return [
-            //
+
+            'patient_id' => [
+                'required',
+                'exists:patients,id',
+            ],
+
+            'encounter_id' => [
+                'nullable',
+                'exists:medical_encounters,id',
+            ],
+
+            'file' => [
+                'required',
+                'file',
+                'max:10240',
+            ],
+
+            'document_type' => [
+                'required',
+                'in:lab_report,xray,mri,ct_scan,prescription,other',
+            ],
+
+            'description' => [
+                'nullable',
+                'string',
+            ],
+
         ];
     }
 }

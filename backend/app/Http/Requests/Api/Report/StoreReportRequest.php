@@ -1,29 +1,50 @@
 <?php
 
-namespace App\Http\Requests\Api\Report;
+namespace App\Http\Requests;
 
-use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreReportRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
-        return false;
+        return $this->user()->can('create', \App\Models\Report::class);
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
         return [
-            //
+            'name' => [
+                'required',
+                'string',
+                'max:100',
+            ],
+
+            'type' => [
+                'required',
+                'in:appointment,patient,doctor,revenue,telehealth,custom',
+            ],
+
+            'query' => [
+                'required',
+                'string',
+            ],
+
+            'parameters' => [
+                'nullable',
+                'array',
+            ],
+
+            'schedule' => [
+                'nullable',
+                'string',
+                'max:50',
+            ],
+
+            'is_active' => [
+                'sometimes',
+                'boolean',
+            ],
         ];
     }
 }

@@ -2,82 +2,33 @@
 
 namespace App\Policies;
 
-use App\Models\Department;
 use App\Models\User;
+use App\Models\SymptomDepartmentMapping;
 
-class DepartmentPolicy
+class SymptomDepartmentMappingPolicy
 {
-
-
-    public function view(User $user,Department $department ): bool
+    public function viewAny(User $user): bool
     {
-
-
-        if ($user->hasRole('platform_admin')) {
-
-            return true;
-
-        }
-
-
-        return $user->hospitals()
-            ->where(
-                'hospital_id',
-                $department->hospital_id
-            )
-            ->exists();
-
+        return true; // Everyone can view mappings
     }
 
-
-
+    public function view(User $user, SymptomDepartmentMapping $mapping): bool
+    {
+        return true;
+    }
 
     public function create(User $user): bool
     {
-
-        return $user->hasRole(
-            'hospital_admin'
-        );
-
+        return $user->isAdmin(); // Only admins
     }
 
-
-
-
-
-    public function update(  User $user,Department $department): bool
+    public function update(User $user, SymptomDepartmentMapping $mapping): bool
     {
-
-
-        if ($user->hasRole('platform_admin')) {
-
-            return true;
-
-        }
-
-
-        return $user->hospitals()
-            ->where(
-                'hospital_id',
-                $department->hospital_id
-            )
-            ->exists();
-
+        return $user->isAdmin();
     }
 
-
-
-
-
-    public function delete(  User $user, Department $department): bool
+    public function delete(User $user, SymptomDepartmentMapping $mapping): bool
     {
-
-
-        return $this->update(
-            $user,
-            $department
-        );
-
+        return $user->isAdmin();
     }
-
 }

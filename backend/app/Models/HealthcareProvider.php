@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 class HealthcareProvider extends Model
 {
@@ -152,4 +153,24 @@ public function prescriptions()
             'id'            // Local key on encounters
         );
     }
+    public function reviews()
+{
+    return $this->hasMany(
+        ReviewRating::class,
+        'doctor_id'
+    );
+}
+
+public function telehealthSessions()
+{
+    return $this->hasManyThrough(
+        TelehealthSession::class,
+        Appointment::class,
+        'doctor_id',      // FK on appointments
+        'appointment_id', // FK on telehealth_sessions
+        'id',             // Local key on healthcare_providers
+        'id'              // Local key on appointments
+    );
+}
+
 }

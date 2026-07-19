@@ -7,59 +7,96 @@ use App\Models\User;
 
 class ReportPolicy
 {
-    /**
-     * Determine whether the user can view any models.
-     */
+
     public function viewAny(User $user): bool
     {
-        return false;
+        return 
+            $user->hasRole('platform_admin') ||
+            $user->hasRole('hospital_admin') ||
+            $user->hasRole('doctor');
     }
 
-    /**
-     * Determine whether the user can view the model.
-     */
-    public function view(User $user, Report $report): bool
-    {
-        return false;
+
+    public function view(
+    User $user,
+    Report $report
+): bool
+{
+
+    if ($user->hasRole('platform_admin')) {
+
+        return true;
+
     }
 
-    /**
-     * Determine whether the user can create models.
-     */
+
+    if ($user->hasRole('hospital_admin')) {
+
+        return $user->hospitalStaff()
+            ->where(
+                'hospital_id',
+                $report->hospital_id
+            )
+            ->exists();
+
+    }
+
+
+    if ($user->hasRole('doctor')) {
+
+        return $report->created_by === $user->id;
+
+    }
+
+
+    return false;
+
+}
+
+
+
     public function create(User $user): bool
     {
-        return false;
+        return 
+            $user->hasRole('platform_admin') ||
+            $user->hasRole('hospital_admin');
     }
 
-    /**
-     * Determine whether the user can update the model.
-     */
+
+
     public function update(User $user, Report $report): bool
     {
-        return false;
+
+        if ($user->hasRole('platform_admin')) {
+
+            return true;
+
+        }
+
+
+        return $user->hasRole('hospital_admin')
+            &&
+            $report->created_by === $user->id;
+
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
+
+
     public function delete(User $user, Report $report): bool
     {
-        return false;
+
+        if ($user->hasRole('platform_admin')) {
+
+            return true;
+
+        }
+
+
+        return $user->hasRole('hospital_admin')
+            &&
+            $report->created_by === $user->id;
+
     }
 
-    /**
-     * Determine whether the user can restore the model.
-     */
-    public function restore(User $user, Report $report): bool
-    {
-        return false;
-    }
 
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
-    public function forceDelete(User $user, Report $report): bool
-    {
-        return false;
-    }
 }

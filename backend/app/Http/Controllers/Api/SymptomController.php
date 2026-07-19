@@ -3,64 +3,64 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\Symptom\StoreSymptomRequest;
+use App\Http\Requests\Api\Symptom\UpdateSymptomRequest;
+use App\Services\SymptomService;
 use App\Models\Symptom;
-use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 
 class SymptomController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    protected SymptomService $service;
+
+    public function __construct(SymptomService $service)
     {
-        //
+        $this->service = $service;
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+    public function index(): JsonResponse
     {
-        //
+        $this->authorize('viewAny', Symptom::class);
+
+        $symptoms = Symptom::orderBy('category')->orderBy('name')->get();
+
+        return response()->json($symptoms);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function show(string $id): JsonResponse
     {
-        //
+        $symptom = $this->service->find($id);
+        $this->authorize('view', $symptom);
+
+        return response()->json($symptom->load('departmentMappings.department'));
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Symptom $symptom)
+    public function store(StoreSymptomRequest $request): JsonResponse
     {
-        //
+        $this->authorize('create', Symptom::class);
+
+        $symptom = $this->service->store($request->validated());
+
+        return response()->json($symptom, 201);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Symptom $symptom)
+    public function update(UpdateSymptomRequest $request, string $id): JsonResponse
     {
-        //
+        $symptom = $this->service->find($id);
+        $this->authorize('update', $symptom);
+
+        $symptom = $this->service->update($id, $request->validated());
+
+        return response()->json($symptom);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Symptom $symptom)
+    public function destroy(string $id): JsonResponse
     {
-        //
-    }
+        $symptom = $this->service->find($id);
+        $this->authorize('delete', $symptom);
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Symptom $symptom)
-    {
-        //
+        $this->service->delete($id);
+
+        return response()->json(['message' => 'Symptom deleted successfully']);
     }
 }

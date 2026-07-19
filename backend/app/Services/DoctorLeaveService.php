@@ -9,11 +9,13 @@ use App\Services\AppointmentSlotService;
 use App\Models\HealthcareProvider;
 use App\Models\Appointment;
 use Illuminate\Validation\ValidationException;
+use App\Services\NotificationService;
 
 class DoctorLeaveService
 {
     public function __construct(
-        private AppointmentSlotService $slotService
+        private AppointmentSlotService $slotService,
+         private NotificationService $notificationService
     ) {
     }
     public function create(array $data)
@@ -69,8 +71,16 @@ class DoctorLeaveService
                 'status' => 'pending',
 
             ]);
+            $leave = $leave->load('doctor.user');
 
-            return $leave->load('doctor.user');
+$this->notificationService->sendDoctorLeaveNotification(
+    $leave,
+    'submitted'
+);
+
+return $leave;
+
+            // return $leave->load('doctor.user');
 
         });
     }
@@ -158,6 +168,10 @@ class DoctorLeaveService
             'approved_by' => auth()->id(),
 
         ]);
+        $this->notificationService->sendDoctorLeaveNotification(
+      $leave->fresh(['doctor.user']),
+      $status
+);
 
         if ($status !== 'approved') {
 

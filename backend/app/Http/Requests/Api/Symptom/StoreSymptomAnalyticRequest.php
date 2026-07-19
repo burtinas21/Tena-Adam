@@ -1,29 +1,24 @@
 <?php
 
-namespace App\Http\Requests;
+namespace App\Http\Requests\Api\Symptom;
 
-use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreSymptomAnalyticRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
-        return false;
+        return true; // Policy handles authorization
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
         return [
-            //
+            'symptom_id'               => 'required|uuid|exists:symptoms,id',
+            'recommended_department_id' => 'required|uuid|exists:departments,id',
+            'selected_by_patient'      => 'nullable|boolean',
+            'patient_id'               => 'nullable|uuid|exists:patients,id',
+            'session_id'               => 'nullable|uuid',
         ];
     }
 }

@@ -1,29 +1,24 @@
 <?php
 
-namespace App\Http\Requests;
+namespace App\Http\Requests\Api\Symptom;
 
-use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreSymptomDepartmentMappingRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
-        return false;
+        return true; // Policy handles authorization
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
         return [
-            //
+            'symptom_id' => 'required|uuid|exists:symptoms,id',
+            'department_id' => 'required|uuid|exists:departments,id',
+            'relevance_score' => 'nullable|integer|min:0|max:100',
+            'is_primary' => 'nullable|boolean',
+            'evidence_level' => 'nullable|in:high,medium,low',
         ];
     }
 }

@@ -19,7 +19,44 @@ export default [
 
         component: () => import("../views/doctor/Dashboard.vue"),
       },
+{
+        path: "medicalencounter",
 
+        name: "medicalencounter",
+
+        component: () => import("../views/doctor/MedicalEncounters.vue"),
+      },
+      {
+        path: "telehealth",
+
+        name: "doctor-telehealth",
+
+        component: () => import("../views/doctor/Telehealth.vue"),
+      },
+      {
+        path: "telemedicine",
+
+        name: "telemedicine",
+
+        component: () => import("../views/doctor/TelemedicineActiveCall.vue"),
+      },
+       {
+        path: "prescription",
+
+        name: "prescription",
+
+        component: () => import("../views/doctor/Prescriptions.vue"),
+      },
+      {
+        path: "vitals",
+        name: "doctor-vitals",
+        component: () => import("../views/doctor/vitals.vue"),
+      },
+      {
+        path: "documents",
+        name: "doctor-documents",
+        component: () => import("../views/doctor/MedicalDocuments.vue"),
+      },
       {
         path: "appointments",
 
@@ -49,6 +86,13 @@ export default [
         name: "doctor-profile",
 
         component: () => import("../views/doctor/profile/MyProfile.vue"),
+      },
+      {
+        path: "notifications",
+
+        name: "doctor-notifications",
+
+        component: () => import("../views/doctor/Notifications.vue"),
       },
     ],
   },

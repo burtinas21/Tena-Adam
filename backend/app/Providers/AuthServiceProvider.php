@@ -1,7 +1,8 @@
 <?php
 
 namespace App\Providers;
-
+use App\Models\Report;
+use App\Policies\ReportPolicy;
 use App\Models\Vital;
 use App\Policies\VitalPolicy;
 use Illuminate\Support\ServiceProvider;
@@ -22,6 +23,10 @@ use App\Models\DoctorLeave;
 use App\Models\Prescription;
 use App\Policies\PrescriptionPolicy;
 use App\Policies\DoctorLeavePolicy;
+use App\Policies\MedicalDocumentPolicy;
+use App\Models\MedicalDocument;
+use App\Models\AuditLog;
+use App\Policies\AuditLogPolicy;
 
 class AuthServiceProvider extends ServiceProvider
 {
@@ -59,7 +64,18 @@ class AuthServiceProvider extends ServiceProvider
         \App\Models\PatientEmergencyContact::class =>
             \App\Policies\PatientEmergencyContactPolicy::class,
             Prescription::class     => PrescriptionPolicy::class,
-            Vital::class => VitalPolicy::class,
+            Vital::class            => VitalPolicy::class,
+             AuditLog::class            => AuditLogPolicy::class,
+             MedicalDocument::class            => MedicalDocumentPolicy::class,
+            \App\Models\MedicalEncounter::class => \App\Policies\MedicalEncounterPolicy::class,
+             Report::class => ReportPolicy::class,
+    \App\Models\Symptom::class => \App\Policies\SymptomPolicy::class,
+    \App\Models\SymptomDepartmentMapping::class => \App\Policies\SymptomDepartmentMappingPolicy::class,
+    \App\Models\SymptomAnalytic::class => \App\Policies\SymptomAnalyticsPolicy::class,
+    \App\Models\TelehealthSession::class => \App\Policies\TelehealthSessionPolicy::class,
+    \App\Models\TelehealthAttendance::class => \App\Policies\TelehealthAttendancePolicy::class,
+    \App\Models\Notification::class => \App\Policies\NotificationPolicy::class,
+    \App\Models\NotificationTemplate::class => \App\Policies\NotificationTemplatePolicy::class,
 
     ];
 

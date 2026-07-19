@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Str;
 
 class MedicalEncounter extends Model
@@ -113,9 +114,19 @@ class MedicalEncounter extends Model
     {
         return $this->hasMany(Prescription::class, 'encounter_id');
     }
-    public function vitals()
+ public function vital(): HasOne
 {
-    return $this->hasMany(Vital::class, 'encounter_id');
+    return $this->hasOne(
+        Vital::class,
+        'encounter_id'
+    );
+}
+public function medicalDocuments()
+{
+    return $this->hasMany(
+        MedicalDocument::class,
+        'encounter_id'
+    );
 }
 
 }

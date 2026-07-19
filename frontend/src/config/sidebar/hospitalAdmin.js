@@ -10,7 +10,9 @@ import {
   BarChart3,
   Bell,
   Settings,
-  Users,
+  Stethoscope,
+  FileBarChart,
+  CalendarX2,
 } from "lucide-vue-next";
 
 export default {
@@ -96,7 +98,7 @@ export default {
     {
       title: "Telemedicine",
 
-      route: "/hospital-admin/telemedicine",
+      route: "/hospital-admin/telemanagment",
 
       icon: Video,
 
@@ -104,11 +106,11 @@ export default {
     },
 
     {
-      title: "Doctor_Leaves",
+      title: "Doctor Leaves",
 
       route: "/hospital-admin/leaves",
 
-      icon: BarChart3,
+      icon: CalendarX2,
 
       roles: ["hospital_admin"],
     },
@@ -129,6 +131,24 @@ export default {
       route: "/settings",
 
       icon: Settings,
+
+      roles: ["hospital_admin"],
+    },
+    {
+      title: "Reports & Analytics",
+
+      route: "/hospital-admin/reports",
+
+      icon: FileBarChart,
+
+      roles: ["hospital_admin"],
+    },
+    {
+      title: "Symptoms",
+
+      route: "/hospital-admin/symptoms",
+
+      icon: Stethoscope,
 
       roles: ["hospital_admin"],
     },

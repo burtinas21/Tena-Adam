@@ -20,6 +20,11 @@ export default [
         component: () => import("../views/receptionist/appointments/CheckInAppointments.vue"),
       },
       {
+        path: "notification",
+        name: "receptionist-notification",
+        component: () => import("../views/receptionist/Notifications.vue"),
+      },
+      {
         path: "queue",
         name: "receptionist-queue",
         component: () => import("../views/receptionist/queue/TodayQueue.vue"),

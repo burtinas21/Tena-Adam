@@ -6,9 +6,14 @@ use App\Models\DoctorSchedule;
 use App\Models\HealthcareProvider;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use App\Services\NotificationService;
 
 class DoctorScheduleService
 {
+    public function __construct(
+    private NotificationService $notificationService
+) {
+}
     public function create(array $data)
 {
     return DB::transaction(function () use ($data) {
@@ -67,16 +72,25 @@ class DoctorScheduleService
             ]);
         }
 
-        return DoctorSchedule::create([
-            'doctor_id'         => $doctorId,
-            'day_of_week'       => $data['day_of_week'],
-            'start_time'        => $data['start_time'],
-            'end_time'          => $data['end_time'],
-            'slot_duration_min' => $data['slot_duration_min'] ?? 30,
-            'lunch_start'       => $data['lunch_start'] ?? null,
-            'lunch_end'         => $data['lunch_end'] ?? null,
-            'is_available'      => $data['is_available'] ?? true,
-        ]);
+       $schedule = DoctorSchedule::create([
+    'doctor_id'         => $doctorId,
+    'day_of_week'       => $data['day_of_week'],
+    'start_time'        => $data['start_time'],
+    'end_time'          => $data['end_time'],
+    'slot_duration_min' => $data['slot_duration_min'] ?? 30,
+    'lunch_start'       => $data['lunch_start'] ?? null,
+    'lunch_end'         => $data['lunch_end'] ?? null,
+    'is_available'      => $data['is_available'] ?? true,
+]);
+
+$schedule->load('doctor.user');
+
+$this->notificationService->sendDoctorScheduleNotification(
+    $schedule,
+    'created'
+);
+
+return $schedule;
     });
 }
 
@@ -120,7 +134,14 @@ class DoctorScheduleService
             $schedule->update($allowed);
         }
 
-        return $schedule->fresh(['doctor.user']);
+        $schedule = $schedule->fresh(['doctor.user']);
+
+$this->notificationService->sendDoctorScheduleNotification(
+    $schedule,
+    'updated'
+);
+
+return $schedule;
     });
 }
 
@@ -139,7 +160,16 @@ class DoctorScheduleService
             }
 
             // return $schedule->delete();
-             return $schedule->forceDelete();
+             $schedule->load('doctor.user');
+
+$this->notificationService->sendDoctorScheduleNotification(
+    $schedule,
+    'deleted'
+);
+
+$schedule->forceDelete();
+
+return true;
         });
     }
 

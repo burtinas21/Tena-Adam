@@ -12,7 +12,30 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('notification_templates', function (Blueprint $table) {
-            $table->id();
+
+            $table->uuid('id')->primary();
+
+            $table->string('name', 100)
+                ->unique();
+
+            $table->string('subject')
+                ->nullable();
+
+            $table->text('email_body')
+                ->nullable();
+
+            $table->text('sms_body')
+                ->nullable();
+
+            $table->text('push_body')
+                ->nullable();
+
+            $table->json('variables')
+                ->nullable();
+
+            $table->boolean('is_active')
+                ->default(true);
+
             $table->timestamps();
         });
     }

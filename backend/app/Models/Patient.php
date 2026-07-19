@@ -98,5 +98,16 @@ public function prescriptions()
 {
     return $this->hasMany(Vital::class, 'patient_id');
 }
-
+public function reviews()
+{
+    return $this->hasMany(
+        ReviewRating::class
+    );
+}
+public function medicalDocuments()
+{
+    return $this->hasMany(
+        MedicalDocument::class
+    );
+}
 }

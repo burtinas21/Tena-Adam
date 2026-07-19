@@ -3,11 +3,13 @@
 namespace App\Services;
 
 use App\Events\QueueUpdated;
+use App\Models\MedicalEncounter;
 use App\Models\Queue;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Services\NotificationService;
 
 class QueueService
 {
@@ -20,7 +22,13 @@ class QueueService
     {
         return Carbon::parse($date)->toDateString();
     }
+ private NotificationService $notificationService;
 
+    public function __construct(
+        NotificationService $notificationService
+    ) {
+        $this->notificationService = $notificationService;
+    }
     /**
      * Safely fire QueueUpdated — never crashes the caller if broadcasting
      * fails (e.g. SSL issues in local development).
@@ -92,7 +100,14 @@ class QueueService
                 'walk_in_patient_name' => $data['walk_in_patient_name'] ?? null,
                 'walk_in_phone'        => $data['walk_in_phone'] ?? null,
             ]);
+if ($entry->appointment) {
 
+    $this->notificationService
+        ->sendQueueNotification(
+            $entry
+        );
+
+}
             return $entry;
         });
     }
@@ -139,6 +154,24 @@ class QueueService
                     'started_at' => now(),
                     // ended_at is intentionally NOT set here
                 ]);
+
+                // ── Auto-create Medical Encounter ──────────────────────────
+                // If this queue entry is linked to an appointment, create the
+                // encounter immediately so the doctor sees the patient in EMR.
+                if ($found->appointment_id) {
+                    $appt = \App\Models\Appointment::find($found->appointment_id);
+
+                    if ($appt && !MedicalEncounter::where('appointment_id', $appt->id)->exists()) {
+                        MedicalEncounter::create([
+                            'patient_id'    => $appt->patient_id,
+                            'doctor_id'     => $appt->doctor_id,
+                            'hospital_id'   => $appt->hospital_id,
+                            'appointment_id'=> $appt->id,
+                            'encounter_date'=> now(),
+                            'status'        => 'in_progress',
+                        ]);
+                    }
+                }
             }
         });
 
@@ -164,6 +197,10 @@ class QueueService
         }
 
         $this->broadcast($found->fresh());
+        $this->notificationService
+    ->sendQueueNotification(
+        $found->fresh()
+    );
 
         return [
             'message'         => 'Patient called successfully',
@@ -202,6 +239,10 @@ class QueueService
         });
 
         $this->broadcast($entry->fresh());
+        $this->notificationService
+    ->sendQueueNotification(
+        $entry->fresh()
+    );
 
         return [
             'message' => 'Consultation completed successfully',
@@ -265,7 +306,10 @@ class QueueService
 
         $this->broadcast($original->fresh());
         $this->broadcast($newEntry->fresh());
-
+$this->notificationService
+    ->sendQueueNotification(
+        $newEntry->fresh()
+    );
         return [
             'message'   => 'Patient skipped and moved to end of queue',
             'original'  => [
@@ -306,6 +350,10 @@ class QueueService
         });
 
         $this->broadcast($entry->fresh());
+        $this->notificationService
+    ->sendQueueNotification(
+        $entry->fresh()
+    );
 
         return [
             'message' => 'Patient recalled to waiting',

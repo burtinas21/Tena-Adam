@@ -1,5 +1,4 @@
 <?php
-
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\API\PasswordResetController;
 use Illuminate\Support\Facades\Route;
@@ -20,41 +19,236 @@ use App\Http\Controllers\Api\ConsultationController;
 use App\Http\Controllers\Api\MedicalEncounterController;
 use App\Http\Controllers\Api\PrescriptionController;
 use App\Http\Controllers\Api\VitalController;
-Route::middleware('auth:sanctum')  ->prefix('vitals')  ->group(function () {
-        Route::post('/', [VitalController::class, 'store']);
-        Route::put('/{id}', [VitalController::class, 'update']);
-        Route::get('/{id}', [VitalController::class, 'show']);
+use App\Http\Controllers\Api\TelehealthSessionController;
+use App\Http\Controllers\Api\TelehealthAttendanceController;
+use App\Http\Controllers\Api\SymptomDepartmentMappingController;
+// use App\Http\Controllers\Api\SymptomAnalyticController;
+use App\Http\Controllers\Api\SymptomAnalyticsController;
+use App\Http\Controllers\Api\SymptomController;
+use App\Http\Controllers\API\NotificationController;
+use App\Http\Controllers\Api\NotificationTemplateController;
+use App\Http\Controllers\Api\ReportController;
+use App\Http\Controllers\Api\ReviewRatingController;
+use App\Http\Controllers\Api\MedicalDocumentController;
+use App\Http\Controllers\Api\GoogleAuthController;
+use Illuminate\Support\Facades\Http;
+use App\Http\Controllers\Api\AuditLogController;
+Route::middleware(['auth:sanctum'])->group(function () {
+
+    Route::get(
+        '/audit-logs',
+        [AuditLogController::class, 'index']
+    );
+
+    Route::get(
+        '/audit-logs/{auditLog}',
+        [AuditLogController::class, 'show']
+    );
+
+    Route::get(
+        '/audit-logs/user/{userId}',
+        [AuditLogController::class, 'userLogs']
+    );
+
+});
+Route::middleware('auth:sanctum')->group(function () {
+    Route::prefix('reviews')->group(function () {
+        Route::post('/', [ReviewRatingController::class, 'store']);
+        Route::get('/doctor/{doctorId}', [ReviewRatingController::class, 'doctorReviews']);
+        Route::get('/patient/{patientId}', [ReviewRatingController::class, 'patientReviews']);
+        Route::get('/doctor/{doctorId}/rating', [ReviewRatingController::class, 'doctorRating']);
+        Route::put('/{reviewId}', [ReviewRatingController::class, 'update']);
+        Route::delete('/{reviewId}', [ReviewRatingController::class, 'destroy']);
     });
-Route::middleware('auth:sanctum')  ->prefix('prescriptions')->group(function () {
-        Route::post('/', [PrescriptionController::class, 'store']);
-        Route::put('/{id}', [PrescriptionController::class, 'update']);
-        Route::get('/{id}', [PrescriptionController::class, 'show']);
-        Route::delete('/{id}', [PrescriptionController::class, 'cancel']);
+});
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/medical-documents', [MedicalDocumentController::class, 'index']);
+    Route::post('/medical-documents', [MedicalDocumentController::class, 'store']);
+    Route::post('/medical-documents/{medicalDocument}', [MedicalDocumentController::class, 'update']);
+    Route::put('/medical-documents/{medicalDocument}', [MedicalDocumentController::class, 'update']);
+    Route::delete('/medical-documents/{medicalDocument}', [MedicalDocumentController::class, 'destroy']);
+    Route::get('/patients/{patientId}/medical-documents', [MedicalDocumentController::class, 'patientDocuments']);
+    Route::get('/encounters/{encounterId}/medical-documents', [MedicalDocumentController::class, 'encounterDocuments']);
+    Route::get('/medical-documents/{medicalDocument}/download', [MedicalDocumentController::class, 'download']);
+});
+Route::middleware('auth:sanctum')->prefix('reports')->group(function () {
+    Route::get('/patients', [ReportController::class, 'getPatientStatistics']);
+    Route::get('/appointments', [ReportController::class, 'getAppointmentReport']);
+    Route::get('/doctors/workload', [ReportController::class, 'getDoctorWorkload']);
+    Route::get('/departments/performance', [ReportController::class, 'getDepartmentPerformance']);
+    Route::get('/telehealth', [ReportController::class, 'getTelehealthStatistics']);
+    Route::get('/trends', [ReportController::class, 'getHealthcareTrends']);
+    Route::post('/custom/{reportId}', [ReportController::class, 'generateCustomReport']);
+    Route::post('/', [ReportController::class, 'store']);
+    Route::get('/doctor-ratings', [ReportController::class, 'getDoctorRatingStatistics']);
+ Route::get('/export/excel/{type}', [ReportController::class, 'exportExcel']);
+    Route::get('/export/csv/{type}', [ReportController::class, 'exportCsv']);
+    Route::get('/export/pdf/{type}', [ReportController::class, 'exportPdf']);
+});
+Route::middleware('auth:sanctum')->group(function () {
+
+    /*
+    |--------------------------------------------------------------------------
+    | Notifications
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get('/notifications', [NotificationController::class, 'index']);
+    Route::post('/notifications', [NotificationController::class, 'store']);
+    Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);
+    Route::patch('/notifications/mark-all-read', [NotificationController::class, 'markAllRead']);
+    Route::get('/notifications/{notification}', [NotificationController::class, 'show']);
+    Route::patch('/notifications/{notification}', [NotificationController::class, 'update']);
+    Route::patch('/notifications/{notification}/retry', [NotificationController::class, 'retry']);
+    Route::delete('/notifications/{notification}', [NotificationController::class, 'destroy']);
+
+    // User notification preferences
+    Route::get('/notification-preferences', [NotificationController::class, 'getPreferences']);
+    Route::put('/notification-preferences', [NotificationController::class, 'updatePreferences']);
+
+});
+
+// Notification Templates (platform_admin only)
+Route::middleware('auth:sanctum')->prefix('notification-templates')->group(function () {
+    Route::get('/', [NotificationTemplateController::class, 'index']);
+    Route::post('/', [NotificationTemplateController::class, 'store']);
+    Route::get('/{notificationTemplate}', [NotificationTemplateController::class, 'show']);
+    Route::put('/{notificationTemplate}', [NotificationTemplateController::class, 'update']);
+    Route::delete('/{notificationTemplate}', [NotificationTemplateController::class, 'destroy']);
+});
+
+Route::middleware('auth:sanctum')->prefix('symptoms')->group(function () {
+    Route::get('/', [SymptomController::class, 'index']);           // everyone
+    Route::get('/{id}', [SymptomController::class, 'show']);        // everyone
+    Route::post('/', [SymptomController::class, 'store']);          // admin only
+    Route::put('/{id}', [SymptomController::class, 'update']);      // admin only
+    Route::delete('/{id}', [SymptomController::class, 'destroy']);  // admin only
+});
+Route::middleware('auth:sanctum')->prefix('symptom-analytics')->group(function () {
+    Route::post('/', [SymptomAnalyticsController::class, 'store']); // Patients log analytics
+    Route::get('/', [SymptomAnalyticsController::class, 'index']); // Admins/Doctors view all
+    Route::get('/top-symptoms', [SymptomAnalyticsController::class, 'topSymptoms']); // Admins/Doctors view top 10
+});
+Route::middleware('auth:sanctum')->prefix('symptom-mappings')->group(function () {
+    Route::get('/recommendations-with-appointment/{symptomId}', [SymptomDepartmentMappingController::class, 'recommendationsWithAppointment']);
+    Route::post('/', [SymptomDepartmentMappingController::class, 'store']); // Admin only
+    Route::put('/{id}', [SymptomDepartmentMappingController::class, 'update']); // Admin only
+    Route::delete('/{id}', [SymptomDepartmentMappingController::class, 'destroy']); // Admin only
+    Route::get('/symptom/{symptomId}', [SymptomDepartmentMappingController::class, 'indexBySymptom']);
+    Route::post('/{symptomId}/create-appointment', [SymptomDepartmentMappingController::class, 'createAppointment']);
+});
+// Public Google OAuth routes — must be defined BEFORE the auth:sanctum telehealth group
+// so the /{id} wildcard doesn't intercept them first.
+Route::get(
+    '/telehealth-sessions/google/auth',
+    [GoogleAuthController::class, 'redirectToGoogle']
+);
+
+Route::get(
+    '/telehealth-sessions/oauth2callback',
+    [GoogleAuthController::class, 'handleCallback']
+);
+
+Route::middleware('auth:sanctum')->prefix('telehealth-sessions/{sessionId}/attendance')->group(function () {
+    Route::get('/', [TelehealthAttendanceController::class, 'index']); // list attendance
+    Route::post('/', [TelehealthAttendanceController::class, 'store']); // join session
+    Route::put('/{userId}', [TelehealthAttendanceController::class, 'update']); // leave session
+});
+Route::middleware('auth:sanctum')->prefix('telehealth-sessions')->group(function () {
+    Route::post('/', [TelehealthSessionController::class, 'store']);
+    Route::get('/my-sessions', [TelehealthSessionController::class, 'mySessions']);
+    Route::get('/appointment/{appointmentId}', [TelehealthSessionController::class, 'byAppointment']);
+    Route::get('/{id}', [TelehealthSessionController::class, 'show']);
+    Route::put('/{id}', [TelehealthSessionController::class, 'update']);
+    Route::post('/{id}/start', [TelehealthSessionController::class, 'start']);
+    Route::post('/{id}/complete', [TelehealthSessionController::class, 'complete']);
+    Route::post('/{id}/cancel', [TelehealthSessionController::class, 'cancel']);
+    Route::post('/google-meet', [TelehealthSessionController::class, 'storeGoogleMeet']);
+});
+Route::middleware('auth:sanctum')
+    ->prefix('vitals')
+    ->group(function () {
+
+        Route::post(
+            '/',
+            [VitalController::class, 'store']
+        );
+
+        Route::get(
+            '/{vital}',
+            [VitalController::class, 'show']
+        );
+
+        Route::put(
+            '/{vital}',
+            [VitalController::class, 'update']
+        );
+
+        Route::delete(
+            '/{vital}',
+            [VitalController::class, 'destroy']
+        );
+
     });
 Route::middleware('auth:sanctum')
-->prefix('medical-encounters')
-->group(function(){
+    ->prefix('prescriptions')
+    ->group(function () {
 
-    Route::post(
-        '/',
-        [MedicalEncounterController::class,'store']
+        Route::get(
+            '/',
+            [PrescriptionController::class, 'index']
+        );
+
+        Route::post(
+            '/',
+            [PrescriptionController::class, 'store']
+        );
+
+        Route::get(
+            '/{prescription}',
+            [PrescriptionController::class, 'show']
+        );
+
+        Route::put(
+            '/{prescription}',
+            [PrescriptionController::class, 'update']
+        );
+
+        Route::patch(
+            '/{prescription}/complete',
+            [PrescriptionController::class, 'complete']
+        );
+
+        Route::patch(
+            '/{prescription}/cancel',
+            [PrescriptionController::class, 'cancel']
+        );
+
+    });
+Route::middleware('auth:sanctum')->group(function () {
+
+    Route::apiResource(
+        'medical-encounters',
+        MedicalEncounterController::class
+    )->only([
+        'store',
+        'show',
+        'update',
+    ]);
+
+    // List encounters for the authenticated doctor or patient
+    Route::get('/medical-encounters', [MedicalEncounterController::class, 'index']);
+
+    Route::patch(
+        '/medical-encounters/{medicalEncounter}/complete',
+        [MedicalEncounterController::class, 'complete']
     );
-    Route::get(
-        '/{id}',
-        [MedicalEncounterController::class,'show']
-    );
 
-    Route::put(
-        '/{id}',
-        [MedicalEncounterController::class,'update']
-    );
+    // Doctor: get full encounter history for a specific patient
+    Route::get('/medical-encounters/patient/{patientId}', [MedicalEncounterController::class, 'patientHistory']);
 
-
-    Route::post(
-        '/{id}/complete',
-        [MedicalEncounterController::class,'complete']
-    );
-
+    // Doctor: update patient persistent medical profile (blood_type, allergies, medical_history)
+    Route::patch('/medical-encounters/{encounterId}/patient-medical', [MedicalEncounterController::class, 'updatePatientMedical']);
 
 });
 Route::middleware('auth:sanctum')->group(function () {
