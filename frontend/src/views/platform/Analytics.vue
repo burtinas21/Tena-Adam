@@ -1,10 +1,8 @@
 <template>
   <div
-    class="min-h-screen bg-[#F8FAFC] p-4 sm:p-6 lg:p-8 font-sans antialiased text-slate-600 selection:bg-blue-600/10"
+    class="min-h-screen bg-[#F8FAFC] dark:bg-[#0f172a] p-4 sm:p-6 lg:p-8 font-sans antialiased text-slate-600 dark:text-slate-300 selection:bg-blue-600/10"
   >
     <div class="max-w-[1440px] mx-auto space-y-6">
-
-      <!-- Section 1: Heading & Filters -->
       <div
         class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 pb-4 border-b border-slate-200/50"
       >
@@ -27,7 +25,9 @@
         {{ store.error }}
       </div>
 
-      <!-- Section 2: KPI Cards -->
+     
+
+      <!-- Section: KPI Cards -->
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <PlatformMetricCard
           title="Total Patients"
@@ -55,7 +55,7 @@
         />
       </div>
 
-      <!-- Section 3: Patient Growth + Appointment Trends -->
+      <!-- Section: Growth + Appointment Trend charts -->
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
         <div class="lg:col-span-8">
           <PatientGrowthMixedChart
@@ -73,7 +73,7 @@
         </div>
       </div>
 
-      <!-- Section 4: Department + Doctor info -->
+      <!-- Section: Top Hospitals + Doctor Activity -->
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
         <div class="lg:col-span-8">
           <TopHospitalsTable />
@@ -82,13 +82,12 @@
           <DoctorActivityHeatmap />
         </div>
       </div>
-
     </div>
   </div>
 </template>
 
 <script setup>
-import { onMounted } from 'vue';
+import { onMounted, ref } from 'vue';
 import { AlertCircle, Users2, Activity, CalendarCheck2, Video } from 'lucide-vue-next';
 import { useReportStore } from '../../stores/reportStore';
 
@@ -99,9 +98,19 @@ import TopHospitalsTable from '../../components/analytics/TopHospitalsTable.vue'
 import DoctorActivityHeatmap from '../../components/analytics/DoctorActivityHeatmap.vue';
 
 const store = useReportStore();
+const showDebug = ref(true);
 
-onMounted(() => {
-  store.fetchAll();
+onMounted(async () => {
+  try {
+    await store.fetchAll();
+    console.log('Analytics data loaded:', {
+      trends: store.trends,
+      topHospitals: store.topHospitals,
+      heatmap: store.doctorActivityHeatmap,
+    });
+  } catch (error) {
+    console.error('Failed to load analytics:', error);
+  }
 });
 
 function fmt(val) {

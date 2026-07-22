@@ -64,7 +64,7 @@ function handleMenuClick(item) {
         sidebarConfig.theme.background,
         // Mobile: fixed overlay, always full width when open
         'fixed lg:relative inset-y-0 left-0 z-40 lg:z-auto',
-        'flex flex-col h-screen border-r border-gray-100 transition-all duration-300 ease-in-out flex-shrink-0',
+        'flex flex-col h-screen border-r border-gray-100 dark:border-slate-700 transition-all duration-300 ease-in-out flex-shrink-0 dark:bg-slate-800',
         // Mobile visibility
         isMobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
         // Desktop width: collapsed = icon-only (w-16), expanded = full (w-60)
@@ -73,16 +73,16 @@ function handleMenuClick(item) {
       ]"
     >
       <!-- Brand header -->
-      <div class="px-3 pt-4 pb-3 border-b border-gray-100 flex items-center gap-3 flex-shrink-0 overflow-hidden">
+      <div class="px-3 pt-4 pb-3 border-b border-gray-100 dark:border-slate-700 flex items-center gap-3 flex-shrink-0 overflow-hidden">
         <div class="w-8 h-8 rounded-lg bg-[#004795] flex items-center justify-center flex-shrink-0">
           <span class="text-xs font-bold text-white">SC</span>
         </div>
         <Transition name="fade-text">
           <div v-if="isOpen" class="overflow-hidden">
-            <h1 class="text-sm font-bold text-[#0A3D80] whitespace-nowrap">
+            <h1 class="text-sm font-bold text-[#0A3D80] dark:text-blue-400 whitespace-nowrap">
               {{ sidebarConfig.theme.title }}
             </h1>
-            <p class="text-[10px] text-gray-400 whitespace-nowrap">
+            <p class="text-[10px] text-gray-400 dark:text-slate-500 whitespace-nowrap">
               {{ sidebarConfig.theme.subtitle }}
             </p>
           </div>
@@ -99,8 +99,8 @@ function handleMenuClick(item) {
           class="flex items-center gap-3 rounded-lg cursor-pointer transition-colors group relative"
           :class="[
             route.path === item.route
-              ? 'bg-blue-100 text-blue-700'
-              : 'hover:bg-gray-100 text-gray-500 hover:text-gray-800',
+              ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400'
+              : 'hover:bg-gray-100 dark:hover:bg-slate-800 text-gray-500 dark:text-slate-400 hover:text-gray-800 dark:hover:text-slate-100',
             isOpen ? 'px-3 py-2.5' : 'lg:px-2 lg:py-2.5 lg:justify-center px-3 py-2.5',
           ]"
         >
@@ -115,7 +115,7 @@ function handleMenuClick(item) {
           <!-- Tooltip on collapsed desktop -->
           <div
             v-if="!isOpen"
-            class="hidden lg:block absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-xs rounded-md whitespace-nowrap
+            class="hidden lg:block absolute left-full ml-2 px-2 py-1 bg-gray-800 dark:bg-slate-700 text-white text-xs rounded-md whitespace-nowrap
                    opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50"
           >
             {{ item.title }}

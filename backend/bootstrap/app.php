@@ -20,9 +20,12 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
 
             'permission' => PermissionMiddleware::class,
-            'audit'=>AuditMiddleware::class
+            'audit'      => AuditMiddleware::class,
 
         ]);
+
+        // Apply audit logging automatically to all authenticated API requests
+        $middleware->appendToGroup('api', AuditMiddleware::class);
 
     })
     ->withExceptions(function (Exceptions $exceptions): void {

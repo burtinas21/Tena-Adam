@@ -24,6 +24,8 @@ export const useReportStore = defineStore("report", {
     telehealthStats: null,
     trends: null,
     doctorRatings: [],
+    topHospitals: [],
+    doctorActivityHeatmap: null,
 
     loading: false,
     exportLoading: false,
@@ -88,16 +90,22 @@ export const useReportStore = defineStore("report", {
           apptRes,
           telehealthRes,
           trendsRes,
+          topHospitalsRes,
+          heatmapRes,
         ] = await Promise.all([
           reportApi.getPatientStatistics(),
           reportApi.getAppointmentReport(),
           reportApi.getTelehealthStatistics(),
           reportApi.getHealthcareTrends(),
+          reportApi.getTopHospitalsByVolume(),
+          reportApi.getDoctorActivityHeatmap(),
         ]);
         this.patientStats = patientRes.data?.data ?? patientRes.data;
         this.appointmentReport = apptRes.data?.data ?? apptRes.data;
         this.telehealthStats = telehealthRes.data?.data ?? telehealthRes.data;
         this.trends = trendsRes.data?.data ?? trendsRes.data;
+        this.topHospitals = topHospitalsRes.data?.data ?? topHospitalsRes.data ?? [];
+        this.doctorActivityHeatmap = heatmapRes.data?.data ?? heatmapRes.data ?? null;
       } catch (err) {
         this.error =
           err.response?.data?.message || "Failed to load report data.";

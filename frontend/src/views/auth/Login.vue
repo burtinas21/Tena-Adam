@@ -68,16 +68,16 @@ const handleLogin = async () => {
 </script>
 <template>
   <div
-    class="min-h-screen bg-slate-50 flex font-sans text-slate-700 select-none"
+    class="min-h-screen bg-slate-50 dark:bg-slate-950 flex font-sans text-slate-700 dark:text-slate-200 select-none transition-colors duration-300"
   >
     <div
-      class="w-full lg:w-1/2 flex items-center justify-center p-6 bg-slate-50"
+      class="w-full lg:w-1/2 flex items-center justify-center p-6 bg-slate-50 dark:bg-slate-950"
     >
       <div
-        class="bg-white rounded-xl border border-slate-200 p-8 shadow-sm max-w-md w-full"
+        class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 p-8 shadow-sm max-w-md w-full"
       >
         <div
-          class="flex items-center justify-center gap-2 text-[#004494] font-bold text-lg tracking-tight mb-4"
+          class="flex items-center justify-center gap-2 text-[#004494] dark:text-blue-400 font-bold text-lg tracking-tight mb-4"
         >
           <span
             class="bg-[#004494] text-white rounded-md p-1 flex items-center justify-center text-xs font-black w-6 h-6"
@@ -87,8 +87,8 @@ const handleLogin = async () => {
           <span>Smart Care</span>
         </div>
         <div class="text-center mb-6">
-          <h1 class="text-2xl font-bold text-slate-800 mb-1.5">Sign In</h1>
-          <p class="text-xs text-slate-500">
+          <h1 class="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1.5">Sign In</h1>
+          <p class="text-xs text-slate-500 dark:text-slate-400">
             Enter your credentials to access your healthcare portal.
           </p>
         </div>
@@ -96,7 +96,7 @@ const handleLogin = async () => {
         <!-- Success banner -->
         <div
           v-if="successMessage"
-          class="flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg px-4 py-3 text-sm mb-4"
+          class="flex items-center gap-2 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-700 text-emerald-700 dark:text-emerald-400 rounded-lg px-4 py-3 text-sm mb-4"
         >
           <svg
             class="w-4 h-4 flex-shrink-0 text-emerald-500"
@@ -117,7 +117,7 @@ const handleLogin = async () => {
         <!-- Error banner -->
         <div
           v-if="errorMessage"
-          class="flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm mb-4"
+          class="flex items-center gap-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 text-red-700 dark:text-red-400 rounded-lg px-4 py-3 text-sm mb-4"
         >
           <svg
             class="w-4 h-4 flex-shrink-0 text-red-500"
@@ -137,12 +137,12 @@ const handleLogin = async () => {
 
         <form @submit.prevent="handleLogin" class="space-y-4">
           <div class="flex flex-col gap-1.5">
-            <label class="text-xs font-semibold text-slate-700"
+            <label class="text-xs font-semibold text-slate-700 dark:text-slate-300"
               >Email Address</label
             >
             <div class="relative">
               <span
-                class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400"
+                class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400 dark:text-slate-500"
               >
                 <svg
                   class="w-4 h-4"
@@ -163,15 +163,15 @@ const handleLogin = async () => {
                 type="email"
                 placeholder="doctor@hospital.com"
                 required
-                class="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-md shadow-sm text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 placeholder-slate-400 bg-white"
+                class="w-full pl-9 pr-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 placeholder-slate-400 dark:placeholder-slate-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 transition-colors"
               />
             </div>
           </div>
           <div class="flex flex-col gap-1.5">
-            <label class="text-xs font-semibold text-slate-700">Password</label>
+            <label class="text-xs font-semibold text-slate-700 dark:text-slate-300">Password</label>
             <div class="relative">
               <span
-                class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400"
+                class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400 dark:text-slate-500"
               >
                 <svg
                   class="w-4 h-4"
@@ -192,12 +192,12 @@ const handleLogin = async () => {
                 :type="isPasswordVisible ? 'text' : 'password'"
                 placeholder="••••••••"
                 required
-                class="w-full pl-9 pr-10 py-2 border border-slate-300 rounded-md shadow-sm text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 placeholder-slate-400 bg-white"
+                class="w-full pl-9 pr-10 py-2 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 placeholder-slate-400 dark:placeholder-slate-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 transition-colors"
               />
               <button
                 type="button"
                 @click="togglePasswordVisibility"
-                class="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600"
+                class="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"
               >
                 <svg
                   v-if="isPasswordVisible"
@@ -238,18 +238,18 @@ const handleLogin = async () => {
           </div>
           <div class="flex items-center justify-between text-xs pt-1">
             <label
-              class="flex items-center gap-2 cursor-pointer text-slate-500 hover:text-slate-700"
+              class="flex items-center gap-2 cursor-pointer text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
             >
               <input
                 v-model="rememberMe"
                 type="checkbox"
-                class="w-3.5 h-3.5 rounded text-blue-600 border-slate-300 focus:ring-blue-500 cursor-pointer"
+                class="w-3.5 h-3.5 rounded text-blue-600 border-slate-300 dark:border-slate-600 focus:ring-blue-500 cursor-pointer"
               />
               <span>Remember Me</span>
             </label>
             <router-link
               to="/forgot-password"
-              class="font-semibold text-blue-600 hover:text-blue-700 underline"
+              class="font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 underline"
             >
               Forgot Password?
             </router-link>
@@ -277,22 +277,22 @@ const handleLogin = async () => {
           </div>
 
           <div
-            class="text-center text-xs text-slate-500 pt-4 border-t border-slate-100 flex flex-col gap-3 items-center"
+            class="text-center text-xs text-slate-500 dark:text-slate-400 pt-4 border-t border-slate-100 dark:border-slate-700 flex flex-col gap-3 items-center"
           >
             <div>
               Don't have an account?
               <router-link
                 to="/register"
-                class="font-bold text-blue-600 hover:text-blue-700 ml-0.5"
+                class="font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 ml-0.5"
               >
                 Create Account
               </router-link>
             </div>
             <div
-              class="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-full text-[11px] border border-emerald-100 font-medium"
+              class="inline-flex items-center gap-1 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 px-2.5 py-1 rounded-full text-[11px] border border-emerald-100 dark:border-emerald-700 font-medium"
             >
               <svg
-                class="w-3.5 h-3.5 text-emerald-600"
+                class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"

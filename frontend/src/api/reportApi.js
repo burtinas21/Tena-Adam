@@ -30,6 +30,14 @@ export default {
     return api.get("/reports/doctor-ratings");
   },
 
+  getTopHospitalsByVolume() {
+    return api.get("/reports/hospitals/top");
+  },
+
+  getDoctorActivityHeatmap() {
+    return api.get("/reports/doctors/activity-heatmap");
+  },
+
   // ── Custom reports ────────────────────────────────────────────────────────
   generateCustomReport(reportId, params = {}) {
     return api.post(`/reports/custom/${reportId}`, params);

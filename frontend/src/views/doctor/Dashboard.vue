@@ -1,55 +1,98 @@
 <template>
-  <main class="flex-1 bg-[#F8FAFC] p-6 overflow-y-auto font-sans">
-    <!-- Top Action Row Header Area Layout Component Line -->
-    <div
-      class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-y-4 mb-6"
-    >
+  <main class="flex-1 bg-[#F8FAFC] dark:bg-[#0f172a] p-6 overflow-y-auto font-sans dark:text-slate-200">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-y-4 mb-6">
       <div>
         <h1 class="text-2xl font-bold text-gray-800 tracking-tight">
-          Welcome back, Dr. Jameson
+          Welcome back, {{ dash.doctorName }}
         </h1>
         <p class="text-xs text-gray-500 font-medium mt-0.5">
-          Here is your overview for today, October 24th.
+          Here is your overview for {{ dash.todayDate }}.
         </p>
       </div>
-      <button
-        class="bg-[#004795] hover:bg-[#003670] text-white font-bold text-xs py-2.5 px-4 rounded-lg flex items-center gap-x-1.5 transition shadow-sm self-start sm:self-auto"
-      >
-        <Plus class="w-4 h-4" />
-        New Encounter
-      </button>
+      <div class="flex items-center gap-x-3">
+        <button
+          class="border border-gray-200 bg-white hover:bg-gray-50 text-gray-600 font-bold text-xs py-2.5 px-4 rounded-lg flex items-center gap-x-1.5 transition shadow-sm"
+          :class="{ 'opacity-50 cursor-not-allowed': dash.loading }"
+          @click="dash.fetchAll()"
+        >
+          <RefreshCw class="w-3.5 h-3.5" :class="{ 'animate-spin': dash.loading }" />
+          Refresh
+        </button>
+        <RouterLink
+          to="/doctor/medicalencounter"
+          class="bg-[#004795] hover:bg-[#003670] text-white font-bold text-xs py-2.5 px-4 rounded-lg flex items-center gap-x-1.5 transition shadow-sm"
+        >
+          <Plus class="w-4 h-4" />
+          New Encounter
+        </RouterLink>
+      </div>
     </div>
 
-    <!-- Layout Columns Breakdown Partition Partition Grid block wrapper -->
+    <!-- Error banner -->
+    <div
+      v-if="dash.error"
+      class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-x-2 text-xs text-red-700 font-medium"
+    >
+      <AlertCircle class="w-4 h-4 shrink-0" />
+      {{ dash.error }}
+      <button class="ml-auto underline font-bold" @click="dash.fetchAll()">Retry</button>
+    </div>
+
+    <!-- Main grid -->
     <div class="grid grid-cols-1 xl:grid-cols-4 gap-6">
-      <!-- Primary Core Function Area (Takes up 3/4 layout spaces width on desktop views) -->
+      <!-- Left 3/4 -->
       <div class="xl:col-span-3 flex flex-col gap-y-6">
-        <!-- Numerical Stat Counter Panels Section List Grid -->
+        <!-- Stat cards -->
         <section class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
           <DoctorStatCard
             label="Today's Appts"
-            value="14"
-            subBadge="+2"
+            :value="dash.todayAppointmentsCount"
             :icon="CalendarDays"
+            :loading="dash.loading"
           />
           <DoctorStatCard
             label="Waiting"
-            value="3"
+            :value="dash.waitingCount"
             :icon="Users2"
-            :isAlert="true"
+            :isAlert="dash.waitingCount > 5"
+            :loading="dash.loading"
           />
-          <DoctorStatCard label="Completed" value="6" :icon="CheckCircle2" />
-          <DoctorStatCard label="Telemedicine" value="4" :icon="Video" />
-          <DoctorStatCard label="Pending F/U" value="8" :icon="Activity" />
-          <DoctorStatCard label="Active Rx" value="24" :icon="Activity" />
+          <DoctorStatCard
+            label="Completed"
+            :value="dash.completedTodayCount"
+            :icon="CheckCircle2"
+            :loading="dash.loading"
+          />
+          <DoctorStatCard
+            label="Telemedicine"
+            :value="dash.telemed"
+            :icon="Video"
+            :loading="dash.loading"
+          />
+          <DoctorStatCard
+            label="Pending"
+            :value="dash.pendingFollowUp"
+            :icon="Clock"
+            :loading="dash.loading"
+          />
+          <DoctorStatCard
+            label="Notifications"
+            :value="dash.unreadNotifications"
+            :icon="Bell"
+            :isAlert="dash.unreadNotifications > 0"
+            :loading="dash.loading"
+          />
         </section>
 
-        <!-- Main Workspace Components Block Stack array rows layout split maps -->
+        <!-- Schedule timeline -->
         <ScheduleTimeline />
+
+        <!-- Patient queue -->
         <PatientQueueTable />
       </div>
 
-      <!-- Right Column Controls & Sidebar Accessories Feed layout area panel -->
+      <!-- Right column -->
       <div class="flex flex-col gap-y-6">
         <DoctorQuickActions />
         <NotificationsAlertList />
@@ -59,17 +102,25 @@
 </template>
 
 <script setup>
+import { onMounted } from "vue";
+import { RouterLink } from "vue-router";
 import {
-  Plus,
-  CalendarDays,
-  Users2,
-  CheckCircle2,
-  Video,
-  Activity,
+  Plus, RefreshCw, AlertCircle,
+  CalendarDays, Users2, CheckCircle2,
+  Video, Clock, Bell,
 } from "lucide-vue-next";
-import DoctorStatCard from "../../components/doctordashboard/DoctorStatCard.vue";
-import ScheduleTimeline from "../../components/doctordashboard/ScheduleTimeline.vue";
-import PatientQueueTable from "../../components/doctordashboard/PatientQueueTable.vue";
-import DoctorQuickActions from "../../components/doctordashboard/DoctorQuickActions.vue";
+
+import DoctorStatCard         from "../../components/doctordashboard/DoctorStatCard.vue";
+import ScheduleTimeline       from "../../components/doctordashboard/ScheduleTimeline.vue";
+import PatientQueueTable      from "../../components/doctordashboard/PatientQueueTable.vue";
+import DoctorQuickActions     from "../../components/doctordashboard/DoctorQuickActions.vue";
 import NotificationsAlertList from "../../components/doctordashboard/NotificationsAlertList.vue";
+
+import { useDoctorDashboardStore } from "../../stores/doctorDashboardStore";
+
+const dash = useDoctorDashboardStore();
+
+onMounted(() => {
+  dash.fetchAll();
+});
 </script>

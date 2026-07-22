@@ -54,7 +54,7 @@
         </div>
 
         <!-- Date/time block -->
-        <div class="bg-[#F0F4FA] p-2.5 rounded-xl flex flex-col items-center justify-center text-center min-w-[75px] flex-shrink-0">
+        <div class="bg-[#f0f4fa] dark:bg-[#1e293b] dark:bg-[#1e293b] p-2.5 rounded-xl flex flex-col items-center justify-center text-center min-w-[75px] flex-shrink-0">
           <span class="text-[9px] font-bold text-blue-600 tracking-wider uppercase">
             {{ apptDate }}
           </span>

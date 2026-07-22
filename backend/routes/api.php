@@ -40,14 +40,20 @@ Route::middleware(['auth:sanctum'])->group(function () {
         [AuditLogController::class, 'index']
     );
 
+    // Must be before /{auditLog} to avoid being swallowed by the wildcard
     Route::get(
-        '/audit-logs/{auditLog}',
-        [AuditLogController::class, 'show']
+        '/audit-logs/actions',
+        [AuditLogController::class, 'actions']
     );
 
     Route::get(
         '/audit-logs/user/{userId}',
         [AuditLogController::class, 'userLogs']
+    );
+
+    Route::get(
+        '/audit-logs/{auditLog}',
+        [AuditLogController::class, 'show']
     );
 
 });
@@ -78,6 +84,8 @@ Route::middleware('auth:sanctum')->prefix('reports')->group(function () {
     Route::get('/departments/performance', [ReportController::class, 'getDepartmentPerformance']);
     Route::get('/telehealth', [ReportController::class, 'getTelehealthStatistics']);
     Route::get('/trends', [ReportController::class, 'getHealthcareTrends']);
+    Route::get('/hospitals/top', [ReportController::class, 'getTopHospitalsByVolume']);
+    Route::get('/doctors/activity-heatmap', [ReportController::class, 'getDoctorActivityHeatmap']);
     Route::post('/custom/{reportId}', [ReportController::class, 'generateCustomReport']);
     Route::post('/', [ReportController::class, 'store']);
     Route::get('/doctor-ratings', [ReportController::class, 'getDoctorRatingStatistics']);

@@ -25,7 +25,7 @@ class AuditLogResource extends JsonResource
 
             'user_agent' => $this->user_agent,
 
-            'created_at' => $this->created_at,
+            'created_at' => $this->created_at?->toISOString(),
 
             'user' => [
 

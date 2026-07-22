@@ -47,12 +47,12 @@ export default {
       icon: CalendarDays,
       roles: ["patient"],
     },
-    {
-      title: "Queue",
-      route: "/patient/queue-status",
-      icon: LayoutGrid,
-      roles: ["patient"],
-    },
+    // {
+    //   title: "Queue",
+    //   route: "/patient/queue-status",
+    //   icon: LayoutGrid,
+    //   roles: ["patient"],
+    // },
     {
       title: "TeleHealth",
       route: "/patient/telehealth",

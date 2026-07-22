@@ -1,6 +1,6 @@
 <template>
   <div
-    class="min-h-screen bg-[#F8FAFC] p-6 lg:p-8 font-sans antialiased text-gray-600"
+    class="min-h-screen bg-[#F8FAFC] dark:bg-[#0f172a] p-6 lg:p-8 font-sans antialiased text-gray-600 dark:text-slate-300"
   >
     <div
       class="max-w-[1440px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 h-[calc(100vh-4rem)] min-h-[640px]"

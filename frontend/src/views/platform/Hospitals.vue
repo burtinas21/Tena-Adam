@@ -1,5 +1,5 @@
 <template>
-  <main class="flex-1 bg-[#F8FAFC] p-6 overflow-y-auto font-sans">
+  <main class="flex-1 bg-[#F8FAFC] dark:bg-[#0f172a] p-6 overflow-y-auto font-sans dark:text-slate-200">
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-y-4 mb-6">
       <div>

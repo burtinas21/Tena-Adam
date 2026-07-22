@@ -1,98 +1,110 @@
 <template>
-  <div
-    class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex flex-col h-full"
-  >
+  <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex flex-col">
     <div class="flex items-center justify-between mb-4">
       <h2 class="text-base font-bold text-gray-800">Today's Schedule</h2>
-      <a href="#" class="text-xs font-semibold text-blue-600 hover:underline"
-        >View All</a
-      >
+      <RouterLink to="/doctor/appointments" class="text-xs font-semibold text-blue-600 hover:underline">
+        View All
+      </RouterLink>
     </div>
 
-    <!-- Timeline List Rows -->
-    <div class="flex flex-col gap-y-3 flex-1">
-      <!-- Completed Appointment Item Row -->
-      <div
-        class="flex items-center justify-between p-3.5 border border-gray-100 rounded-xl hover:bg-gray-50/50 transition-colors"
-      >
-        <div class="flex items-center gap-x-4">
-          <div class="text-center min-w-[70px] border-r border-gray-100 pr-2">
-            <p class="text-xs font-bold text-gray-800">09:00 AM</p>
-            <p class="text-[10px] text-gray-400 font-medium">30 min</p>
-          </div>
-          <div>
-            <h4 class="text-xs font-bold text-gray-800">Sarah Jenkins</h4>
-            <p class="text-[11px] text-gray-400 font-medium mt-0.5">
-              👤 Physical • Annual Checkup
-            </p>
-          </div>
-        </div>
-        <div class="flex items-center gap-x-3">
-          <span
-            class="bg-emerald-50 text-emerald-600 font-bold px-2 py-0.5 rounded-md text-[10px]"
-            >Completed</span
-          >
-          <button class="text-gray-400 hover:text-gray-600 text-sm font-bold">
-            ⋮
-          </button>
-        </div>
-      </div>
+    <!-- Loading -->
+    <div v-if="loading" class="flex flex-col gap-y-3">
+      <div v-for="i in 3" :key="i" class="h-16 bg-gray-50 rounded-xl animate-pulse border border-gray-100"></div>
+    </div>
 
-      <!-- In Progress Active Video Call Appointment Row -->
+    <!-- Empty -->
+    <div v-else-if="!items.length" class="py-10 flex flex-col items-center gap-y-2">
+      <CalendarDays class="w-8 h-8 text-gray-200" />
+      <p class="text-xs text-gray-400 font-medium">No appointments scheduled for today.</p>
+    </div>
+
+    <!-- Timeline rows -->
+    <div v-else class="flex flex-col gap-y-3">
       <div
-        class="flex items-center justify-between p-3.5 border border-blue-100 bg-blue-50/20 rounded-xl"
+        v-for="appt in items"
+        :key="appt.id"
+        class="flex items-center justify-between p-3.5 border rounded-xl transition-colors"
+        :class="rowClass(appt.status)"
       >
-        <div class="flex items-center gap-x-4">
-          <div class="text-center min-w-[70px] border-r border-blue-100 pr-2">
-            <p class="text-xs font-bold text-[#0D4FB3]">09:45 AM</p>
-            <p class="text-[10px] text-blue-400 font-medium">15 min</p>
+        <!-- Time + patient info -->
+        <div class="flex items-center gap-x-4 min-w-0">
+          <div class="text-center min-w-[72px] border-r pr-3 shrink-0" :class="appt.status === 'in_progress' ? 'border-blue-100' : 'border-gray-100'">
+            <p class="text-xs font-bold" :class="appt.status === 'in_progress' ? 'text-blue-700' : 'text-gray-800'">
+              {{ appt.time }}
+            </p>
+            <p class="text-[10px] font-medium mt-0.5" :class="appt.status === 'in_progress' ? 'text-blue-400' : 'text-gray-400'">
+              {{ appt.duration }}
+            </p>
           </div>
-          <div>
-            <h4 class="text-xs font-bold text-gray-900">Michael Chang</h4>
-            <p class="text-[11px] text-blue-600 font-medium mt-0.5">
-              💻 Video • Follow-up
+          <div class="min-w-0">
+            <h4 class="text-xs font-bold text-gray-900 truncate">{{ appt.patient }}</h4>
+            <p class="text-[11px] font-medium mt-0.5 truncate" :class="appt.status === 'in_progress' ? 'text-blue-600' : 'text-gray-400'">
+              {{ appt.type === 'video' ? '💻 Video' : '👤 Physical' }}
+              {{ appt.reason ? '• ' + appt.reason : '' }}
             </p>
           </div>
         </div>
-        <div class="flex items-center gap-x-3">
-          <span
-            class="bg-[#004795] text-white font-bold px-2 py-0.5 rounded-md text-[10px]"
-            >In Progress</span
-          >
-          <button
-            class="bg-[#004795] hover:bg-[#003670] text-white font-bold text-xs px-3 py-1 rounded-md transition shadow-sm"
+
+        <!-- Status + action -->
+        <div class="flex items-center gap-x-2 shrink-0 ml-3">
+          <span class="text-[10px] font-bold px-2 py-0.5 rounded-md" :class="statusBadge(appt.status)">
+            {{ statusLabel(appt.status) }}
+          </span>
+          <RouterLink
+            v-if="appt.type === 'video' && appt.status === 'in_progress'"
+            to="/doctor/telehealth"
+            class="bg-[#004795] hover:bg-[#003670] text-white font-bold text-[10px] px-3 py-1 rounded-md transition shadow-sm"
           >
             Join
-          </button>
-        </div>
-      </div>
-
-      <!-- Waiting Status Patient Row -->
-      <div
-        class="flex items-center justify-between p-3.5 border border-gray-100 rounded-xl hover:bg-gray-50/50 transition-colors"
-      >
-        <div class="flex items-center gap-x-4">
-          <div class="text-center min-w-[70px] border-r border-gray-100 pr-2">
-            <p class="text-xs font-bold text-gray-800">10:15 AM</p>
-            <p class="text-[10px] text-gray-400 font-medium">45 min</p>
-          </div>
-          <div>
-            <h4 class="text-xs font-bold text-gray-800">Robert Davis</h4>
-            <p class="text-[11px] text-gray-400 font-medium mt-0.5">
-              👤 Physical • New Patient
-            </p>
-          </div>
-        </div>
-        <div class="flex items-center gap-x-3">
-          <span
-            class="bg-blue-50 text-blue-600 font-bold px-2 py-0.5 rounded-md text-[10px]"
-            >Waiting</span
+          </RouterLink>
+          <RouterLink
+            v-else
+            :to="`/doctor/medicalencounter`"
+            class="text-gray-400 hover:text-blue-600 font-bold text-xs transition"
           >
-          <button class="text-gray-400 hover:text-gray-600 text-sm font-bold">
             ⋮
-          </button>
+          </RouterLink>
         </div>
       </div>
     </div>
   </div>
 </template>
+
+<script setup>
+import { computed } from "vue";
+import { RouterLink } from "vue-router";
+import { CalendarDays } from "lucide-vue-next";
+import { useDoctorDashboardStore } from "../../stores/doctorDashboardStore";
+
+const store   = useDoctorDashboardStore();
+const loading = computed(() => store.loading);
+const items   = computed(() => store.todaySchedule);
+
+function rowClass(status) {
+  const s = (status ?? "").toLowerCase();
+  if (s === "in_progress") return "border-blue-100 bg-blue-50/20";
+  if (s === "completed")   return "border-gray-100 bg-gray-50/30";
+  return "border-gray-100 hover:bg-gray-50/50";
+}
+
+function statusLabel(status) {
+  const map = {
+    completed:   "Completed",
+    in_progress: "In Progress",
+    scheduled:   "Upcoming",
+    confirmed:   "Confirmed",
+    cancelled:   "Cancelled",
+    pending:     "Pending",
+  };
+  return map[(status ?? "").toLowerCase()] ?? status;
+}
+
+function statusBadge(status) {
+  const s = (status ?? "").toLowerCase();
+  if (s === "completed")   return "bg-emerald-50 text-emerald-600";
+  if (s === "in_progress") return "bg-[#004795] text-white";
+  if (s === "cancelled")   return "bg-red-50 text-red-500";
+  if (s === "confirmed")   return "bg-indigo-50 text-indigo-600";
+  return "bg-blue-50 text-blue-600";
+}
+</script>

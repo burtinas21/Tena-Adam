@@ -1,5 +1,5 @@
 <template>
-  <main class="flex-1 bg-[#F8FAFC] p-6 overflow-y-auto font-sans">
+  <main class="flex-1 bg-[#F8FAFC] dark:bg-[#0f172a] p-6 overflow-y-auto font-sans dark:text-slate-200">
     <div class="max-w-2xl mx-auto">
       <div class="mb-6">
         <h1 class="text-2xl font-bold text-gray-800 tracking-tight">My Profile</h1>

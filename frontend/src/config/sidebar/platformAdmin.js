@@ -59,15 +59,15 @@ export default {
 
       roles: ["platform_admin"],
     },
-    {
-      title: "Users",
+    // {
+    //   title: "Users",
 
-      route: "/platform/users",
+    //   route: "/platform/users",
 
-      icon: Users,
+    //   icon: Users,
 
-      roles: ["platform_admin"],
-    },
+    //   roles: ["platform_admin"],
+    // },
 
     // {
     //   title: "Hospital Network",
@@ -98,15 +98,7 @@ export default {
 
       roles: ["platform_admin"],
     },
-    {
-      title: "Notifications",
-
-      route: "/platform/notifications",
-
-      icon: Bell,
-
-      roles: ["platform_admin"],
-    },
+    
     {
       title: "Reports",
 
@@ -117,13 +109,22 @@ export default {
       roles: ["platform_admin"],
     },
     {
-      title: "Symptoms",
+      title: "Notifications",
 
-      route: "/platform/symptoms",
+      route: "/platform/notifications",
 
-      icon: Stethoscope,
+      icon: Bell,
 
       roles: ["platform_admin"],
     },
+    // {
+    //   title: "Symptoms",
+
+    //   route: "/platform/symptoms",
+
+    //   icon: Stethoscope,
+
+    //   roles: ["platform_admin"],
+    // },
   ],
 };

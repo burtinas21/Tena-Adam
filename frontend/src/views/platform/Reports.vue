@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-[#F8FAFC] p-4 sm:p-6 lg:p-8 font-sans antialiased text-slate-600">
+  <div class="min-h-screen bg-[#F8FAFC] dark:bg-[#0f172a] p-4 sm:p-6 lg:p-8 font-sans antialiased text-slate-600 dark:text-slate-300">
     <div class="max-w-[1440px] mx-auto space-y-6">
 
       <!-- Header -->
@@ -37,8 +37,6 @@
         <AlertCircle class="w-4 h-4 flex-shrink-0" />
         {{ store.error }}
       </div>
-
-      <!-- ── OVERVIEW TAB ─────────────────────────────────────────────────── -->
       <template v-if="activeTab === 'overview'">
 
         <!-- KPI grid -->
@@ -75,32 +73,6 @@
             color="purple"
             :loading="store.loading"
           />
-        </div>
-
-        <!-- Trend chart + appointment donut -->
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
-          <div class="lg:col-span-8">
-            <PatientGrowthTrendChart
-              class="h-full"
-              :labels="store.trendLabels"
-              :patient-data="store.trendPatientData"
-              :appt-data="store.trendAppointmentData"
-              :loading="store.loading"
-              :export-loading="store.exportLoading"
-              @export="handleExport('trend', $event)"
-            />
-          </div>
-          <div class="lg:col-span-4">
-            <AppointmentStatusChart
-              class="h-full"
-              :data="apptChartData"
-              :loading="store.loading"
-            />
-          </div>
-        </div>
-
-        <!-- Telehealth stats panel -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           <PlatformReportCard
             title="Scheduled Sessions"
             :value="fmt(store.telehealthStats?.scheduled_sessions)"
@@ -133,6 +105,28 @@
             color="rose"
             :loading="store.loading"
           />
+        </div>
+
+        <!-- Trend chart + appointment donut -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+          <div class="lg:col-span-8">
+            <PatientGrowthTrendChart
+              class="h-full"
+              :labels="store.trendLabels"
+              :patient-data="store.trendPatientData"
+              :appt-data="store.trendAppointmentData"
+              :loading="store.loading"
+              :export-loading="store.exportLoading"
+              @export="handleExport('trend', $event)"
+            />
+          </div>
+          <div class="lg:col-span-4">
+            <AppointmentStatusChart
+              class="h-full"
+              :data="apptChartData"
+              :loading="store.loading"
+            />
+          </div>
         </div>
       </template>
 

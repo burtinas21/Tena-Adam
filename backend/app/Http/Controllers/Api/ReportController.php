@@ -358,4 +358,44 @@ public function exportPdf(
     return $this->reportService
         ->exportPdf($type);
 }
+
+/**
+ * Get top hospitals by volume
+ */
+public function getTopHospitalsByVolume(): JsonResponse
+{
+    try {
+        $data = $this->reportService->getTopHospitalsByVolume();
+
+        return response()->json([
+            'success' => true,
+            'data' => $data
+        ]);
+    } catch (ValidationException $e) {
+        return response()->json([
+            'success' => false,
+            'errors' => $e->errors()
+        ], 422);
+    }
+}
+
+/**
+ * Get doctor activity heatmap
+ */
+public function getDoctorActivityHeatmap(): JsonResponse
+{
+    try {
+        $data = $this->reportService->getDoctorActivityHeatmap();
+
+        return response()->json([
+            'success' => true,
+            'data' => $data
+        ]);
+    } catch (ValidationException $e) {
+        return response()->json([
+            'success' => false,
+            'errors' => $e->errors()
+        ], 422);
+    }
+}
 }

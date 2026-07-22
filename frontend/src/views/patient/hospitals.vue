@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-[#f8fafc] p-6 lg:p-8 max-w-7xl mx-auto">
+  <div class="min-h-screen bg-[#f8fafc] dark:bg-[#0f172a] p-6 lg:p-8 max-w-7xl mx-auto">
     <!-- Header -->
     <div class="mb-6">
       <h1 class="text-2xl font-bold text-gray-900">Hospital Discovery Network</h1>

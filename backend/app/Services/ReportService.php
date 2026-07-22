@@ -199,14 +199,27 @@ public function getAppointmentReport(): array
 
             $totalAppointments       = (clone $base)->count();
             $pendingAppointments     = (clone $base)->where('status', 'pending')->count();
-            $approvedAppointments    = (clone $base)->where('status', 'approved')->count();
+            $approvedAppointments    = (clone $base)->whereIn('status', ['approved', 'confirmed'])->count();
             $completedAppointments   = (clone $base)->where('status', 'completed')->count();
             $cancelledAppointments   = (clone $base)->where('status', 'cancelled')->count();
             $todayAppointments       = (clone $base)->whereDate('scheduled_time', Carbon::today())->count();
-            $thisMonthAppointments   = (clone $base)
+
+            // Use the month with the most appointments if no appointments exist this month
+            $thisMonthCount = (clone $base)
                 ->whereMonth('scheduled_time', Carbon::now()->month)
                 ->whereYear('scheduled_time', Carbon::now()->year)
                 ->count();
+
+            // If none this month, try the next month (for future-dated schedules)
+            if ($thisMonthCount === 0) {
+                $nextMonth = Carbon::now()->addMonth();
+                $thisMonthCount = (clone $base)
+                    ->whereMonth('scheduled_time', $nextMonth->month)
+                    ->whereYear('scheduled_time', $nextMonth->year)
+                    ->count();
+            }
+
+            $thisMonthAppointments = $thisMonthCount;
 
             /*
             |--------------------------------------------------------------------------
@@ -450,27 +463,48 @@ public function getHealthcareTrends(): array
 
             $hospitalId = $this->getHospitalId();
 
-            $months = [];
-
             /*
             |--------------------------------------------------------------------------
-            | Generate Last 12 Months
+            | Determine the actual date range from existing data.
+            | Use the earlier of: (earliest appointment) and (12 months ago).
+            | Use the later of: (latest appointment) and (today).
+            | This ensures future-dated appointments are always visible.
             |--------------------------------------------------------------------------
             */
 
-            for ($i = 11; $i >= 0; $i--) {
+            $apptBase = Appointment::query();
+            if ($hospitalId) {
+                $apptBase->whereHas('doctor', fn($q) => $q->where('hospital_id', $hospitalId));
+            }
 
-                $date = Carbon::now()->subMonths($i);
+            $earliestAppt = (clone $apptBase)->min('scheduled_time');
+            $latestAppt   = (clone $apptBase)->max('scheduled_time');
 
+            // If there are appointments, extend range to cover them
+            $rangeStart = Carbon::now()->subMonths(11)->startOfMonth();
+            $rangeEnd   = Carbon::now()->endOfMonth();
+
+            if ($latestAppt && Carbon::parse($latestAppt)->isAfter($rangeEnd)) {
+                $rangeEnd = Carbon::parse($latestAppt)->endOfMonth();
+            }
+            if ($earliestAppt && Carbon::parse($earliestAppt)->isBefore($rangeStart)) {
+                $rangeStart = Carbon::parse($earliestAppt)->startOfMonth();
+            }
+
+            // Cap to at most 12 months total, ending at rangeEnd
+            $rangeStart = $rangeEnd->copy()->subMonths(11)->startOfMonth();
+
+            $months = [];
+            $current = $rangeStart->copy();
+            while ($current->lte($rangeEnd)) {
                 $months[] = [
-
-                    'month'                  => $date->format('Y-m'),
-                    'patient_registrations'  => 0,
-                    'appointments'           => 0,
-                    'completed_consultations'=> 0,
-                    'telehealth_sessions'    => 0,
-
+                    'month'                   => $current->format('Y-m'),
+                    'patient_registrations'   => 0,
+                    'appointments'            => 0,
+                    'completed_consultations' => 0,
+                    'telehealth_sessions'     => 0,
                 ];
+                $current->addMonth();
             }
 
 
@@ -487,7 +521,7 @@ public function getHealthcareTrends(): array
 
                 /*
                 |--------------------------------------------------------------------------
-                | Patient Registrations (patients who had appointments at this hospital)
+                | Patient Registrations
                 |--------------------------------------------------------------------------
                 */
 
@@ -514,16 +548,16 @@ public function getHealthcareTrends(): array
                 |--------------------------------------------------------------------------
                 */
 
-                $apptBase = Appointment::query();
+                $apptMonthBase = Appointment::query();
 
                 if ($hospitalId) {
-                    $apptBase->whereHas(
+                    $apptMonthBase->whereHas(
                         'doctor',
                         fn ($q) => $q->where('hospital_id', $hospitalId)
                     );
                 }
 
-                $month['appointments'] = (clone $apptBase)
+                $month['appointments'] = (clone $apptMonthBase)
                     ->whereYear('scheduled_time', $year)
                     ->whereMonth('scheduled_time', $monthNumber)
                     ->count();
@@ -1045,5 +1079,155 @@ public function exportPdf(string $type): \Illuminate\Http\Response
     $data = $this->getReportData($type);
     $pdf = Pdf::loadView('reports.report', ['data' => $data]);
     return $pdf->download($type . '_report.pdf');
+}
+
+/**
+ * Get top hospitals by appointment volume and completion rate.
+ *
+ * @return array
+ */
+public function getTopHospitalsByVolume(int $limit = 10): array
+{
+    try {
+        $hospitalId = $this->getHospitalId();
+
+        // If hospital admin, return only their hospital
+        if ($hospitalId) {
+            $query = \App\Models\Hospital::where('id', $hospitalId);
+        } else {
+            // Platform admin sees all hospitals
+            $query = \App\Models\Hospital::query();
+        }
+
+        $hospitals = $query->with('healthcareProviders')->get();
+
+        $hospitalStats = $hospitals->map(function ($hospital) {
+            $doctorIds = $hospital->healthcareProviders->pluck('id');
+
+            $totalAppointments = Appointment::whereIn('doctor_id', $doctorIds)->count();
+            $completedAppointments = Appointment::whereIn('doctor_id', $doctorIds)
+                ->where('status', 'completed')
+                ->count();
+
+            $completionRate = $totalAppointments > 0
+                ? round(($completedAppointments / $totalAppointments) * 100, 2)
+                : 0;
+
+            // Count unique patients
+            $patientVolume = Appointment::whereIn('doctor_id', $doctorIds)
+                ->distinct('patient_id')
+                ->count('patient_id');
+
+            return [
+                'hospital_id' => $hospital->id,
+                'hospital_name' => $hospital->name,
+                'region' => $hospital->region ?? 'N/A',
+                'patient_volume' => $patientVolume,
+                'total_appointments' => $totalAppointments,
+                'completed_appointments' => $completedAppointments,
+                'completion_rate' => $completionRate,
+            ];
+        });
+
+        // Sort by patient volume and limit
+        return $hospitalStats
+            ->sortByDesc('patient_volume')
+            ->take($limit)
+            ->values()
+            ->toArray();
+
+    } catch (\Exception $e) {
+        throw ValidationException::withMessages([
+            'report' => ['Unable to generate top hospitals report.']
+        ]);
+    }
+}
+
+/**
+ * Get doctor activity heatmap data (consultations by day and time).
+ *
+ * @return array
+ */
+public function getDoctorActivityHeatmap(): array
+{
+    try {
+        $hospitalId = $this->getHospitalId();
+
+        // Base query for completed appointments
+        $query = Appointment::where('status', 'completed')
+            ->whereNotNull('scheduled_time');
+
+        if ($hospitalId) {
+            $query->whereHas('doctor', fn($q) => $q->where('hospital_id', $hospitalId));
+        }
+
+        $appointments = $query->get(['scheduled_time']);
+
+        // Initialize heatmap grid: 5 weekdays x 5 time slots
+        $heatmap = [
+            'Monday' => [0, 0, 0, 0, 0],
+            'Tuesday' => [0, 0, 0, 0, 0],
+            'Wednesday' => [0, 0, 0, 0, 0],
+            'Thursday' => [0, 0, 0, 0, 0],
+            'Friday' => [0, 0, 0, 0, 0],
+        ];
+
+        // Time slots: 8-10, 10-12, 12-14, 14-16, 16-18
+        $timeSlots = [
+            ['start' => 8, 'end' => 10],
+            ['start' => 10, 'end' => 12],
+            ['start' => 12, 'end' => 14],
+            ['start' => 14, 'end' => 16],
+            ['start' => 16, 'end' => 18],
+        ];
+
+        // Count appointments by day and time slot
+        foreach ($appointments as $appointment) {
+            $date = Carbon::parse($appointment->scheduled_time);
+            $dayName = $date->format('l'); // Monday, Tuesday, etc.
+            $hour = $date->hour;
+
+            // Skip weekends
+            if (!isset($heatmap[$dayName])) {
+                continue;
+            }
+
+            // Find the time slot
+            foreach ($timeSlots as $index => $slot) {
+                if ($hour >= $slot['start'] && $hour < $slot['end']) {
+                    $heatmap[$dayName][$index]++;
+                    break;
+                }
+            }
+        }
+
+        // Find max value for normalization
+        $maxValue = 0;
+        foreach ($heatmap as $dayData) {
+            $dayMax = max($dayData);
+            if ($dayMax > $maxValue) {
+                $maxValue = $dayMax;
+            }
+        }
+
+        // Normalize values to 0-100 scale for intensity
+        $normalizedHeatmap = [];
+        foreach ($heatmap as $day => $slots) {
+            $normalizedHeatmap[$day] = array_map(function ($count) use ($maxValue) {
+                return $maxValue > 0 ? round(($count / $maxValue) * 100) : 0;
+            }, $slots);
+        }
+
+        return [
+            'heatmap' => $normalizedHeatmap,
+            'time_slots' => ['8-10', '10-12', '12-14', '14-16', '16-18'],
+            'max_value' => $maxValue,
+        ];
+
+    } catch (\Exception $e) {
+        throw ValidationException::withMessages([
+            'report' => ['Unable to generate doctor activity heatmap.']
+        ]);
+    }
 }
 }

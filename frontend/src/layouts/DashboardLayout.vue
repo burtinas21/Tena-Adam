@@ -4,13 +4,20 @@ import TopNavbar from "../components/layout/TopNavbar.vue";
 </script>
 
 <template>
-  <div class="flex h-screen overflow-hidden bg-gray-50">
+  <div
+    class="flex h-screen overflow-hidden bg-gray-50 dark:bg-[#0f172a] transition-colors duration-300"
+  >
     <Sidebar />
     <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
       <TopNavbar />
-      <main class="flex-1 overflow-y-auto">
+      <!--
+        This <main> is the scroll container that wraps the router-view.
+        The child view components each have their OWN <main> with bg-[#F8FAFC].
+        theme.css targets html.dark main to override all of them to #0f172a.
+      -->
+      <div class="flex-1 overflow-y-auto bg-gray-50 dark:bg-[#0f172a] transition-colors duration-300">
         <router-view />
-      </main>
+      </div>
     </div>
   </div>
 </template>
