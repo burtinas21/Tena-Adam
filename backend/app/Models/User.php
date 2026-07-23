@@ -10,6 +10,8 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
+use App\Models\Language;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class User extends Authenticatable
 {
@@ -246,5 +248,14 @@ public function auditLogs(): HasMany
     return $this->hasMany(
         AuditLog::class
     );
+}
+public function language(): BelongsTo
+{
+
+    return $this->belongsTo(
+        Language::class,
+        'language_id'
+    );
+
 }
 }

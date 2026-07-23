@@ -15,6 +15,7 @@ import { useNotificationStore } from "../../stores/notificationStore";
 import { useSidebar } from "../../composables/useSidebar";
 import doctorApi from "../../api/doctorApi";
 import ThemeToggle from "../common/ThemeToggle.vue";
+import LanguageSwitcher from "../common/LanguageSwitcher.vue";
 const router = useRouter();
 const route = useRoute();
 const authStore = useAuthStore();
@@ -207,6 +208,7 @@ function timeAgo(dateStr) {
     <div class="flex items-center gap-1 ml-auto">
       <!-- Theme toggle -->
       <ThemeToggle />
+      <LanguageSwitcher />
 
       <!-- Notification bell -->
       <div class="relative">
@@ -233,7 +235,9 @@ function timeAgo(dateStr) {
             <div
               class="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-slate-700 flex-shrink-0"
             >
-              <span class="text-sm font-bold text-gray-800 dark:text-slate-100">Notifications</span>
+              <span class="text-sm font-bold text-gray-800 dark:text-slate-100"
+                >Notifications</span
+              >
               <div class="flex items-center gap-2">
                 <button
                   v-if="notifStore.unreadCount > 0"
@@ -264,7 +268,9 @@ function timeAgo(dateStr) {
                 v-else-if="!recentNotifs.length"
                 class="py-10 text-center text-xs text-gray-400 dark:text-slate-500"
               >
-                <Bell class="w-6 h-6 mx-auto mb-2 text-gray-300 dark:text-slate-600" />
+                <Bell
+                  class="w-6 h-6 mx-auto mb-2 text-gray-300 dark:text-slate-600"
+                />
                 No notifications yet
               </div>
               <div v-else>
@@ -272,20 +278,30 @@ function timeAgo(dateStr) {
                   v-for="n in recentNotifs"
                   :key="n.id"
                   @click="handleMarkRead(n)"
-                  :class="n.status !== 'read' ? 'bg-blue-50/60 dark:bg-blue-900/20' : 'bg-white dark:bg-slate-800'"
+                  :class="
+                    n.status !== 'read'
+                      ? 'bg-blue-50/60 dark:bg-blue-900/20'
+                      : 'bg-white dark:bg-slate-800'
+                  "
                   class="w-full text-left px-4 py-3 border-b border-gray-50 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700 transition flex items-start gap-3"
                 >
                   <span class="text-lg flex-shrink-0 mt-0.5">{{
                     channelIcon(n.channel)
                   }}</span>
                   <div class="min-w-0 flex-1">
-                    <p class="text-xs font-semibold text-gray-800 dark:text-slate-100 truncate">
+                    <p
+                      class="text-xs font-semibold text-gray-800 dark:text-slate-100 truncate"
+                    >
                       {{ n.subject || "Notification" }}
                     </p>
-                    <p class="text-xs text-gray-500 dark:text-slate-400 mt-0.5 line-clamp-2">
+                    <p
+                      class="text-xs text-gray-500 dark:text-slate-400 mt-0.5 line-clamp-2"
+                    >
                       {{ n.content }}
                     </p>
-                    <p class="text-[10px] text-gray-400 dark:text-slate-500 mt-1">
+                    <p
+                      class="text-[10px] text-gray-400 dark:text-slate-500 mt-1"
+                    >
                       {{ timeAgo(n.created_at) }}
                     </p>
                   </div>
@@ -341,10 +357,14 @@ function timeAgo(dateStr) {
             }}</span>
           </div>
           <div class="hidden sm:block text-left">
-            <p class="text-xs font-semibold text-gray-800 dark:text-slate-100 leading-tight">
+            <p
+              class="text-xs font-semibold text-gray-800 dark:text-slate-100 leading-tight"
+            >
               {{ fullName }}
             </p>
-            <p class="text-[10px] text-gray-400 dark:text-slate-500 leading-tight">
+            <p
+              class="text-[10px] text-gray-400 dark:text-slate-500 leading-tight"
+            >
               {{ roleName }}
             </p>
           </div>
@@ -359,7 +379,9 @@ function timeAgo(dateStr) {
             v-if="showUserMenu"
             class="absolute right-0 top-full mt-2 w-52 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-gray-100 dark:border-slate-700 py-1 z-50"
           >
-            <div class="px-4 py-3 border-b border-gray-50 dark:border-slate-700">
+            <div
+              class="px-4 py-3 border-b border-gray-50 dark:border-slate-700"
+            >
               <div class="flex items-center gap-3 mb-2">
                 <div
                   class="w-10 h-10 rounded-full bg-[#004795] flex items-center justify-center flex-shrink-0 overflow-hidden"
@@ -375,10 +397,14 @@ function timeAgo(dateStr) {
                   }}</span>
                 </div>
                 <div class="min-w-0">
-                  <p class="text-xs font-semibold text-gray-800 dark:text-slate-100 truncate">
+                  <p
+                    class="text-xs font-semibold text-gray-800 dark:text-slate-100 truncate"
+                  >
                     {{ fullName }}
                   </p>
-                  <p class="text-xs text-gray-400 dark:text-slate-500 mt-0.5 truncate">
+                  <p
+                    class="text-xs text-gray-400 dark:text-slate-500 mt-0.5 truncate"
+                  >
                     {{ user?.email }}
                   </p>
                 </div>

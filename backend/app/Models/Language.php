@@ -5,104 +5,117 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Support\Str;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
 
 class Language extends Model
 {
+
     use HasFactory;
 
-    protected $table = 'languages';
+
+    /*
+    |--------------------------------------------------------------------------
+    | UUID Configuration
+    |--------------------------------------------------------------------------
+    */
 
     protected $keyType = 'string';
 
     public $incrementing = false;
 
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Mass Assignment
+    |--------------------------------------------------------------------------
+    */
+
     protected $fillable = [
+
         'code',
+
         'name',
+
         'native_name',
-        'flag',
-        'is_default',
+
+        'direction',
+
         'is_active',
+
+        'is_default',
+
     ];
 
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Casts
+    |--------------------------------------------------------------------------
+    */
+
     protected $casts = [
+
+        'is_active'  => 'boolean',
+
         'is_default' => 'boolean',
-        'is_active' => 'boolean',
+
     ];
+
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | UUID Generate
+    |--------------------------------------------------------------------------
+    */
 
     protected static function boot()
     {
+
         parent::boot();
+
 
         static::creating(function ($language) {
 
+
             if (!$language->id) {
-                $language->id = (string) Str::uuid();
+
+                $language->id = Str::uuid();
+
             }
 
+
         });
+
+
     }
+
+
 
     /*
     |--------------------------------------------------------------------------
     | Relationships
     |--------------------------------------------------------------------------
+    |
+    | Language
+    |    |
+    |    | hasMany
+    |    |
+    | Translation
+    |
     */
 
-    public function translations()
+    public function translations(): HasMany
     {
+
         return $this->hasMany(
             Translation::class
         );
+
     }
 
-    public function users()
-    {
-        return $this->hasMany(
-            User::class,
-            'preferred_language_id'
-        );
-    }
 
-    public function hospitalTranslations()
-    {
-        return $this->hasMany(
-            HospitalTranslation::class
-        );
-    }
-
-    public function departmentTranslations()
-    {
-        return $this->hasMany(
-            DepartmentTranslation::class
-        );
-    }
-
-    public function medicineTranslations()
-    {
-        return $this->hasMany(
-            MedicineTranslation::class
-        );
-    }
-
-    public function symptomTranslations()
-    {
-        return $this->hasMany(
-            SymptomTranslation::class
-        );
-    }
-
-    public function diseaseTranslations()
-    {
-        return $this->hasMany(
-            DiseaseTranslation::class
-        );
-    }
-
-    public function medicalServiceTranslations()
-    {
-        return $this->hasMany(
-            MedicalServiceTranslation::class
-        );
-    }
 }

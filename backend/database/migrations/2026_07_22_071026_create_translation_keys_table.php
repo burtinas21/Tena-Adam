@@ -74,8 +74,8 @@ return new class extends Migration
             |--------------------------------------------------------------------------
             */
 
-            $table->text()
-                ->nullable();
+           $table->text('description')
+    ->nullable();
 
 
 

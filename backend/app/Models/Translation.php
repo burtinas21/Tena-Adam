@@ -3,24 +3,27 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Support\Str;
 
 class Translation extends Model
 {
-    use HasFactory;
-
-    protected $table = 'translations';
 
     protected $keyType = 'string';
 
     public $incrementing = false;
 
+
     protected $fillable = [
+
         'translation_key_id',
+
         'language_id',
-        'value',
+
+        'value'
+
     ];
+
+
 
     protected static function boot()
     {
@@ -29,23 +32,50 @@ class Translation extends Model
         static::creating(function ($model) {
 
             if (!$model->id) {
-                $model->id = (string) Str::uuid();
+
+                $model->id = Str::uuid();
+
             }
 
         });
     }
 
-    public function translationKey()
-    {
-        return $this->belongsTo(
-            TranslationKey::class
-        );
-    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Language Relationship
+    |--------------------------------------------------------------------------
+    */
 
     public function language()
     {
+
         return $this->belongsTo(
-            Language::class
+            Language::class,
+            'language_id'
         );
+
     }
+
+
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Translation Key Relationship
+    |--------------------------------------------------------------------------
+    */
+
+    public function translationKey()
+    {
+
+        return $this->belongsTo(
+            TranslationKey::class,
+            'translation_key_id'
+        );
+
+    }
+
+
 }

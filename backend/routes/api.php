@@ -33,6 +33,9 @@ use App\Http\Controllers\Api\MedicalDocumentController;
 use App\Http\Controllers\Api\GoogleAuthController;
 use Illuminate\Support\Facades\Http;
 use App\Http\Controllers\Api\AuditLogController;
+use App\Http\Controllers\Api\TranslationController;
+Route::get( '/translations',[TranslationController::class,'translate']);
+Route::get('/translations/all', [TranslationController::class,'all']);
 Route::middleware(['auth:sanctum'])->group(function () {
 
     Route::get(
