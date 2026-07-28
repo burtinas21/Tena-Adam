@@ -5,7 +5,8 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
 Schedule::command('mark:noshow-patients')
     ->everyFiveMinutes();
-    Schedule::command('appointments:send-reminders')->dailyAt('08:00');
+// Run every 5 minutes to catch all reminder windows: 24h, 1h, and 15-min
+Schedule::command('appointments:send-reminders')->everyFiveMinutes();
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');

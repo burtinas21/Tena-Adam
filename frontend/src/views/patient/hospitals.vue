@@ -103,7 +103,7 @@
         </div>
       </div>
 
-      <!-- Empty state -->
+     
       <div v-if="!filtered.length" class="text-center py-16 text-gray-400">
         <Building2 class="w-10 h-10 mx-auto mb-3 text-gray-300" />
         <p class="text-sm font-medium">No hospitals found matching your filters.</p>
@@ -126,8 +126,6 @@ import { ref, computed, onMounted } from "vue";
 import { Search, SlidersHorizontal, Video, AlertCircle, Building2 } from "lucide-vue-next";
 import hospitalApi from "../../api/hospitalApi";
 import HospitalCard from "../../components/patient/hospital/HospitalCard.vue";
-
-// ── State ─────────────────────────────────────────────────────────────────
 const rawHospitals  = ref([]);
 const loading       = ref(false);
 const error         = ref(null);
@@ -153,11 +151,15 @@ async function load() {
         id:              h.id,
         name:            h.name,
         location:        `${h.city ?? ""}${h.region ? ", " + h.region : ""}`,
+        address:         h.address ?? "",
         phone:           h.phone ?? "—",
         departments:     depts,
         moreDeptsCount:  extraCount,
         totalDoctors:    h.total_doctors ?? 0,
         telemedAvailable: h.has_telehealth ?? false,
+        latitude:        h.latitude ?? null,
+        longitude:       h.longitude ?? null,
+        google_place_id: h.google_place_id ?? null,
         _city:           h.city ?? "",
         _region:         h.region ?? "",
         _depts:          (h.departments ?? []).map((d) => d.name ?? d),

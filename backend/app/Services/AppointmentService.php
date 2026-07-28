@@ -8,8 +8,10 @@ use App\Models\DoctorSchedule;
 use App\Models\HealthcareProvider;
 use Carbon\Carbon;
 use App\Services\NotificationService;
+use App\Services\TelehealthSessionService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use App\Services\PaymentService;
 
 class AppointmentService
 
@@ -19,11 +21,48 @@ class AppointmentService
         return substr($time, 0, 5);
     }
  protected NotificationService $notificationService;
+ protected TelehealthSessionService $telehealthService;
 public function __construct(
-    NotificationService $notificationService
+    NotificationService $notificationService,
+    TelehealthSessionService $telehealthService,
+     private PaymentService $paymentService
 ) {
     $this->notificationService = $notificationService;
+    $this->telehealthService   = $telehealthService;
 }
+
+    // ── Helpers ───────────────────────────────────────────────────────────
+
+    /**
+     * Save optional uploaded files and attach them to the appointment.
+     * Files come as an array of UploadedFile instances.
+     */
+    private function attachUploadedFiles(Appointment $appointment, array $files): void
+    {
+        $allowedMimes = ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf'];
+
+        foreach ($files as $file) {
+            if (! $file || ! in_array($file->getMimeType(), $allowedMimes)) {
+                continue;
+            }
+
+            $filePath = $file->store('appointment-documents', 'public');
+
+            \App\Models\MedicalDocument::create([
+                'patient_id'     => $appointment->patient_id,
+                'appointment_id' => $appointment->id,
+                'encounter_id'   => null,
+                'file_name'      => $file->getClientOriginalName(),
+                'file_url'       => $filePath,
+                'file_type'      => $file->getMimeType(),
+                'file_size'      => $file->getSize(),
+                'document_type'  => 'appointment_upload',
+                'uploaded_by'    => auth()->id(),
+                'description'    => 'Uploaded at appointment booking',
+            ]);
+        }
+    }
+
     public function all()
     {
         $user  = auth()->user();
@@ -60,7 +99,7 @@ public function __construct(
         return $query->get();
     }
 
-    public function create(array $data): Appointment
+    public function create(array $data): array
     {
         return DB::transaction(function () use ($data) {
 
@@ -181,11 +220,28 @@ public function __construct(
                 'slot_id'       => $slot->id,
                 'scheduled_time'=> $scheduledDatetime,
                 'duration_min'  => $schedule->slot_duration_min,
-                'status'        => 'pending',
+                // 'status'        => 'pending',
+                'visit_type'      => $data['visit_type'],
+                'status'          => 'pending_payment',
                 'reason'        => $data['reason'],
                 'notes'         => $data['notes'] ?? null,
                 'is_telehealth' => $data['is_telehealth'] ?? false,
             ]);
+            $payment = $this->paymentService->create([
+
+            'appointment_id'    => $appointment->id,
+
+            'patient_id'        => $appointment->patient_id,
+
+            'hospital_id'       => $appointment->hospital_id,
+
+            'payment_method_id' => $data['payment_method_id'],
+
+            'amount'            => $data['amount'],
+
+            'currency'          => 'ETB',
+
+        ]);
             $this->notificationService
     ->sendAppointmentNotification(
 
@@ -199,6 +255,11 @@ public function __construct(
 
         false
     );
+
+            // ── Optional file attachments ─────────────────────────────────
+            if (! empty($data['uploaded_files'])) {
+                $this->attachUploadedFiles($appointment, (array) $data['uploaded_files']);
+            }
 
             // Notify doctor of the new appointment request
             $this->notificationService->sendAppointmentNotification(
@@ -217,15 +278,26 @@ public function __construct(
                 "A new appointment has been booked by {$patientName} with Dr. {$doctorName}."
             );
 
-            return $appointment->load([
-                'patient',
-                'doctor.user',
-                'hospital',
-                'department',
-                'approvedBy',
-                'slot',
-            ]);
-        });
+            $appointment->load([
+    'patient',
+    'doctor.user',
+    'hospital',
+    'department',
+    'approvedBy',
+    'slot',
+    'documents',
+]);
+
+
+return [
+
+    'appointment' => $appointment,
+
+    'payment' => $payment['payment'],
+
+    'checkout_url' => $payment['checkout_url'],
+
+];
     }
 
 
@@ -324,6 +396,15 @@ public function __construct(
         'An appointment has been confirmed and is now on your schedule.',
         false
     );
+
+    // ── Auto-create telehealth session on confirmation ───────────────
+    if ($appointment->is_telehealth && ! $appointment->telehealthSession) {
+        try {
+            $this->telehealthService->autoCreateSession($appointment);
+        } catch (\Throwable) {
+            // Never block the confirmation if session creation fails
+        }
+    }
 }
 if (
     isset($data['status']) &&

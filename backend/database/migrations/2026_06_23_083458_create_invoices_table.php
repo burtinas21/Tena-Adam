@@ -12,8 +12,37 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('invoices', function (Blueprint $table) {
-            $table->id();
+
+            $table->uuid('id')->primary();
+
+            $table->foreignUuid('payment_id')
+                ->constrained('payments')
+                ->cascadeOnDelete();
+
+            $table->string('invoice_number', 50)->unique();
+
+            $table->date('due_date');
+
+            $table->enum('status', [
+                'paid',
+                'unpaid',
+                'overdue',
+                'cancelled'
+            ])->default('unpaid');
+
+            $table->string('pdf_url')->nullable();
+
             $table->timestamps();
+
+            /*
+            |--------------------------------------------------------------------------
+            | Indexes
+            |--------------------------------------------------------------------------
+            */
+
+            $table->index('payment_id');
+            $table->index('status');
+            $table->index('due_date');
         });
     }
 

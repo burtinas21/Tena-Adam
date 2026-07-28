@@ -10,25 +10,25 @@
       </div>
       <div class="grid grid-cols-2 gap-3">
         <MiniMetricCard
-          title="Upcoming"
+          :title="$t('dashboard.upcoming')"
           :value="apptStore.pending.length + apptStore.confirmed.length"
           :icon="Calendar"
           color="blue"
         />
         <MiniMetricCard
-          title="Completed"
+          :title="$t('dashboard.completed')"
           :value="apptStore.completed.length"
           :icon="CheckSquare"
           color="emerald"
         />
         <MiniMetricCard
-          title="Active Rx"
+          :title="$t('dashboard.active_rx')"
           :value="activePrescriptions"
           :icon="Pill"
           color="amber"
         />
         <MiniMetricCard
-          title="Records"
+          :title="$t('dashboard.records')"
           :value="medicalRecords"
           :icon="FolderHeart"
           color="gray"
@@ -52,10 +52,10 @@
 
     <!-- Quick Actions -->
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-      <ActionShortcut label="Book Appointment" :icon="CalendarPlus" to="/patient/appointments" />
-      <ActionShortcut label="Join Telemedicine" :icon="Video" to="/patient/telemedicine" />
-      <ActionShortcut label="Search Doctors" :icon="UserSearch" to="/patient/doctors" />
-      <ActionShortcut label="View Records" :icon="FolderHeart" to="/patient/medical-records" />
+      <ActionShortcut :label="$t('action.book_appointment')"  :icon="CalendarPlus" to="/patient/appointments" />
+      <ActionShortcut :label="$t('action.join_telemedicine')" :icon="Video"        to="/patient/telemedicine" />
+      <ActionShortcut :label="$t('action.search_doctors')"    :icon="UserSearch"   to="/patient/doctors" />
+      <ActionShortcut :label="$t('action.view_records')"      :icon="FolderHeart"  to="/patient/medical-records" />
     </div>
   </main>
 
@@ -66,8 +66,8 @@
     <div class="bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[85vh] flex flex-col">
       <div class="flex items-center justify-between px-6 pt-5 pb-4 border-b border-gray-100 flex-shrink-0">
         <div>
-          <h3 class="text-sm font-bold text-gray-800">Reschedule Appointment</h3>
-          <p class="text-xs text-gray-400 mt-0.5">Pick a new date and time slot</p>
+          <h3 class="text-sm font-bold text-gray-800">{{ $t('reschedule.title') }}</h3>
+          <p class="text-xs text-gray-400 mt-0.5">{{ $t('reschedule.subtitle') }}</p>
         </div>
         <button @click="closeReschedule" class="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 transition">
           <X class="w-4 h-4" />
@@ -80,7 +80,7 @@
         </div>
         <div>
           <label class="block text-xs font-semibold text-gray-700 mb-1.5">
-            New Date <span class="text-red-500">*</span>
+            {{ $t('reschedule.new_date') }} <span class="text-red-500">*</span>
           </label>
           <input v-model="rescheduleDate" type="date" :min="today"
             class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#004795]/30 focus:border-[#004795] transition"
@@ -88,14 +88,14 @@
         </div>
         <div v-if="rescheduleDate">
           <label class="block text-xs font-semibold text-gray-700 mb-2">
-            Available Slots <span class="text-red-500">*</span>
+            {{ $t('reschedule.available_slots') }} <span class="text-red-500">*</span>
           </label>
           <div v-if="rescheduleSlotsLoading" class="flex items-center gap-2 text-xs text-gray-500">
-            <Loader2 class="w-3.5 h-3.5 animate-spin" /> Loading slots...
+            <Loader2 class="w-3.5 h-3.5 animate-spin" /> {{ $t('reschedule.loading_slots') }}
           </div>
           <div v-else-if="!rescheduleSlots.length"
             class="text-xs text-gray-500 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2.5 flex items-center gap-2">
-            <AlertCircle class="w-3.5 h-3.5 text-amber-500" /> No available slots on this date.
+            <AlertCircle class="w-3.5 h-3.5 text-amber-500" /> {{ $t('reschedule.no_slots') }}
           </div>
           <div v-else class="grid grid-cols-3 sm:grid-cols-4 gap-2">
             <button v-for="slot in rescheduleSlots" :key="slot.id || slot.start_time"
@@ -113,13 +113,13 @@
       <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-100 flex-shrink-0">
         <button @click="closeReschedule"
           class="px-4 py-2 text-sm font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition">
-          Cancel
+          {{ $t('button.cancel') }}
         </button>
         <button @click="handleReschedule"
           :disabled="!selectedRescheduleSlotId || rescheduleSaving"
           class="px-5 py-2 text-sm font-semibold text-white bg-[#004795] hover:bg-[#003670] rounded-lg transition disabled:opacity-50 flex items-center gap-2">
           <Loader2 v-if="rescheduleSaving" class="w-3.5 h-3.5 animate-spin" />
-          Confirm Reschedule
+          {{ $t('reschedule.confirm') }}
         </button>
       </div>
     </div>
@@ -128,6 +128,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from "vue";
+import { useI18n } from "vue-i18n";
 import {
   Calendar, CheckSquare, Pill, FolderHeart,
   CalendarPlus, Video, UserSearch, X, AlertCircle, Loader2,
@@ -145,6 +146,7 @@ import ActionShortcut from "../../components/patientdashboard/ActionShortcut.vue
 
 const authStore = useAuthStore();
 const apptStore = useAppointmentStore();
+const { t } = useI18n();
 
 // ── Patient profile state ─────────────────────────────────────────────────
 const patient = ref(null);

@@ -12,6 +12,7 @@ use App\Http\Requests\Api\Appointment\UpdateAppointmentRequest;
 use App\Services\AppointmentService;
 use App\Services\AppointmentSlotService;
 use Illuminate\Http\Request;
+use App\Http\Resources\PaymentResource;
 use Carbon\Carbon;
 
 class AppointmentController extends Controller
@@ -25,8 +26,14 @@ class AppointmentController extends Controller
     {
         $this->authorize('viewAny', Appointment::class);
 
+        $appointments = $this->service->all();
+
+        // Eager-load documents for each appointment so the doctor/patient can
+        // see uploaded files without a separate request.
+        $appointments->load('documents');
+
         return response()->json([
-            'data' => $this->service->all()
+            'data' => $appointments
         ]);
     }
 
@@ -34,14 +41,26 @@ class AppointmentController extends Controller
     {
         $this->authorize('create', Appointment::class);
 
-        $appointment = $this->service->create(
-            $request->validated()
-        );
+        $data = $request->validated();
 
-        return response()->json([
-            'message' => 'Appointment created successfully',
-            'data'    => $appointment,
-        ], 201);
+        // Handle optional file uploads — save files array to pass into service
+        if ($request->hasFile('files')) {
+            $data['uploaded_files'] = $request->file('files');
+        }
+
+       $result = $this->service->create($data);
+
+    return response()->json([
+
+        'message' => 'Appointment created successfully.',
+        'appointment' => $result['appointment'],
+        'payment' => new PaymentResource(
+            $result['payment']
+        ),
+
+        'checkout_url' => $result['checkout_url'],
+
+    ]);
     }
 
     public function show(Appointment $appointment)
@@ -56,6 +75,10 @@ class AppointmentController extends Controller
                 'department',
                 'approvedBy',
                 'slot',
+                'documents',
+                'referrals.referredBy.user',
+                'referrals.referredToDoctor.user',
+                'referrals.referredToDepartment',
             ])
         ]);
     }

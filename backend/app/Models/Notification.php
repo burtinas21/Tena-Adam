@@ -20,6 +20,7 @@ class Notification extends Model
         'user_id',
         'type',
         'channel',
+        'reference_id',
         'subject',
         'content',
         'sent_at',

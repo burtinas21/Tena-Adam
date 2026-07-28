@@ -89,12 +89,12 @@
 
           <!-- Book button -->
           <div class="mt-5 pt-4 border-t border-gray-50">
-            <router-link
-              to="/patient/appointments"
+            <button
+              @click="bookAppointment"
               class="inline-flex items-center gap-2 bg-[#004bb5] hover:bg-[#003da1] text-white font-bold text-sm py-2.5 px-6 rounded-lg transition shadow-sm"
             >
               <CalendarPlus class="w-4 h-4" /> Book Appointment
-            </router-link>
+            </button>
           </div>
         </div>
 
@@ -142,7 +142,7 @@
 
 <script setup>
 import { ref, computed, onMounted, defineComponent, h } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import {
   ChevronLeft, AlertCircle, Building2, Briefcase,
   Monitor, UserCheck, CalendarPlus, ShieldCheck,
@@ -160,7 +160,8 @@ const DetailItem = defineComponent({
     ]),
 });
 
-const route = useRoute();
+const route    = useRoute();
+const router   = useRouter();
 const doctorId = computed(() => route.params.id);
 
 const doctor   = ref(null);
@@ -188,6 +189,16 @@ const practiceStart = computed(() => {
 
 // Default languages — backend doesn't store them yet so we show sensible defaults
 const languages = computed(() => ["Amharic", "English"]);
+
+function bookAppointment() {
+  router.push({
+    name:  "appointments",
+    query: {
+      doctor_id:   doctorId.value,
+      hospital_id: doctor.value?.hospital?.id ?? "",
+    },
+  });
+}
 
 async function load() {
   try {

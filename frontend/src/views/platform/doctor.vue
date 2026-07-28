@@ -1,9 +1,8 @@
 <template>
-  <main class="flex-1 bg-[#F8FAFC] dark:bg-[#0f172a] p-6 overflow-y-auto font-sans dark:text-slate-200">
-    <div class="max-w-7xl mx-auto">
+  <main class="flex-1 bg-[#F8FAFC] dark:bg-[#0f172a] px-2 py-3 sm:p-6 overflow-y-auto font-sans dark:text-slate-200">
 
       <!-- Header -->
-      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-3 sm:mb-6">
         <div>
           <h1 class="text-2xl font-bold text-gray-900 tracking-tight">Doctor Directory</h1>
           <p class="text-xs text-gray-400 font-medium mt-0.5">
@@ -23,7 +22,7 @@
       </div>
 
       <!-- Stat cards -->
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 mb-3 sm:mb-6">
         <StatCard icon="stethoscope" label="Total Doctors"       :value="totalCount" />
         <StatCard icon="user-check"  label="Active Providers"    :value="activeCount" badge="+2 this week" />
         <StatCard icon="video"       label="Telemedicine Enabled" :value="teleCount" />
@@ -32,7 +31,7 @@
 
       <!-- Search + filter -->
       <div class="bg-white rounded-2xl border border-gray-200 shadow-sm">
-        <div class="flex flex-col sm:flex-row sm:items-center gap-3 px-5 py-4 border-b border-gray-100">
+        <div class="flex flex-col sm:flex-row sm:items-center gap-3 px-2 py-3 sm:px-5 sm:py-4 border-b border-gray-100">
           <div class="relative flex-1">
             <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
             <input v-model="search" type="text" placeholder="Search doctors by name or ID..."
@@ -68,82 +67,107 @@
         </div>
 
         <!-- Table -->
-        <div v-else class="overflow-x-auto">
-          <table class="w-full text-sm text-left min-w-[700px]">
+        <div v-else class="w-full">
+          <table class="w-full table-fixed">
+            <colgroup>
+              <col style="width:24%" />
+              <col style="width:14%" />
+              <col style="width:16%" />
+              <col style="width:12%" />
+              <col style="width:12%" />
+              <col style="width:10%" />
+              <col style="width:12%" />
+            </colgroup>
             <thead>
               <tr class="border-b border-gray-100">
-                <th class="px-5 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Doctor</th>
-                <th class="px-5 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Department</th>
-                <th class="px-5 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider">License & Exp.</th>
-                <th class="px-5 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Status</th>
-                <th class="px-5 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Telemedicine</th>
-                <th class="px-5 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider text-right">Actions</th>
+                <th class="px-2 sm:px-4 py-2.5 text-[9px] sm:text-[10px] font-bold text-gray-400 uppercase tracking-wider text-left">Doctor</th>
+                <th class="px-1 sm:px-4 py-2.5 text-[9px] sm:text-[10px] font-bold text-gray-400 uppercase tracking-wider text-left">Department</th>
+                <th class="px-3 sm:px-4 py-2.5 text-[9px] sm:text-[10px] font-bold text-gray-400 uppercase tracking-wider text-left">License & Exp.</th>
+                <th class="px-2 sm:px-4 py-2.5 text-[9px] sm:text-[10px] font-bold text-gray-400 uppercase tracking-wider text-left">Status</th>
+                <th class="px-3 sm:px-4 py-2.5 text-[9px] sm:text-[10px] font-bold text-gray-400 uppercase tracking-wider text-left">Telemed</th>
+                <th class="px-1 sm:px-4 py-2.5 text-[9px] sm:text-[10px] font-bold text-gray-400 uppercase tracking-wider text-left">Hospital</th>
+                <th class="px-1 sm:px-4 py-2.5 text-[9px] sm:text-[10px] font-bold text-gray-400 uppercase tracking-wider text-right">Actions</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-50">
               <tr v-if="!paged.length">
-                <td colspan="6" class="px-5 py-12 text-center text-gray-400">
+                <td colspan="7" class="px-5 py-12 text-center text-gray-400">
                   <Stethoscope class="w-8 h-8 mx-auto mb-2 text-gray-300" />
                   <p class="text-sm font-medium">No doctors found</p>
                 </td>
               </tr>
-              <tr v-for="doc in paged" :key="doc.id" class="hover:bg-gray-50/60 transition-colors">
+              <tr v-for="doc in paged" :key="doc.id" class="hover:bg-gray-50/60 transition-colors align-middle">
                 <!-- Doctor -->
-                <td class="px-5 py-4">
-                  <div class="flex items-center gap-3">
-                    <div class="w-9 h-9 rounded-full bg-[#004795]/10 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                <td class="px-2 sm:px-4 py-2 sm:py-3">
+                  <div class="flex items-center gap-1.5">
+                    <div class="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-[#004795]/10 flex items-center justify-center flex-shrink-0 overflow-hidden">
                       <img v-if="doc.profile_picture_url" :src="doc.profile_picture_url"
                         class="w-full h-full object-cover" :alt="doc.fullName" />
-                      <span v-else class="text-xs font-bold text-[#004795]">{{ doc.initials }}</span>
+                      <span v-else class="text-[9px] sm:text-[10px] font-bold text-[#004795]">{{ doc.initials }}</span>
                     </div>
-                    <div>
-                      <p class="font-semibold text-gray-800 text-sm">Dr. {{ doc.fullName }}</p>
-                      <p class="text-xs text-gray-400 mt-0.5">{{ doc.department }}</p>
+                    <div class="min-w-0">
+                      <p class="font-semibold text-[10px] sm:text-xs text-gray-800 truncate">Dr. {{ doc.fullName }}</p>
+                      <p class="text-[9px] sm:text-[10px] text-gray-400 truncate">{{ doc.department }}</p>
                     </div>
                   </div>
                 </td>
                 <!-- Department badge -->
-                <td class="px-5 py-4">
-                  <span class="px-2.5 py-1 bg-blue-50 text-blue-700 border border-blue-100 rounded-lg text-xs font-medium">
+                <td class="px-2 sm:px-4 py-2 sm:py-3">
+                  <span class="px-1.5 sm:px-2 py-0.5 bg-blue-50 text-blue-700 border border-blue-100 rounded-lg text-[9px] sm:text-[10px] font-medium truncate block max-w-full">
                     {{ doc.department || '—' }}
                   </span>
                 </td>
                 <!-- License & exp -->
-                <td class="px-5 py-4">
-                  <p class="text-sm font-semibold text-gray-700">{{ doc.license_number || '—' }}</p>
-                  <p class="text-xs text-gray-400 mt-0.5">{{ doc.years_experience ?? 0 }} Years</p>
+                <td class="px-2 sm:px-4 py-2 sm:py-3">
+                  <p class="text-[10px] sm:text-xs font-semibold text-gray-700 truncate">{{ doc.license_number || '—' }}</p>
+                  <p class="text-[9px] sm:text-[10px] text-gray-400">{{ doc.years_experience ?? 0 }} yrs</p>
                 </td>
                 <!-- Status -->
-                <td class="px-5 py-4">
-                  <span class="flex items-center gap-1.5 text-sm font-medium"
+                <td class="px-2 sm:px-4 py-2 sm:py-3">
+                  <span class="flex items-center gap-1 text-[10px] sm:text-xs font-medium whitespace-nowrap"
                     :class="doc.is_telehealth_available ? 'text-emerald-600' : 'text-gray-500'">
-                    <span class="w-2 h-2 rounded-full flex-shrink-0"
+                    <span class="w-1.5 h-1.5 rounded-full flex-shrink-0"
                       :class="doc.is_telehealth_available ? 'bg-emerald-500' : 'bg-gray-400'" />
                     {{ doc.is_telehealth_available ? 'Online' : 'Offline' }}
                   </span>
                 </td>
                 <!-- Telemedicine icon -->
-                <td class="px-5 py-4">
+                <td class="px-2 sm:px-4 py-2 sm:py-3">
                   <div
-                    :class="doc.is_telehealth_available
-                      ? 'bg-[#004795] text-white'
-                      : 'bg-gray-100 text-gray-400'"
-                    class="w-9 h-9 rounded-lg flex items-center justify-center">
-                    <Video v-if="doc.is_telehealth_available" class="w-4 h-4" />
-                    <VideoOff v-else class="w-4 h-4" />
+                    :class="doc.is_telehealth_available ? 'bg-[#004795] text-white' : 'bg-gray-100 text-gray-400'"
+                    class="w-6 h-6 sm:w-7 sm:h-7 rounded-lg flex items-center justify-center">
+                    <Video v-if="doc.is_telehealth_available" class="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                    <VideoOff v-else class="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                   </div>
                 </td>
-                <!-- Actions -->
-                <td class="px-5 py-4 text-right">
-                  <div class="flex items-center justify-end gap-1">
-                    <button title="Edit"
-                      class="p-1.5 rounded-lg text-gray-400 hover:text-[#004795] hover:bg-[#004795]/10 transition">
-                      <Pencil class="w-3.5 h-3.5" />
+                <!-- Hospital -->
+                <td class="px-2 sm:px-4 py-2 sm:py-3 text-[9px] sm:text-[10px] text-gray-500 truncate">
+                  {{ doc.hospital || '—' }}
+                </td>
+                <!-- Actions — three-dot dropdown -->
+                <td class="px-2 sm:px-4 py-2 sm:py-3 text-right">
+                  <div class="relative inline-block" @click.stop>
+                    <button
+                      @click="toggleMenu(doc.id)"
+                      class="p-1 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition"
+                    >
+                      <MoreVertical class="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                     </button>
-                    <button title="View"
-                      class="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition">
-                      <Eye class="w-3.5 h-3.5" />
-                    </button>
+                    <div
+                      v-if="openMenuId === doc.id"
+                      class="absolute right-0 mt-1 w-32 bg-white border border-gray-100 rounded-xl shadow-lg z-30 py-1"
+                    >
+                      <button
+                        class="flex items-center gap-2 w-full px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 transition"
+                      >
+                        <Pencil class="w-3.5 h-3.5 text-[#004795]" /> Edit
+                      </button>
+                      <button
+                        class="flex items-center gap-2 w-full px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 transition"
+                      >
+                        <Eye class="w-3.5 h-3.5 text-gray-500" /> View
+                      </button>
+                    </div>
                   </div>
                 </td>
               </tr>
@@ -152,7 +176,7 @@
         </div>
 
         <!-- Pagination -->
-        <div v-if="filtered.length" class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-5 py-4 border-t border-gray-100">
+        <div v-if="filtered.length" class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-2 py-3 sm:px-5 sm:py-4 border-t border-gray-100">
           <p class="text-xs text-gray-500">
             Showing {{ (page - 1) * perPage + 1 }} to {{ Math.min(page * perPage, filtered.length) }} of {{ filtered.length }} doctors
           </p>
@@ -176,7 +200,6 @@
           </div>
         </div>
       </div>
-    </div>
   </main>
 </template>
 
@@ -184,10 +207,18 @@
 import { ref, computed, watch, onMounted, defineComponent, h } from "vue";
 import {
   Download, Plus, Search, SlidersHorizontal, AlertCircle,
-  Stethoscope, Video, VideoOff, Pencil, Eye,
+  Stethoscope, Video, VideoOff, Pencil, Eye, MoreVertical,
   ChevronLeft, ChevronRight, UserCheck, Calendar,
 } from "lucide-vue-next";
 import doctorApi from "../../api/doctorApi";
+import { onUnmounted } from "vue";
+
+// ── Dropdown menu ─────────────────────────────────────────────────────────
+const openMenuId = ref(null);
+function toggleMenu(id) { openMenuId.value = openMenuId.value === id ? null : id; }
+function closeMenu() { openMenuId.value = null; }
+document.addEventListener("click", closeMenu);
+onUnmounted(() => document.removeEventListener("click", closeMenu));
 
 // ── Inline StatCard component ────────────────────────────────────────────
 const StatCard = defineComponent({

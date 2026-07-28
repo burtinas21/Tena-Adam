@@ -61,12 +61,12 @@
               </div>
             </div>
             <!-- Book appointment CTA -->
-            <router-link
+            <!-- <router-link
               to="/patient/appointments"
               class="flex-shrink-0 bg-[#004bb5] hover:bg-[#003da1] text-white font-bold text-xs py-2.5 px-5 rounded-lg transition shadow-sm flex items-center gap-2"
             >
               <CalendarPlus class="w-3.5 h-3.5" /> Book Appointment
-            </router-link>
+            </router-link> -->
           </div>
 
           <!-- Stats strip -->
@@ -86,6 +86,50 @@
               <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mt-0.5">Telemedicine</p>
             </div>
           </div>
+        </div>
+
+        <!-- ── Location Map ──────────────────────────────────────────── -->
+        <div
+          v-if="hospital.latitude && hospital.longitude"
+          class="bg-white rounded-xl border border-gray-100 shadow-sm mb-5 overflow-hidden"
+        >
+          <div class="flex items-center justify-between px-5 py-3 border-b border-gray-50">
+            <h2 class="text-sm font-bold text-gray-800 flex items-center gap-2">
+              <MapPin class="w-4 h-4 text-[#004bb5]" /> Location
+            </h2>
+            <a
+              :href="googleMapsUrl"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="flex items-center gap-1 text-xs text-[#004bb5] font-semibold hover:underline"
+            >
+              Open in Google Maps
+              <ExternalLink class="w-3 h-3" />
+            </a>
+          </div>
+
+          <!-- Leaflet map -->
+          <HospitalMap
+            :lat="Number(hospital.latitude)"
+            :lng="Number(hospital.longitude)"
+            :label="hospital.name"
+            :zoom="15"
+            height="280px"
+          />
+
+          <div class="px-5 py-2.5 bg-gray-50 border-t border-gray-100 flex items-center gap-1.5">
+            <MapPin class="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+            <span class="text-xs text-gray-600">{{ hospitalLocation }}</span>
+          </div>
+        </div>
+
+        <!-- No coordinates notice -->
+        <div
+          v-else
+          class="bg-white rounded-xl border border-gray-100 shadow-sm mb-5 px-5 py-4 flex items-center gap-3 text-gray-400"
+        >
+          <MapPin class="w-4 h-4 flex-shrink-0" />
+          <span class="text-xs">Map location not available for this hospital.</span>
         </div>
 
         <!-- ── Departments strip ─────────────────────────────────────── -->
@@ -183,12 +227,13 @@
               </p>
 
               <!-- Book appointment button -->
-              <router-link
-                to="/patient/appointments"
-                class="w-full bg-[#004bb5] hover:bg-[#003da1] text-white font-bold text-xs py-2.5 rounded-lg transition text-center mt-auto"
+              <button
+                @click="bookWithDoctor(doc)"
+                class="w-full bg-[#004bb5] hover:bg-[#003da1] text-white font-bold text-xs py-2.5 rounded-lg transition text-center mt-auto flex items-center justify-center gap-1.5"
               >
+                <CalendarPlus class="w-3.5 h-3.5" />
                 Book Appointment
-              </router-link>
+              </button>
             </div>
           </div>
         </div>
@@ -199,32 +244,40 @@
 
 <script setup>
 import { ref, computed, onMounted } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import {
   Building2, MapPin, Phone, Mail, Globe, ChevronLeft,
   CalendarPlus, AlertCircle, Search, Stethoscope,
-  Video, Award, Banknote,
+  Video, Award, Banknote, ExternalLink,
 } from "lucide-vue-next";
 import hospitalApi from "../../api/hospitalApi";
 import doctorApi from "../../api/doctorApi";
+import HospitalMap from "../../components/patient/hospital/HospitalMap.vue";
 
-const route = useRoute();
+const route    = useRoute();
+const router   = useRouter();
 const hospitalId = computed(() => route.params.id);
 
 // ── State ─────────────────────────────────────────────────────────────────
-const hospital       = ref(null);
+const hospital        = ref(null);
 const loadingHospital = ref(false);
 const loadingDoctors  = ref(false);
-const error          = ref(null);
-const doctors        = ref([]);
-const doctorSearch   = ref("");
-const activeDept     = ref(null);   // dept id or name used for filtering
+const error           = ref(null);
+const doctors         = ref([]);
+const doctorSearch    = ref("");
+const activeDept      = ref(null);
 
 // ── Derived ───────────────────────────────────────────────────────────────
 const hospitalLocation = computed(() => {
   const h = hospital.value;
   if (!h) return "—";
   return [h.address, h.city, h.region].filter(Boolean).join(", ");
+});
+
+const googleMapsUrl = computed(() => {
+  const h = hospital.value;
+  if (!h?.latitude || !h?.longitude) return "#";
+  return `https://www.google.com/maps/search/?api=1&query=${h.latitude},${h.longitude}`;
 });
 
 const hasTelehealth = computed(() =>
@@ -297,6 +350,17 @@ async function loadDoctors() {
   } finally {
     loadingDoctors.value = false;
   }
+}
+
+// ── Book with pre-selected doctor ────────────────────────────────────────
+function bookWithDoctor(doc) {
+  router.push({
+    name: "appointments",
+    query: {
+      doctor_id:   doc.id,
+      hospital_id: hospitalId.value,
+    },
+  });
 }
 
 onMounted(() => {

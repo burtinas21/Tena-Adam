@@ -36,7 +36,7 @@ class StoreMedicalDocumentRequest extends FormRequest
 
             'document_type' => [
                 'required',
-                'in:lab_report,xray,mri,ct_scan,prescription,other',
+                'in:lab_report,xray,mri,ct_scan,prescription,other,appointment_upload',
             ],
 
             'description' => [

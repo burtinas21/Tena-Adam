@@ -43,6 +43,8 @@ class EthiopiaHospitalSeeder extends Seeder
                 'website'             => 'https://www.tash.gov.et',
                 'registration_number' => 'MOH-ETH-2001',
                 'is_active'           => true,
+                'latitude'            => 9.019287049008764,
+                'longitude'           => 38.74875231172921,
             ]);
 
             $hospitalB = Hospital::create([
@@ -56,6 +58,8 @@ class EthiopiaHospitalSeeder extends Seeder
                 'website'             => 'https://www.sphmmc.edu.et',
                 'registration_number' => 'MOH-ETH-2002',
                 'is_active'           => true,
+                'latitude'            => 9.048841379598851,
+                'longitude'           => 38.729461441912484,
             ]);
 
             // ================================================================
@@ -184,11 +188,6 @@ class EthiopiaHospitalSeeder extends Seeder
                 'hire_date'   => '2019-05-01',
                 'is_active'   => true,
             ]);
-
-            // ================================================================
-            // 6. DOCTORS (HealthcareProviders)
-            // ================================================================
-
             $doctorsRaw = [
                 // Hospital A doctors
                 [

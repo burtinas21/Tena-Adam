@@ -29,6 +29,36 @@
 
     <!-- Appointment details -->
     <template v-else>
+      <!-- Telemedicine reminder banner -->
+      <div
+        v-if="telehealthBanner"
+        :class="[
+          'mt-3 rounded-xl px-3 py-2.5 flex items-center justify-between gap-2 border',
+          telehealthBanner.urgent
+            ? 'bg-red-50 border-red-200 text-red-700'
+            : 'bg-blue-50 border-blue-200 text-blue-700',
+        ]"
+      >
+        <div class="flex items-center gap-2 min-w-0">
+          <Video class="w-4 h-4 flex-shrink-0" />
+          <span class="text-xs font-semibold truncate">{{ telehealthBanner.label }}</span>
+        </div>
+        <a
+          v-if="sessionUrl"
+          :href="sessionUrl"
+          target="_blank"
+          rel="noopener noreferrer"
+          :class="[
+            'flex-shrink-0 text-xs font-bold px-2.5 py-1 rounded-lg border transition',
+            telehealthBanner.urgent
+              ? 'bg-red-600 text-white border-red-600 hover:bg-red-700'
+              : 'bg-[#004795] text-white border-[#004795] hover:bg-[#003670]',
+          ]"
+        >
+          Join Now
+        </a>
+      </div>
+
       <div class="flex items-center justify-between gap-x-4 my-4">
         <!-- Doctor info -->
         <div class="flex items-center gap-x-3.5">
@@ -50,11 +80,18 @@
               <MapPin class="w-3 h-3" />
               {{ hospitalInfo }}
             </p>
+            <!-- Telemedicine type tag -->
+            <span
+              v-if="appointment.is_telehealth"
+              class="inline-flex items-center gap-1 mt-1 text-[10px] font-semibold text-blue-600 bg-blue-50 border border-blue-100 px-1.5 py-0.5 rounded"
+            >
+              <Video class="w-2.5 h-2.5" /> Telemedicine
+            </span>
           </div>
         </div>
 
         <!-- Date/time block -->
-        <div class="bg-[#f0f4fa] dark:bg-[#1e293b] dark:bg-[#1e293b] p-2.5 rounded-xl flex flex-col items-center justify-center text-center min-w-[75px] flex-shrink-0">
+        <div class="bg-[#f0f4fa] dark:bg-[#1e293b] p-2.5 rounded-xl flex flex-col items-center justify-center text-center min-w-[75px] flex-shrink-0">
           <span class="text-[9px] font-bold text-blue-600 tracking-wider uppercase">
             {{ apptDate }}
           </span>
@@ -67,7 +104,7 @@
         </div>
       </div>
 
-      <!-- Action buttons — only pending can be rescheduled -->
+      <!-- Action buttons -->
       <div class="grid grid-cols-2 gap-3 mt-2">
         <button
           v-if="appointment.status === 'pending'"
@@ -76,6 +113,16 @@
         >
           Reschedule
         </button>
+        <!-- Join meeting shortcut for confirmed telehealth -->
+        <a
+          v-else-if="appointment.status === 'confirmed' && appointment.is_telehealth && sessionUrl"
+          :href="sessionUrl"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="w-full bg-[#004795] hover:bg-[#003670] text-white font-bold text-xs py-2.5 px-4 rounded-lg transition shadow-sm flex items-center justify-center gap-1.5"
+        >
+          <Video class="w-3 h-3" /> Join Meeting
+        </a>
         <div v-else class="w-full" />
         <router-link
           to="/patient/appointments"
@@ -89,8 +136,9 @@
 </template>
 
 <script setup>
-import { computed } from "vue";
-import { CalendarDays, MapPin } from "lucide-vue-next";
+import { ref, computed, onMounted, onUnmounted } from "vue";
+import { CalendarDays, MapPin, Video } from "lucide-vue-next";
+import telehealthApi from "../../api/telehealthApi";
 
 const props = defineProps({
   appointment: { type: Object, default: null },
@@ -99,6 +147,58 @@ const props = defineProps({
 
 defineEmits(["reschedule"]);
 
+// ── Telehealth session URL ─────────────────────────────────────────────────
+const sessionUrl = ref(null);
+
+async function fetchSessionUrl() {
+  if (!props.appointment?.is_telehealth || !props.appointment?.id) {
+    sessionUrl.value = null;
+    return;
+  }
+  try {
+    const res = await telehealthApi.getSessionByAppointment(props.appointment.id);
+    const session = res.data?.data ?? res.data;
+    sessionUrl.value = session?.session_url ?? null;
+  } catch {
+    sessionUrl.value = null;
+  }
+}
+
+// ── Countdown timer for reminder banner ───────────────────────────────────
+const now = ref(Date.now());
+let ticker = null;
+
+onMounted(() => {
+  fetchSessionUrl();
+  ticker = setInterval(() => { now.value = Date.now(); }, 30000); // refresh every 30s
+});
+onUnmounted(() => { if (ticker) clearInterval(ticker); });
+
+// Re-fetch session URL if appointment changes
+import { watch } from "vue";
+watch(() => props.appointment?.id, () => fetchSessionUrl());
+
+const minutesUntil = computed(() => {
+  if (!props.appointment?.scheduled_time) return Infinity;
+  return (new Date(props.appointment.scheduled_time) - now.value) / 60000;
+});
+
+/**
+ * Returns { label, urgent } when we should show the reminder banner,
+ * or null when outside the display window (>30 min away or in the past).
+ */
+const telehealthBanner = computed(() => {
+  if (!props.appointment?.is_telehealth) return null;
+  if (!['confirmed', 'pending'].includes(props.appointment?.status)) return null;
+  const mins = minutesUntil.value;
+  if (mins > 30 || mins < -10) return null;           // outside display window
+  if (mins <= 0) return { label: "Session is live — join now!", urgent: true };
+  if (mins <= 5)  return { label: `Starts in ${Math.ceil(mins)} min — join now!`, urgent: true };
+  if (mins <= 15) return { label: `Session starts in ${Math.ceil(mins)} minutes`, urgent: false };
+  return { label: `Telemedicine session in ${Math.ceil(mins)} minutes`, urgent: false };
+});
+
+// ── Appointment display helpers ───────────────────────────────────────────
 const doctorName = computed(() => {
   const u = props.appointment?.doctor?.user;
   if (!u) return "—";

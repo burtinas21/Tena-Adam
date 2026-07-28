@@ -69,6 +69,14 @@ export default {
     return api.post(`/telehealth-sessions/${id}/cancel`);
   },
 
+  /**
+   * Reschedule a session by adding minutes to the appointment time.
+   * payload: { add_minutes: 10 }
+   */
+  rescheduleSession(id, addMinutes) {
+    return api.post(`/telehealth-sessions/${id}/reschedule`, { add_minutes: addMinutes });
+  },
+
   // ── Attendance ─────────────────────────────────────────────────────────────
 
   /**

@@ -77,6 +77,9 @@ class AuthService implements AuthServiceInterface
     // Load roles relationship
     $user->load('roles');
 
+    // Load user language preference so the frontend can restore it
+    $user->load('language');
+
     // For doctors, also load their healthcare provider profile
     // so the frontend can display their profile picture in the navbar
     if ($user->hasRole('doctor')) {

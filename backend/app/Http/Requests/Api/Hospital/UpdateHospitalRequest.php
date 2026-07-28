@@ -35,6 +35,24 @@ class UpdateHospitalRequest extends FormRequest
                 'required',
                 'string',
             ],
+            'latitude' => [
+    'nullable',
+    'numeric',
+    'between:-90,90'
+],
+
+
+'longitude' => [
+    'nullable',
+    'numeric',
+    'between:-180,180'
+],
+
+
+// 'google_place_id' => [
+//     'nullable',
+//     'string'
+// ],
 
 
             'city' =>

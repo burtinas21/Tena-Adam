@@ -10,9 +10,16 @@
             Electronic Medical Records — consultations, vitals, and prescriptions.
           </p>
         </div>
+           <div class="flex justify-end p-4">
+  <router-link 
+    to="/doctor/queue" 
+    class="inline-flex items-center justify-center px-4 py-2.5 bg-[#004795] hover:bg-[#003670] text-white text-sm font-semibold rounded-lg shadow-sm transition-colors duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#004795]"
+  >
+    Call Next_Patient
+  </router-link>
+</div>
       </div>
 
-      <!-- Global error -->
       <div
         v-if="encounterStore.error"
         class="flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 text-xs font-medium rounded-lg px-4 py-3"
@@ -202,14 +209,14 @@
           </div>
 
           <!-- Vitals section -->
-          <MedicalVitalsGrid
+          <!-- <MedicalVitalsGrid
             v-if="selectedEncounter"
             :vital="currentVital"
             :encounter-id="selectedEncounter.id"
             :patient-id="selectedEncounter.patient?.id"
             :can-edit="selectedEncounter.status === 'in_progress'"
             @saved="onVitalSaved"
-          />
+          /> -->
 
           <!-- History timeline + encounter form -->
           <div v-if="selectedEncounter" class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
@@ -408,9 +415,7 @@
           </div>
         </div>
       </div>
-
-          <!-- ── Documents section ─────────────────────────────── -->
-          <div v-if="selectedEncounter" class="bg-white border border-slate-200 rounded-xl shadow-sm">
+          <!-- <div v-if="selectedEncounter" class="bg-white border border-slate-200 rounded-xl shadow-sm">
             <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
               <div class="flex items-center gap-2">
                 <FileArchive class="w-4 h-4 text-teal-600" />
@@ -428,8 +433,6 @@
                 Upload
               </button>
             </div>
-
-            <!-- Upload form -->
             <div v-if="showDocUpload" class="px-6 py-4 border-b border-slate-100 bg-slate-50/50 space-y-3">
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div class="space-y-1">
@@ -470,13 +473,13 @@
                 </button>
                 <button @click="cancelDocForm" class="px-4 py-2 text-xs font-semibold text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition">Cancel</button>
               </div>
-            </div>
+            </div> -->
 
-            <!-- Documents list -->
-            <div v-if="documentStore.loading" class="p-6 space-y-2">
+           
+            <!-- <div v-if="documentStore.loading" class="p-6 space-y-2">
               <div v-for="n in 2" :key="n" class="h-12 bg-slate-50 rounded-lg animate-pulse" />
-            </div>
-            <div v-else-if="!documentStore.documents.length" class="px-6 py-8 text-center">
+            </div> -->
+            <!-- <div v-else-if="!documentStore.documents.length" class="px-6 py-8 text-center">
               <FileArchive class="w-8 h-8 mx-auto mb-2 text-slate-200" />
               <p class="text-xs text-slate-400">No documents attached to this encounter</p>
             </div>
@@ -500,7 +503,7 @@
                 </div>
               </div>
             </div>
-          </div>
+          </div> -->
     </div>
   </main>
 </template>

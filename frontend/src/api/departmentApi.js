@@ -1,8 +1,12 @@
 import api from "./axios";
 
 export default {
-  getAll() {
-    return api.get("/departments");
+  getAll(params = {}) {
+    return api.get("/departments", { params });
+  },
+
+  getByHospital(hospitalId) {
+    return api.get("/departments", { params: { hospital_id: hospitalId } });
   },
 
   getById(id) {

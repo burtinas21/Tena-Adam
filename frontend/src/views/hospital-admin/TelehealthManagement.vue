@@ -102,10 +102,11 @@
                 <th class="py-3 px-5">Patient</th>
                 <th class="py-3 px-5">Doctor</th>
                 <th class="py-3 px-5">Scheduled</th>
+                <th class="py-3 px-5">Start Time</th>
+                <th class="py-3 px-5">End Time</th>
                 <th class="py-3 px-5">Platform</th>
                 <th class="py-3 px-5">Duration</th>
                 <th class="py-3 px-5">Status</th>
-                <th class="py-3 px-5 text-right">Actions</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-100 text-xs text-slate-700">
@@ -123,32 +124,24 @@
                   <div class="font-medium text-slate-800">{{ formatTime(session.appointment?.scheduled_time) }}</div>
                   <div class="text-[10px] text-slate-400">{{ formatDate(session.appointment?.scheduled_time) }}</div>
                 </td>
+                <td class="py-3.5 px-5">
+                  <template v-if="session.started_at">
+                    <div class="font-medium text-slate-800">{{ formatTime(session.started_at) }}</div>
+                    <div class="text-[10px] text-slate-400">{{ formatDate(session.started_at) }}</div>
+                  </template>
+                  <span v-else class="text-slate-400">—</span>
+                </td>
+                <td class="py-3.5 px-5">
+                  <template v-if="session.ended_at">
+                    <div class="font-medium text-slate-800">{{ formatTime(session.ended_at) }}</div>
+                    <div class="text-[10px] text-slate-400">{{ formatDate(session.ended_at) }}</div>
+                  </template>
+                  <span v-else class="text-slate-400">—</span>
+                </td>
                 <td class="py-3.5 px-5 text-slate-500">{{ formatPlatform(session.platform) }}</td>
                 <td class="py-3.5 px-5 text-slate-500">{{ session.duration_min ? session.duration_min + ' min' : '—' }}</td>
                 <td class="py-3.5 px-5">
                   <StatusBadge :status="session.status" />
-                </td>
-                <td class="py-3.5 px-5 text-right">
-                  <div class="inline-flex items-center space-x-2">
-                    <a
-                      v-if="session.session_url && (session.status === 'active' || session.status === 'scheduled')"
-                      :href="session.session_url"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      class="flex items-center space-x-1 px-3 py-1.5 bg-[#0252D7] text-white text-xs font-bold rounded-lg hover:bg-blue-700 shadow-sm transition"
-                    >
-                      <ExternalLink class="w-3 h-3" />
-                      <span>Open</span>
-                    </a>
-                    <button
-                      v-if="session.status === 'active' || session.status === 'scheduled'"
-                      @click="handleCancel(session)"
-                      :disabled="store.actionLoading"
-                      class="px-3 py-1.5 bg-white border border-red-200 rounded-lg text-xs font-bold text-red-500 hover:bg-red-50 transition disabled:opacity-50"
-                    >
-                      Cancel
-                    </button>
-                  </div>
                 </td>
               </tr>
             </tbody>
@@ -162,7 +155,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
-import { CalendarClock, Clock, Radio, CheckCircle, Video, ExternalLink } from 'lucide-vue-next';
+import { CalendarClock, Clock, Radio, CheckCircle, Video } from 'lucide-vue-next';
 import { useTelehealthStore } from '../../stores/telehealthStore';
 import StatusBadge from '../../components/telehealth/StatusBadge.vue';
 
@@ -206,14 +199,5 @@ function formatDate(dt) {
 function formatPlatform(p) {
   const map = { google_meet: 'Google Meet', zoom: 'Zoom', microsoft_teams: 'MS Teams', custom: 'Custom' };
   return map[p] || p;
-}
-
-async function handleCancel(session) {
-  if (!confirm('Cancel this telehealth session?')) return;
-  try {
-    await store.cancelSession(session.id);
-  } catch (e) {
-    // error shown in banner
-  }
 }
 </script>

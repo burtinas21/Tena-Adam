@@ -7,16 +7,45 @@ export default {
   getById(id) {
     return api.get(`/appointments/${id}`);
   },
+
+  /**
+   * Create an appointment.
+   * If `data.files` is a non-empty array of File objects we send multipart/form-data
+   * so the backend can receive both form fields and file uploads in one request.
+   * Otherwise we fall back to plain JSON (no change to existing flow).
+   */
   create(data) {
-    return api.post("/appointments", data);
+    const hasFiles = data.files && data.files.length > 0;
+
+    if (!hasFiles) {
+      // Plain JSON — same as before
+      const { files, ...rest } = data;
+      return api.post("/appointments", rest);
+    }
+
+    // Build FormData for multipart upload
+    const form = new FormData();
+    form.append("doctor_id",         data.doctor_id);
+    form.append("appointment_date",  data.appointment_date);
+    form.append("appointment_time",  data.appointment_time);
+    form.append("reason",            data.reason);
+    form.append("is_telehealth",     data.is_telehealth ? "1" : "0");
+    if (data.notes)       form.append("notes",       data.notes);
+    if (data.patient_id)  form.append("patient_id",  data.patient_id);
+
+    data.files.forEach((file) => form.append("files[]", file));
+
+    return api.post("/appointments", form, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
   },
+
   update(id, data) {
     return api.put(`/appointments/${id}`, data);
   },
+
   /**
    * Reschedule an appointment by selecting a new slot.
-   * @param {string} id   - Appointment UUID
-   * @param {string} slotId - AppointmentSlot UUID
    */
   reschedule(id, slotId) {
     return api.put(`/appointments/${id}/reschedule`, { slot_id: slotId });
@@ -24,8 +53,6 @@ export default {
 
   /**
    * Hospital-admin reassigns a leave-affected appointment to a different doctor.
-   * @param {string} id     - Appointment UUID
-   * @param {string} slotId - AppointmentSlot UUID belonging to the replacement doctor
    */
   adminReschedule(id, slotId) {
     return api.put(`/appointments/${id}/admin-reschedule`, { slot_id: slotId });
@@ -33,7 +60,6 @@ export default {
 
   /**
    * Fetch available doctors + slots for a hospital/department/date.
-   * Used by the admin reassign picker after leave approval.
    */
   getAvailableDoctorSlots({ hospital_id, department_id, date, exclude_doctor_id }) {
     return api.get("/appointments/available-doctor-slots", {
@@ -43,5 +69,39 @@ export default {
 
   destroy(id) {
     return api.delete(`/appointments/${id}`);
+  },
+
+  // ── Referrals ──────────────────────────────────────────────────────────
+
+  /**
+   * Doctor refers an appointment to another doctor or department.
+   */
+  refer(appointmentId, data) {
+    return api.post(`/appointments/${appointmentId}/refer`, data);
+  },
+
+  /**
+   * Get all referrals for an appointment.
+   */
+  getReferrals(appointmentId) {
+    return api.get(`/appointments/${appointmentId}/referrals`);
+  },
+
+  /**
+   * Get incoming referrals for the authenticated doctor.
+   */
+  getIncomingReferrals() {
+    return api.get("/appointment-referrals/incoming");
+  },
+
+  /**
+   * Referred-to doctor accepts or rejects a referral.
+   * action: 'accept' | 'reject'
+   */
+  respondReferral(referralId, action, rejectionReason = null) {
+    return api.patch(`/appointment-referrals/${referralId}/respond`, {
+      action,
+      rejection_reason: rejectionReason,
+    });
   },
 };

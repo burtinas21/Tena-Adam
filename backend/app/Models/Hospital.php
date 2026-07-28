@@ -22,6 +22,9 @@ class Hospital extends Model
         'name',
         'code',
         'address',
+        'latitude',
+        'longitude',
+        // 'google_place_id',
         'city',
         'region',
         'phone',
@@ -32,6 +35,15 @@ class Hospital extends Model
         'registration_number',
 
     ];
+    protected $casts = [
+
+    'latitude' => 'decimal:8',
+
+    'longitude' => 'decimal:8',
+
+    'is_active' => 'boolean',
+
+];
 
 
     protected static function boot()
@@ -122,6 +134,12 @@ public function reports(): HasMany
 {
     return $this->hasMany(
         Report::class
+    );
+}
+public function payments(): HasMany
+{
+    return $this->hasMany(
+        Payment::class
     );
 }
 }

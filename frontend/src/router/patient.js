@@ -111,6 +111,34 @@ export default [
 
         component: () => import("../views/patient/SymptomChecker.vue"),
       },
+      {
+        path: "payment",
+
+        name: "payment",
+
+        component: () => import("../views/patient/payment/Payment.vue"),
+      },
+      {
+        path: "payments",
+
+        name: "payments",
+
+        component: () => import("../views/patient/payment/Payments.vue"),
+      },
+      {
+        path: "paymentSuccess",
+
+        name: "paymentSuccess",
+
+        component: () => import("../views/patient/payment/PaymentSuccess.vue"),
+      },
+      {
+        path: "paymentFail",
+
+        name: "paymentFail",
+
+        component: () => import("../views/patient/payment/PaymentFailed.vue"),
+      }
     ],
   },
 ];

@@ -1,13 +1,19 @@
 <template>
   <main class="flex-1 bg-[#F8FAFC] p-6 overflow-y-auto font-sans">
     <div class="max-w-5xl mx-auto">
-
       <!-- Header -->
-      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+      <div
+        class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6"
+      >
         <div>
           <div class="flex items-center gap-2 mb-1">
-            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span class="text-[10px] font-bold text-emerald-600 tracking-widest uppercase">Live Queue</span>
+            <span
+              class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"
+            ></span>
+            <span
+              class="text-[10px] font-bold text-emerald-600 tracking-widest uppercase"
+              >Live Queue</span
+            >
           </div>
           <h1 class="text-xl font-bold text-gray-900">My Patient Queue</h1>
           <p class="text-xs text-gray-500 mt-0.5">{{ dateLabel }}</p>
@@ -29,6 +35,8 @@
           >
             <UserPlus class="w-3.5 h-3.5" /> Add Walk-in
           </button>
+          <!-- <a href="/doctor/medicalencounter">Medical Encounter</a> -->
+          
 
           <!-- Refresh -->
           <button
@@ -37,31 +45,58 @@
             class="p-2.5 rounded-lg border border-gray-200 bg-white text-gray-500 hover:bg-gray-50 transition"
             title="Refresh queue"
           >
-            <RefreshCw class="w-4 h-4" :class="{ 'animate-spin': store.loading }" />
+            <RefreshCw
+              class="w-4 h-4"
+              :class="{ 'animate-spin': store.loading }"
+            />
           </button>
         </div>
       </div>
 
       <!-- KPI row -->
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-        <KpiCard label="Waiting"        :value="store.totalWaiting"   color="amber"   />
-        <KpiCard label="In Consultation":value="store.inConsultation.length" color="blue" />
-        <KpiCard label="Completed"      :value="store.totalCompleted" color="emerald" />
-        <KpiCard label="Skipped"        :value="store.skipped.length" color="gray"    />
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-2">
+        <KpiCard label="Waiting" :value="store.totalWaiting" color="amber" />
+        <KpiCard
+          label="In Consultation"
+          :value="store.inConsultation.length"
+          color="blue"
+        />
+        <KpiCard
+          label="Completed"
+          :value="store.totalCompleted"
+          color="emerald"
+        />
+        <KpiCard label="Skipped" :value="store.skipped.length" color="gray" />
       </div>
 
-      <!-- Error banner -->
-      <div v-if="store.error"
-        class="mb-4 flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 text-xs font-medium rounded-lg px-4 py-3">
+      <div class="flex justify-end p-4">
+  <router-link 
+    to="/doctor/medicalencounter" 
+    class="inline-flex items-center justify-center px-4 py-2.5 bg-[#004795] hover:bg-[#003670] text-white text-sm font-semibold rounded-lg shadow-sm transition-colors duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#004795]"
+  >
+    Medical Encounter
+  </router-link>
+</div>
+
+      <div
+        v-if="store.error"
+        class="mb-4 flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 text-xs font-medium rounded-lg px-4 py-3"
+      >
         <AlertCircle class="w-4 h-4 flex-shrink-0" /> {{ store.error }}
       </div>
 
       <!-- ── Current patient (in consultation) ─────────────────────── -->
-      <div v-if="store.currentPatient"
-        class="bg-blue-600 text-white rounded-xl p-5 mb-5 shadow-md">
+      <div
+        v-if="store.currentPatient"
+        class="bg-blue-600 text-white rounded-xl p-5 mb-5 shadow-md"
+      >
         <div class="flex items-start justify-between gap-4 flex-wrap">
           <div>
-            <p class="text-[10px] font-bold tracking-widest uppercase text-blue-200 mb-1">Now Consulting</p>
+            <p
+              class="text-[10px] font-bold tracking-widest uppercase text-blue-200 mb-1"
+            >
+              Now Consulting
+            </p>
             <p class="text-xl font-bold">
               #{{ store.currentPatient.queue_number }} —
               {{ patientName(store.currentPatient) }}
@@ -84,7 +119,9 @@
               class="flex items-center gap-1.5 bg-white text-blue-700 font-bold text-xs px-5 py-2 rounded-lg hover:bg-blue-50 transition shadow-sm"
             >
               <CheckCircle class="w-3.5 h-3.5" />
-              <span v-if="store.actionLoading"><Loader2 class="w-3.5 h-3.5 animate-spin" /></span>
+              <span v-if="store.actionLoading"
+                ><Loader2 class="w-3.5 h-3.5 animate-spin"
+              /></span>
               <span v-else>Complete</span>
             </button>
           </div>
@@ -106,25 +143,56 @@
 
       <!-- Queue list -->
       <div v-if="store.loading && !store.entries.length" class="space-y-3">
-        <div v-for="n in 5" :key="n" class="h-16 bg-white rounded-xl border border-gray-100 animate-pulse" />
+        <div
+          v-for="n in 5"
+          :key="n"
+          class="h-16 bg-white rounded-xl border border-gray-100 animate-pulse"
+        />
       </div>
 
-      <div v-else-if="!store.entries.length && !store.loading"
-        class="bg-white rounded-xl border border-gray-100 py-16 flex flex-col items-center text-gray-400">
+      <div
+        v-else-if="!store.entries.length && !store.loading"
+        class="bg-white rounded-xl border border-gray-100 py-16 flex flex-col items-center text-gray-400"
+      >
         <Users class="w-10 h-10 mb-3 text-gray-200" />
-        <p class="text-sm font-medium text-gray-500">No queue entries for this date</p>
+        <p class="text-sm font-medium text-gray-500">
+          No queue entries for this date
+        </p>
         <p class="text-xs mt-1">Add a walk-in patient to get started.</p>
       </div>
 
-      <div v-else class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+      <div
+        v-else
+        class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden"
+      >
         <table class="w-full text-sm">
           <thead>
             <tr class="border-b border-gray-100 bg-gray-50/80">
-              <th class="text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider px-4 py-3 w-12">#</th>
-              <th class="text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider px-4 py-3">Patient</th>
-              <th class="text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider px-4 py-3 hidden sm:table-cell">Type</th>
-              <th class="text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider px-4 py-3">Status</th>
-              <th class="text-right text-[10px] font-bold text-gray-400 uppercase tracking-wider px-4 py-3">Actions</th>
+              <th
+                class="text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider px-4 py-3 w-12"
+              >
+                #
+              </th>
+              <th
+                class="text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider px-4 py-3"
+              >
+                Patient
+              </th>
+              <th
+                class="text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider px-4 py-3 hidden sm:table-cell"
+              >
+                Type
+              </th>
+              <th
+                class="text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider px-4 py-3"
+              >
+                Status
+              </th>
+              <th
+                class="text-right text-[10px] font-bold text-gray-400 uppercase tracking-wider px-4 py-3"
+              >
+                Actions
+              </th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-50">
@@ -135,25 +203,39 @@
               :class="{ 'bg-blue-50/50': entry.status === 'in_consultation' }"
             >
               <td class="px-4 py-3">
-                <span class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-gray-100 text-xs font-bold text-gray-600">
+                <span
+                  class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-gray-100 text-xs font-bold text-gray-600"
+                >
                   {{ entry.queue_number }}
                 </span>
               </td>
               <td class="px-4 py-3">
-                <p class="font-semibold text-gray-800 text-sm">{{ patientName(entry) }}</p>
-                <p v-if="entry.appointment?.patient?.user" class="text-[11px] text-gray-400 mt-0.5">
-                  {{ entry.appointment.patient.user.phone ?? '' }}
+                <p class="font-semibold text-gray-800 text-sm">
+                  {{ patientName(entry) }}
                 </p>
-                <p v-else-if="entry.walk_in_phone" class="text-[11px] text-gray-400 mt-0.5">
+                <p
+                  v-if="entry.appointment?.patient?.user"
+                  class="text-[11px] text-gray-400 mt-0.5"
+                >
+                  {{ entry.appointment.patient.user.phone ?? "" }}
+                </p>
+                <p
+                  v-else-if="entry.walk_in_phone"
+                  class="text-[11px] text-gray-400 mt-0.5"
+                >
                   {{ entry.walk_in_phone }}
                 </p>
               </td>
               <td class="px-4 py-3 hidden sm:table-cell">
-                <span class="text-[11px] font-semibold px-2 py-0.5 rounded"
-                  :class="entry.appointment_id
-                    ? 'bg-blue-50 text-blue-700'
-                    : 'bg-orange-50 text-orange-700'">
-                  {{ entry.appointment_id ? 'Appointment' : 'Walk-in' }}
+                <span
+                  class="text-[11px] font-semibold px-2 py-0.5 rounded"
+                  :class="
+                    entry.appointment_id
+                      ? 'bg-blue-50 text-blue-700'
+                      : 'bg-orange-50 text-orange-700'
+                  "
+                >
+                  {{ entry.appointment_id ? "Appointment" : "Walk-in" }}
                 </span>
               </td>
               <td class="px-4 py-3">
@@ -167,7 +249,9 @@
                     @click="handleRecall(entry)"
                     :disabled="store.actionLoading"
                     class="text-[11px] font-semibold text-blue-600 hover:underline px-2 py-1 rounded hover:bg-blue-50 transition"
-                  >Recall</button>
+                  >
+                    Recall
+                  </button>
 
                   <!-- Skip waiting -->
                   <button
@@ -175,53 +259,84 @@
                     @click="handleSkip(entry)"
                     :disabled="store.actionLoading"
                     class="text-[11px] font-semibold text-orange-500 hover:underline px-2 py-1 rounded hover:bg-orange-50 transition"
-                  >Skip</button>
+                  >
+                    Skip
+                  </button>
                 </div>
               </td>
             </tr>
           </tbody>
         </table>
       </div>
-
     </div>
   </main>
 
   <!-- ── Walk-in modal ──────────────────────────────────────────────── -->
-  <div v-if="showWalkIn"
+  <div
+    v-if="showWalkIn"
     class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
-    @click.self="showWalkIn = false">
+    @click.self="showWalkIn = false"
+  >
     <div class="bg-white rounded-2xl shadow-xl w-full max-w-md">
-      <div class="flex items-center justify-between px-6 pt-5 pb-4 border-b border-gray-100">
+      <div
+        class="flex items-center justify-between px-6 pt-5 pb-4 border-b border-gray-100"
+      >
         <h3 class="text-sm font-bold text-gray-800">Add Walk-in Patient</h3>
-        <button @click="showWalkIn = false" class="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 transition">
+        <button
+          @click="showWalkIn = false"
+          class="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 transition"
+        >
           <X class="w-4 h-4" />
         </button>
       </div>
       <form @submit.prevent="handleWalkIn" class="px-6 py-4 space-y-4">
-        <div v-if="walkInError"
-          class="flex items-start gap-2 bg-red-50 border border-red-200 text-red-700 text-xs font-medium rounded-lg px-3 py-2.5">
-          <AlertCircle class="w-3.5 h-3.5 flex-shrink-0 mt-0.5" /> {{ walkInError }}
+        <div
+          v-if="walkInError"
+          class="flex items-start gap-2 bg-red-50 border border-red-200 text-red-700 text-xs font-medium rounded-lg px-3 py-2.5"
+        >
+          <AlertCircle class="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+          {{ walkInError }}
         </div>
         <div>
           <label class="block text-xs font-semibold text-gray-700 mb-1.5">
             Patient Name <span class="text-red-500">*</span>
           </label>
-          <input v-model="walkInForm.name" type="text" required placeholder="Full name"
-            class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#004795]/30 focus:border-[#004795] transition" />
+          <input
+            v-model="walkInForm.name"
+            type="text"
+            required
+            placeholder="Full name"
+            class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#004795]/30 focus:border-[#004795] transition"
+          />
         </div>
         <div>
-          <label class="block text-xs font-semibold text-gray-700 mb-1.5">Phone Number</label>
-          <input v-model="walkInForm.phone" type="tel" placeholder="+251 911 000 000"
-            class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#004795]/30 focus:border-[#004795] transition" />
+          <label class="block text-xs font-semibold text-gray-700 mb-1.5"
+            >Phone Number</label
+          >
+          <input
+            v-model="walkInForm.phone"
+            type="tel"
+            placeholder="+251 911 000 000"
+            class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#004795]/30 focus:border-[#004795] transition"
+          />
         </div>
         <div class="flex items-center justify-end gap-3 pt-1">
-          <button type="button" @click="showWalkIn = false"
-            class="px-4 py-2 text-sm font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition">
+          <button
+            type="button"
+            @click="showWalkIn = false"
+            class="px-4 py-2 text-sm font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition"
+          >
             Cancel
           </button>
-          <button type="submit" :disabled="store.actionLoading"
-            class="px-5 py-2 text-sm font-semibold text-white bg-[#004795] hover:bg-[#003670] rounded-lg transition disabled:opacity-60 flex items-center gap-2">
-            <Loader2 v-if="store.actionLoading" class="w-3.5 h-3.5 animate-spin" />
+          <button
+            type="submit"
+            :disabled="store.actionLoading"
+            class="px-5 py-2 text-sm font-semibold text-white bg-[#004795] hover:bg-[#003670] rounded-lg transition disabled:opacity-60 flex items-center gap-2"
+          >
+            <Loader2
+              v-if="store.actionLoading"
+              class="w-3.5 h-3.5 animate-spin"
+            />
             Add to Queue
           </button>
         </div>
@@ -233,82 +348,122 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, defineComponent, h } from "vue";
 import {
-  Users, UserPlus, RefreshCw, AlertCircle, CheckCircle,
-  BellRing, SkipForward, Loader2, X,
+  Users,
+  UserPlus,
+  RefreshCw,
+  AlertCircle,
+  CheckCircle,
+  BellRing,
+  SkipForward,
+  Loader2,
+  X,
 } from "lucide-vue-next";
 import { useAuthStore } from "../../../stores/authStore";
 import { useQueueStore } from "../../../stores/queueStore";
 
 // ── Tiny inline components ────────────────────────────────────────────────
 const colorMap = {
-  amber:   "bg-amber-50 text-amber-700 border border-amber-200",
-  blue:    "bg-blue-50 text-blue-700 border border-blue-100",
+  amber: "bg-amber-50 text-amber-700 border border-amber-200",
+  blue: "bg-blue-50 text-blue-700 border border-blue-100",
   emerald: "bg-emerald-50 text-emerald-700 border border-emerald-200",
-  gray:    "bg-gray-50 text-gray-600 border border-gray-200",
+  gray: "bg-gray-50 text-gray-600 border border-gray-200",
 };
 
 const KpiCard = defineComponent({
   props: { label: String, value: Number, color: String },
   setup(p) {
-    return () => h("div", {
-      class: "bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex flex-col gap-1"
-    }, [
-      h("p", { class: "text-[10px] font-bold text-gray-400 uppercase tracking-wider" }, p.label),
-      h("p", { class: "text-2xl font-bold text-gray-800 leading-none" }, p.value ?? 0),
-      h("div", { class: `inline-flex w-fit items-center px-2 py-0.5 rounded-full text-[10px] font-bold mt-1 ${colorMap[p.color] ?? colorMap.gray}` }, p.label),
-    ]);
+    return () =>
+      h(
+        "div",
+        {
+          class:
+            "bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex flex-col gap-1",
+        },
+        [
+          h(
+            "p",
+            {
+              class:
+                "text-[10px] font-bold text-gray-400 uppercase tracking-wider",
+            },
+            p.label,
+          ),
+          h(
+            "p",
+            { class: "text-2xl font-bold text-gray-800 leading-none" },
+            p.value ?? 0,
+          ),
+          h(
+            "div",
+            {
+              class: `inline-flex w-fit items-center px-2 py-0.5 rounded-full text-[10px] font-bold mt-1 ${colorMap[p.color] ?? colorMap.gray}`,
+            },
+            p.label,
+          ),
+        ],
+      );
   },
 });
 
 const statusColors = {
-  waiting:         "bg-amber-50 text-amber-700 border border-amber-200",
+  waiting: "bg-amber-50 text-amber-700 border border-amber-200",
   in_consultation: "bg-blue-50 text-blue-700 border border-blue-100",
-  completed:       "bg-emerald-50 text-emerald-700 border border-emerald-200",
-  skipped:         "bg-orange-50 text-orange-600 border border-orange-200",
-  no_show:         "bg-gray-100 text-gray-500 border border-gray-200",
+  completed: "bg-emerald-50 text-emerald-700 border border-emerald-200",
+  skipped: "bg-orange-50 text-orange-600 border border-orange-200",
+  no_show: "bg-gray-100 text-gray-500 border border-gray-200",
 };
 
 const StatusBadge = defineComponent({
   props: { status: String },
   setup(p) {
-    return () => h("span", {
-      class: `text-[10px] font-bold px-2 py-0.5 rounded-full capitalize ${statusColors[p.status] ?? statusColors.no_show}`
-    }, p.status?.replace("_", " ") ?? "—");
+    return () =>
+      h(
+        "span",
+        {
+          class: `text-[10px] font-bold px-2 py-0.5 rounded-full capitalize ${statusColors[p.status] ?? statusColors.no_show}`,
+        },
+        p.status?.replace("_", " ") ?? "—",
+      );
   },
 });
 
 // ── State ─────────────────────────────────────────────────────────────────
 const authStore = useAuthStore();
-const store     = useQueueStore();
+const store = useQueueStore();
 
-const doctorId   = computed(() => authStore.user?.id);
+const doctorId = computed(() => authStore.user?.id);
 
 // hospitalId: try login-cached data first, fall back to /doctor/me fetch
 const hospitalIdRef = ref(null);
 const hospitalId = computed(() => {
   const u = authStore.user;
-  return hospitalIdRef.value
-    ?? u?.healthcare_provider?.hospital?.id
-    ?? u?.healthcareProvider?.hospital?.id
-    ?? u?.healthcare_provider?.hospital_id
-    ?? u?.healthcareProvider?.hospital_id
-    ?? null;
+  return (
+    hospitalIdRef.value ??
+    u?.healthcare_provider?.hospital?.id ??
+    u?.healthcareProvider?.hospital?.id ??
+    u?.healthcare_provider?.hospital_id ??
+    u?.healthcareProvider?.hospital_id ??
+    null
+  );
 });
 
-const today        = new Date().toISOString().split("T")[0];
+const today = new Date().toISOString().split("T")[0];
 const selectedDate = ref(today);
-let   pollInterval = null;
+let pollInterval = null;
 
 const dateLabel = computed(() =>
   new Date(selectedDate.value + "T00:00:00").toLocaleDateString("en-ET", {
-    weekday: "long", year: "numeric", month: "long", day: "numeric",
-  })
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  }),
 );
 
 // Walk-in form
-const showWalkIn  = ref(false);
+const showWalkIn = ref(false);
 const walkInError = ref(null);
-const walkInForm  = ref({ name: "", phone: "" });
+const walkInForm = ref({ name: "", phone: "" });
 
 // ── Lifecycle ─────────────────────────────────────────────────────────────
 onMounted(async () => {
@@ -316,7 +471,7 @@ onMounted(async () => {
   if (!hospitalId.value && doctorId.value) {
     try {
       const { default: doctorApi } = await import("../../../api/doctorApi");
-      const res  = await doctorApi.getMe();
+      const res = await doctorApi.getMe();
       const data = res.data?.data ?? res.data;
       // data.hospital.id comes from HealthcareProviderResource
       hospitalIdRef.value = data?.hospital?.id ?? null;
@@ -355,7 +510,9 @@ async function handleCallNext() {
     if (result?.message && !result.current_patient) {
       store.error = result.message;
     }
-  } catch { /* store.error set by store */ }
+  } catch {
+    /* store.error set by store */
+  }
 }
 
 async function handleComplete(entry) {
@@ -373,21 +530,23 @@ async function handleRecall(entry) {
 async function handleWalkIn() {
   walkInError.value = null;
   if (!doctorId.value || !hospitalId.value) {
-    walkInError.value = "Doctor or hospital information is not available. Please refresh.";
+    walkInError.value =
+      "Doctor or hospital information is not available. Please refresh.";
     return;
   }
   try {
     await store.addWalkIn({
-      doctor_id:            doctorId.value,
-      hospital_id:          hospitalId.value,
-      queue_date:           selectedDate.value,
+      doctor_id: doctorId.value,
+      hospital_id: hospitalId.value,
+      queue_date: selectedDate.value,
       walk_in_patient_name: walkInForm.value.name,
-      walk_in_phone:        walkInForm.value.phone || null,
+      walk_in_phone: walkInForm.value.phone || null,
     });
     walkInForm.value = { name: "", phone: "" };
     showWalkIn.value = false;
   } catch (err) {
-    walkInError.value = err.response?.data?.message || "Failed to add walk-in patient.";
+    walkInError.value =
+      err.response?.data?.message || "Failed to add walk-in patient.";
   }
 }
 
@@ -401,6 +560,9 @@ function patientName(entry) {
 
 function formatTime(dt) {
   if (!dt) return "—";
-  return new Date(dt).toLocaleTimeString("en-ET", { hour: "2-digit", minute: "2-digit" });
+  return new Date(dt).toLocaleTimeString("en-ET", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 </script>

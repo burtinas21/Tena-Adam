@@ -24,6 +24,9 @@ class DatabaseSeeder extends Seeder
             //    → hospital admins → doctors → schedules → leaves
             //    → patients → appointments → slots → queue
             EthiopiaHospitalSeeder::class,
+            LanguageSeeder::class,
+            TranslationKeySeeder::class,
+            TranslationSeeder::class
         ]);
     }
 }

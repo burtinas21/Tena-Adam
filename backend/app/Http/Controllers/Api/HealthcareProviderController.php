@@ -54,7 +54,11 @@ class HealthcareProviderController extends Controller
                 $query->where('hospital_id', $hospitalId);
             }
         }
-        // patients / unauthenticated see all
+        // patients / unauthenticated see all — but can filter by hospital
+        // Allow any role to filter by hospital_id via query param
+        if (request()->filled('hospital_id')) {
+            $query->where('hospital_id', request('hospital_id'));
+        }
 
         return HealthcareProviderResource::collection($query->get());
     }

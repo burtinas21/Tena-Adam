@@ -2,64 +2,118 @@
 
 namespace App\Policies;
 
-use App\Models\Payment;
 use App\Models\User;
+use App\Models\Payment;
 
 class PaymentPolicy
 {
+
     /**
-     * Determine whether the user can view any models.
+     * View payment list
      */
     public function viewAny(User $user): bool
     {
-        return false;
+
+        return $user->hasAnyRole([
+            'platform_admin',
+            'hospital_admin',
+            'receptionist'
+        ]);
+
     }
 
+
+
     /**
-     * Determine whether the user can view the model.
+     * View single payment
      */
-    public function view(User $user, Payment $payment): bool
+    public function view(
+        User $user,
+        Payment $payment
+    ): bool
     {
+
+        // Platform admin can see everything
+        if($user->hasRole('platform_admin')){
+            return true;
+        }
+
+
+        // Hospital admin sees own hospital payments
+        if($user->hasRole('hospital_admin')){
+
+            return $user->hospitals()
+                ->where(
+                    'hospitals.id',
+                    $payment->hospital_id
+                )
+                ->exists();
+
+        }
+
+
+        // Patient sees own payment
+        if($user->hasRole('patient')){
+
+            return $payment->patient_id 
+                === 
+                $user->patient->id;
+
+        }
+
+
         return false;
+
     }
 
+
+
     /**
-     * Determine whether the user can create models.
+     * Create payment
      */
     public function create(User $user): bool
     {
-        return false;
+
+        return $user->hasAnyRole([
+            'hospital_admin',
+            'receptionist'
+        ]);
+
     }
 
-    /**
-     * Determine whether the user can update the model.
-     */
-    public function update(User $user, Payment $payment): bool
-    {
-        return false;
-    }
+
 
     /**
-     * Determine whether the user can delete the model.
+     * Update payment
      */
-    public function delete(User $user, Payment $payment): bool
+    public function update(
+        User $user,
+        Payment $payment
+    ): bool
     {
-        return false;
+
+        return $user->hasAnyRole([
+            'platform_admin',
+            'hospital_admin'
+        ]);
+
     }
 
-    /**
-     * Determine whether the user can restore the model.
-     */
-    public function restore(User $user, Payment $payment): bool
-    {
-        return false;
-    }
+
 
     /**
-     * Determine whether the user can permanently delete the model.
+     * Delete payment
      */
-    public function forceDelete(User $user, Payment $payment): bool
+    public function delete(
+        User $user,
+        Payment $payment
+    ): bool
     {
-        return false;
+
+        return $user->hasRole(
+            'platform_admin'
+        );
+
     }
+
 }

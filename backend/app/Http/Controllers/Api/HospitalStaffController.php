@@ -119,18 +119,25 @@ class HospitalStaffController extends Controller
         }
 
         $request->validate([
-            'first_name' => 'required|string',
-            'last_name'  => 'required|string',
-            'email'      => 'required|email|unique:users,email',
-            'phone'      => 'nullable|string',
-            'password'   => 'required|min:8',
+            'first_name'  => 'required|string',
+            'last_name'   => 'required|string',
+            'email'       => 'required|email|unique:users,email',
+            'phone'       => 'nullable|string',
+            'password'    => 'required|min:8',
+            'hospital_id' => 'sometimes|nullable|exists:hospitals,id',
         ]);
 
-        // Always use the authenticated admin's OWN hospital — ignore any client-sent hospital_id
-        $hospitalId = $this->resolveHospitalId();
-
-        if (!$hospitalId) {
-            return response()->json(['message' => 'Could not determine your hospital.'], 422);
+        // Platform admin must supply a hospital_id; other roles use their own hospital
+        if ($authUser->hasRole('platform_admin')) {
+            $hospitalId = $request->input('hospital_id');
+            if (!$hospitalId) {
+                return response()->json(['message' => 'Please select a hospital.'], 422);
+            }
+        } else {
+            $hospitalId = $this->resolveHospitalId();
+            if (!$hospitalId) {
+                return response()->json(['message' => 'Could not determine your hospital.'], 422);
+            }
         }
 
         $user = User::create([

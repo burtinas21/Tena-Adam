@@ -23,21 +23,22 @@ public function __construct(
 
 public function index()
 {
+    $this->authorize(
+        'viewAny',
+        Department::class
+    );
 
+    $request = request();
 
-$this->authorize(
-    'viewAny',
-    Department::class
-);
+    // Allow filtering by hospital_id for referral doctor/department pickers
+    if ($request->has('hospital_id') && $request->hospital_id) {
+        $departments = Department::where('hospital_id', $request->hospital_id)->get();
+        return DepartmentResource::collection($departments);
+    }
 
-
-return DepartmentResource::collection(
-
-    $this->departmentService->all()
-
-);
-
-
+    return DepartmentResource::collection(
+        $this->departmentService->all()
+    );
 }
 
 

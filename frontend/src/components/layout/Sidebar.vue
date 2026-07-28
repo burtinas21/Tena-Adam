@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from "vue";
 import { useRouter, useRoute } from "vue-router";
+import { useI18n } from "vue-i18n";
 import { useAuthStore } from "../../stores/authStore";
 import { useSidebar } from "../../composables/useSidebar";
 import platformAdmin from "../../config/sidebar/platformAdmin";
@@ -10,7 +11,8 @@ import patient from "../../config/sidebar/patient";
 import receptionist from "../../config/sidebar/receptionist";
 
 const router = useRouter();
-const route = useRoute();
+const route  = useRoute();
+const { t }  = useI18n();
 const authStore = useAuthStore();
 const { isOpen, isMobileOpen, closeMenu } = useSidebar();
 
@@ -39,9 +41,16 @@ const menuItems = computed(() => {
   );
 });
 
+/** Translate nav item title — fall back to the hardcoded English title */
+function itemLabel(item) {
+  if (!item.titleKey) return item.title;
+  const translated = t(item.titleKey);
+  // vue-i18n returns the key itself when not found, so check for that
+  return translated === item.titleKey ? item.title : translated;
+}
+
 function handleMenuClick(item) {
   router.push(item.route);
-  // On mobile: close overlay after navigation
   closeMenu();
 }
 </script>
@@ -62,12 +71,9 @@ function handleMenuClick(item) {
       v-show="isMobileOpen || true"
       :class="[
         sidebarConfig.theme.background,
-        // Mobile: fixed overlay, always full width when open
         'fixed lg:relative inset-y-0 left-0 z-40 lg:z-auto',
         'flex flex-col h-screen border-r border-gray-100 dark:border-slate-700 transition-all duration-300 ease-in-out flex-shrink-0 dark:bg-slate-800',
-        // Mobile visibility
         isMobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
-        // Desktop width: collapsed = icon-only (w-16), expanded = full (w-60)
         isOpen ? 'w-60' : 'lg:w-16',
         'w-60',
       ]"
@@ -93,9 +99,9 @@ function handleMenuClick(item) {
       <nav class="flex-1 overflow-y-auto py-3 px-2 space-y-0.5">
         <div
           v-for="item in menuItems"
-          :key="item.title"
+          :key="item.titleKey || item.title"
           @click="handleMenuClick(item)"
-          :title="!isOpen ? item.title : ''"
+          :title="!isOpen ? itemLabel(item) : ''"
           class="flex items-center gap-3 rounded-lg cursor-pointer transition-colors group relative"
           :class="[
             route.path === item.route
@@ -109,7 +115,7 @@ function handleMenuClick(item) {
             class="text-sm font-medium whitespace-nowrap overflow-hidden transition-all duration-300"
             :class="isOpen ? 'opacity-100 max-w-full' : 'lg:opacity-0 lg:max-w-0 opacity-100 max-w-full'"
           >
-            {{ item.title }}
+            {{ itemLabel(item) }}
           </span>
 
           <!-- Tooltip on collapsed desktop -->
@@ -118,7 +124,7 @@ function handleMenuClick(item) {
             class="hidden lg:block absolute left-full ml-2 px-2 py-1 bg-gray-800 dark:bg-slate-700 text-white text-xs rounded-md whitespace-nowrap
                    opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50"
           >
-            {{ item.title }}
+            {{ itemLabel(item) }}
           </div>
         </div>
       </nav>

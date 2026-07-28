@@ -80,12 +80,12 @@
 
     <!-- Action buttons -->
     <div class="grid grid-cols-2 gap-2 pt-2 border-t border-gray-100">
-      <router-link
-        to="/patient/appointments"
+      <button
+        @click="bookAppointment"
         class="w-full py-2.5 bg-[#004bb5] text-white text-xs font-bold rounded-lg hover:bg-[#003da1] transition-colors leading-tight text-center flex items-center justify-center"
       >
         Book<br>Appointment
-      </router-link>
+      </button>
       <router-link
         :to="`/patient/doctors/${doctor.id}`"
         class="w-full py-2.5 border border-gray-300 text-gray-700 text-xs font-semibold rounded-lg hover:bg-gray-50 transition-colors text-center flex items-center justify-center"
@@ -98,15 +98,27 @@
 
 <script setup>
 import { ref } from "vue";
+import { useRouter } from "vue-router";
 import {
   Heart, Building2, Briefcase, Languages,
   Monitor, UserCheck, CalendarDays,
 } from "lucide-vue-next";
 
-defineProps({
+const props = defineProps({
   doctor: { type: Object, required: true },
 });
 
+const router   = useRouter();
 const imgError = ref(false);
 const isFav    = ref(false);
+
+function bookAppointment() {
+  router.push({
+    name:  "appointments",
+    query: {
+      doctor_id:   props.doctor.id,
+      hospital_id: props.doctor.hospitalId ?? "",
+    },
+  });
+}
 </script>

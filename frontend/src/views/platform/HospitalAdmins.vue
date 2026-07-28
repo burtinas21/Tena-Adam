@@ -1,6 +1,6 @@
 <template>
-  <main class="flex-1 bg-[#F8FAFC] dark:bg-[#0f172a] p-6 overflow-y-auto font-sans dark:text-slate-200">
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-y-4 mb-6">
+  <main class="flex-1 bg-[#F8FAFC] dark:bg-[#0f172a] px-2 py-3 sm:p-6 overflow-y-auto font-sans dark:text-slate-200">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-y-4 mb-3 sm:mb-6">
       <div>
         <h1 class="text-2xl font-bold text-gray-800 tracking-tight">Hospital Admins</h1>
         <p class="text-xs text-gray-500 font-medium mt-0.5">

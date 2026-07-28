@@ -47,6 +47,8 @@ class NotificationService
 
                     'channel' => $data['channel'],
 
+                    'reference_id' => $data['reference_id'] ?? null,
+
                     'subject' => $data['subject'] ?? null,
 
                     'content' => $data['content'],
@@ -331,17 +333,14 @@ public function sendAppointmentReminder(
         "Reminder: You have an appointment tomorrow with Dr. {$doctor->first_name} {$doctor->last_name} ".
         "at {$hospital->name}. Please arrive 15 minutes early.";
 
-    return $this->sendAppointmentNotification(
-
-        $patient,
-
-        $subject,
-
-        $content,
-
-        true
-
-    );
+    return $this->createNotification([
+        'user_id'      => $patient->id,
+        'type'         => 'email',
+        'channel'      => 'appointment',
+        'reference_id' => (string) $appointment->id,
+        'subject'      => $subject,
+        'content'      => $content,
+    ]);
 }
 
 /**
@@ -372,11 +371,12 @@ public function sendQueueNotification(Queue $queue): ?Notification
     if ($queue->appointment_id && $queue->appointment?->patient) {
         try {
             $result = $this->createNotification([
-                'user_id' => $queue->appointment->patient->user->id,
-                'type'    => 'in_app',
-                'channel' => 'queue',
-                'subject' => 'Queue Update',
-                'content' => $patientContent,
+                'user_id'      => $queue->appointment->patient->user->id,
+                'type'         => 'in_app',
+                'channel'      => 'queue',
+                'reference_id' => (string) $queue->id,
+                'subject'      => 'Queue Update',
+                'content'      => $patientContent,
             ]);
         } catch (\Throwable) { /* silent */ }
     }
@@ -386,11 +386,12 @@ public function sendQueueNotification(Queue $queue): ?Notification
         $doctorUser = User::find($queue->doctor_id);
         if ($doctorUser && in_array($queue->status, ['waiting', 'in_consultation', 'completed'])) {
             $this->createNotification([
-                'user_id' => $doctorUser->id,
-                'type'    => 'in_app',
-                'channel' => 'queue',
-                'subject' => 'Queue Update',
-                'content' => $doctorContent,
+                'user_id'      => $doctorUser->id,
+                'type'         => 'in_app',
+                'channel'      => 'queue',
+                'reference_id' => (string) $queue->id,
+                'subject'      => 'Queue Update',
+                'content'      => $doctorContent,
             ]);
         }
     } catch (\Throwable) { /* silent */ }
@@ -428,11 +429,12 @@ public function sendPrescriptionNotification(
     };
 
     $result = $this->createNotification([
-        'user_id' => $patient->id,
-        'type'    => 'in_app',
-        'channel' => 'prescription',
-        'subject' => $subject,
-        'content' => $patientContent,
+        'user_id'      => $patient->id,
+        'type'         => 'in_app',
+        'channel'      => 'prescription',
+        'reference_id' => (string) $prescription->id,
+        'subject'      => $subject,
+        'content'      => $patientContent,
     ]);
 
     // Also notify the doctor
@@ -440,11 +442,12 @@ public function sendPrescriptionNotification(
         $doctorUser = $prescription->encounter->doctor->user ?? null;
         if ($doctorUser) {
             $this->createNotification([
-                'user_id' => $doctorUser->id,
-                'type'    => 'in_app',
-                'channel' => 'prescription',
-                'subject' => $subject,
-                'content' => $doctorContent,
+                'user_id'      => $doctorUser->id,
+                'type'         => 'in_app',
+                'channel'      => 'prescription',
+                'reference_id' => (string) $prescription->id,
+                'subject'      => $subject,
+                'content'      => $doctorContent,
             ]);
         }
     } catch (\Throwable) { /* silent */ }
@@ -485,11 +488,12 @@ public function sendTelehealthNotification(
     }
 
     return $this->createNotification([
-        'user_id' => $user->id,
-        'type'    => $sendEmail ? 'email' : 'in_app',
-        'channel' => 'telehealth',
-        'subject' => $subject,
-        'content' => $content,
+        'user_id'      => $user->id,
+        'type'         => $sendEmail ? 'email' : 'in_app',
+        'channel'      => 'telehealth',
+        'reference_id' => (string) $session->id,
+        'subject'      => $subject,
+        'content'      => $content,
     ]);
 }
 /**
@@ -521,13 +525,14 @@ public function sendDoctorLeaveNotification(
         foreach ($admins as $admin) {
             try {
                 $this->createNotification([
-                    'user_id' => $admin->id,
-                    'type'    => 'in_app',
-                    'channel' => 'doctor_leave',
-                    'subject' => 'New Leave Request',
-                    'content' => ($leave->doctor->user->first_name ?? '') . ' ' .
-                                 ($leave->doctor->user->last_name ?? '') .
-                                 ' submitted a leave request for ' . $leave->leave_date . '.',
+                    'user_id'      => $admin->id,
+                    'type'         => 'in_app',
+                    'channel'      => 'doctor_leave',
+                    'reference_id' => (string) $leave->id,
+                    'subject'      => 'New Leave Request',
+                    'content'      => ($leave->doctor->user->first_name ?? '') . ' ' .
+                                      ($leave->doctor->user->last_name ?? '') .
+                                      ' submitted a leave request for ' . $leave->leave_date . '.',
                 ]);
             } catch (\Throwable) { /* silent */ }
         }
@@ -541,11 +546,12 @@ public function sendDoctorLeaveNotification(
 
     try {
         $this->createNotification([
-            'user_id' => $leave->doctor->user->id,
-            'type'    => 'in_app',
-            'channel' => 'doctor_leave',
-            'subject' => 'Leave Request Update',
-            'content' => $message,
+            'user_id'      => $leave->doctor->user->id,
+            'type'         => 'in_app',
+            'channel'      => 'doctor_leave',
+            'reference_id' => (string) $leave->id,
+            'subject'      => 'Leave Request Update',
+            'content'      => $message,
         ]);
     } catch (\Throwable) { /* silent */ }
 }
@@ -564,11 +570,12 @@ public function sendDoctorScheduleNotification(
 
     try {
         $this->createNotification([
-            'user_id' => $schedule->doctor->user->id,
-            'type'    => 'in_app',
-            'channel' => 'doctor_schedule',
-            'subject' => $message['subject'],
-            'content' => $message['content'],
+            'user_id'      => $schedule->doctor->user->id,
+            'type'         => 'in_app',
+            'channel'      => 'doctor_schedule',
+            'reference_id' => (string) $schedule->id,
+            'subject'      => $message['subject'],
+            'content'      => $message['content'],
         ]);
     } catch (\Throwable) { /* silent */ }
 }
@@ -597,11 +604,12 @@ public function sendMedicalEncounterNotification(
     // Notify patient
     try {
         $this->createNotification([
-            'user_id' => $encounter->patient->user->id,
-            'type'    => 'in_app',
-            'channel' => 'medical_encounter',
-            'subject' => $patientMsg['subject'],
-            'content' => $patientMsg['content'],
+            'user_id'      => $encounter->patient->user->id,
+            'type'         => 'in_app',
+            'channel'      => 'medical_encounter',
+            'reference_id' => (string) $encounter->id,
+            'subject'      => $patientMsg['subject'],
+            'content'      => $patientMsg['content'],
         ]);
     } catch (\Throwable) { /* silent */ }
 
@@ -610,11 +618,12 @@ public function sendMedicalEncounterNotification(
         $doctorUser = $encounter->doctor->user ?? null;
         if ($doctorUser && $doctorMsg) {
             $this->createNotification([
-                'user_id' => $doctorUser->id,
-                'type'    => 'in_app',
-                'channel' => 'medical_encounter',
-                'subject' => $doctorMsg['subject'],
-                'content' => $doctorMsg['content'],
+                'user_id'      => $doctorUser->id,
+                'type'         => 'in_app',
+                'channel'      => 'medical_encounter',
+                'reference_id' => (string) $encounter->id,
+                'subject'      => $doctorMsg['subject'],
+                'content'      => $doctorMsg['content'],
             ]);
         }
     } catch (\Throwable) { /* silent */ }
@@ -631,11 +640,12 @@ public function sendAdminRescheduleNotification(
     try {
         $user = $appointment->patient->user;
         $this->createNotification([
-            'user_id' => $user->id,
-            'type'    => 'email',
-            'channel' => 'appointment',
-            'subject' => 'Appointment Reassigned',
-            'content' => "Your appointment has been reassigned from Dr. {$oldDoctorName} to Dr. {$newDoctorName} due to a schedule change. The date and time remain the same.",
+            'user_id'      => $user->id,
+            'type'         => 'email',
+            'channel'      => 'appointment',
+            'reference_id' => (string) $appointment->id,
+            'subject'      => 'Appointment Reassigned',
+            'content'      => "Your appointment has been reassigned from Dr. {$oldDoctorName} to Dr. {$newDoctorName} due to a schedule change. The date and time remain the same.",
         ]);
     } catch (\Throwable) { /* silent */ }
 }
@@ -658,11 +668,12 @@ public function sendStaffAppointmentNotification(
     foreach ($receptionists as $user) {
         try {
             $this->createNotification([
-                'user_id' => $user->id,
-                'type'    => 'in_app',
-                'channel' => 'appointment',
-                'subject' => $subject,
-                'content' => $content,
+                'user_id'      => $user->id,
+                'type'         => 'in_app',
+                'channel'      => 'appointment',
+                'reference_id' => (string) $appointment->id,
+                'subject'      => $subject,
+                'content'      => $content,
             ]);
         } catch (\Throwable) { /* silent */ }
     }
@@ -675,11 +686,12 @@ public function sendStaffAppointmentNotification(
     foreach ($admins as $user) {
         try {
             $this->createNotification([
-                'user_id' => $user->id,
-                'type'    => 'in_app',
-                'channel' => 'appointment',
-                'subject' => $subject,
-                'content' => $content,
+                'user_id'      => $user->id,
+                'type'         => 'in_app',
+                'channel'      => 'appointment',
+                'reference_id' => (string) $appointment->id,
+                'subject'      => $subject,
+                'content'      => $content,
             ]);
         } catch (\Throwable) { /* silent */ }
     }

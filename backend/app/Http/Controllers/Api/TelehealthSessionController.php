@@ -103,6 +103,17 @@ class TelehealthSessionController extends Controller
 
         return new TelehealthSessionResource($session);
     }
+
+    /**
+     * Reschedule a telehealth session by adding N minutes to the appointment time.
+     * Body: { add_minutes: 10 }
+     */
+    public function reschedule(\Illuminate\Http\Request $request, string $id)
+    {
+        $data       = $request->validate(['add_minutes' => 'required|integer|min:1|max:120']);
+        $session    = $this->service->rescheduleSession($id, (int) $data['add_minutes']);
+        return new TelehealthSessionResource($session);
+    }
     public function storeGoogleMeet(StoreTelehealthSessionRequest $request)
 {
     $session = $this->service->createGoogleMeetSession($request->validated());

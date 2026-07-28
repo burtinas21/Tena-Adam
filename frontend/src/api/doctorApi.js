@@ -1,8 +1,8 @@
 import api from "./axios";
 
 export default {
-  getAll() {
-    return api.get("/healthcare-providers");
+  getAll(params = {}) {
+    return api.get("/healthcare-providers", { params });
   },
   getById(id) {
     return api.get(`/healthcare-providers/${id}`);

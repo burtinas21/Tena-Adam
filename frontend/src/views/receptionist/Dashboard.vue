@@ -118,12 +118,14 @@
 
 <script setup>
 import { computed, onMounted } from "vue";
+import { useI18n } from "vue-i18n";
 import { CalendarDays, UserPlus, ListOrdered, UserCircle, Users, ClipboardList } from "lucide-vue-next";
 import { useAuthStore } from "../../stores/authStore";
 import { useReceptionistStore } from "../../stores/receptionistStore";
 
 const authStore = useAuthStore();
 const store     = useReceptionistStore();
+const { t }     = useI18n();
 
 const hour = new Date().getHours();
 const greeting = hour < 12 ? "Morning" : hour < 17 ? "Afternoon" : "Evening";

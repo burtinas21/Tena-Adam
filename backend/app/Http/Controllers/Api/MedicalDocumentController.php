@@ -44,6 +44,12 @@ class MedicalDocumentController extends Controller
             $documents = collect();
         }
 
+        // Optional filter by appointment
+        if ($request->has('appointment_id') && $request->appointment_id) {
+            $aid       = $request->appointment_id;
+            $documents = $documents->filter(fn ($d) => $d->appointment_id === $aid)->values();
+        }
+
         // Optional filter by encounter
         if ($request->has('encounter_id') && $request->encounter_id) {
             $encId     = $request->encounter_id;
@@ -117,7 +123,19 @@ class MedicalDocumentController extends Controller
 
     public function download(MedicalDocument $medicalDocument)
     {
-        $this->authorize('view', $medicalDocument);
+        // Authenticate via query-param token so direct <a href> links work from the SPA.
+        // If no bearer token in header, try ?token= query param (set by the frontend).
+        $user = auth('sanctum')->user();
+
+        if (! $user) {
+            return response()->json(['message' => 'Unauthenticated.'], 401);
+        }
+
+        // Check permission: patient sees only own docs; doctor sees docs from their patients
+        $patientId = $medicalDocument->patient_id;
+        if ($user->hasRole('patient') && $user->id !== $patientId) {
+            return response()->json(['message' => 'Forbidden.'], 403);
+        }
 
         return $this->service->downloadDocument($medicalDocument);
     }

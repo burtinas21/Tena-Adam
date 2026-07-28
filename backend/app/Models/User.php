@@ -34,6 +34,7 @@ class User extends Authenticatable
         'avatar_url',
         'is_active',
         'last_login',
+        'language_id',
 
     ];
 
@@ -257,5 +258,12 @@ public function language(): BelongsTo
         'language_id'
     );
 
+}
+public function approvedRefunds()
+{
+    return $this->hasMany(
+        Refund::class,
+        'approved_by'
+    );
 }
 }

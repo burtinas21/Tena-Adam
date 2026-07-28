@@ -16,6 +16,15 @@ class DepartmentService
         return Department::with('hospital')->get();
     }
 
+    // Doctors are linked to hospitals via healthcare_providers.hospital_id
+    if ($user->hasRole('doctor')) {
+        $hospitalId = $user->healthcareProvider?->hospital_id;
+        if ($hospitalId) {
+            return Department::where('hospital_id', $hospitalId)->get();
+        }
+        return collect();
+    }
+
     return Department::whereIn(
         'hospital_id',
         $user->hospitals()->pluck('hospitals.id')

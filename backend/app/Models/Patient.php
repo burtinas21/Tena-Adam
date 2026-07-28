@@ -110,4 +110,8 @@ public function medicalDocuments()
         MedicalDocument::class
     );
 }
+public function payments()
+{
+    return $this->hasMany(Payment::class);
+}
 }

@@ -1,11 +1,13 @@
 <script setup>
 import { ref } from "vue";
 import { useRouter } from "vue-router";
+import { useI18n } from "vue-i18n";
 import { useAuthStore } from "../../stores/authStore";
 import LoginForm from "../../components/auth/LoginForm.vue";
 
 const router = useRouter();
 const authStore = useAuthStore();
+const { t } = useI18n();
 const email = ref("");
 const password = ref("");
 const rememberMe = ref(false);
@@ -35,7 +37,7 @@ const handleLogin = async () => {
 
     const role = authStore.user.roles[0].name;
 
-    successMessage.value = "Login successful !";
+    successMessage.value = t("auth.login_success");
 
     setTimeout(() => {
       switch (role) {
@@ -60,7 +62,7 @@ const handleLogin = async () => {
     }, 1000);
   } catch (error) {
     errorMessage.value =
-      error.response?.data?.message || "Invalid email or password";
+      error.response?.data?.message || t("auth.invalid_credentials");
   } finally {
     loading.value = false;
   }
@@ -87,9 +89,9 @@ const handleLogin = async () => {
           <span>Smart Care</span>
         </div>
         <div class="text-center mb-6">
-          <h1 class="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1.5">Sign In</h1>
+          <h1 class="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1.5">{{ $t('auth.sign_in') }}</h1>
           <p class="text-xs text-slate-500 dark:text-slate-400">
-            Enter your credentials to access your healthcare portal.
+            {{ $t('auth.sign_in_subtitle') }}
           </p>
         </div>
 
@@ -138,7 +140,7 @@ const handleLogin = async () => {
         <form @submit.prevent="handleLogin" class="space-y-4">
           <div class="flex flex-col gap-1.5">
             <label class="text-xs font-semibold text-slate-700 dark:text-slate-300"
-              >Email Address</label
+              >{{ $t('auth.email') }}</label
             >
             <div class="relative">
               <span
@@ -168,7 +170,7 @@ const handleLogin = async () => {
             </div>
           </div>
           <div class="flex flex-col gap-1.5">
-            <label class="text-xs font-semibold text-slate-700 dark:text-slate-300">Password</label>
+            <label class="text-xs font-semibold text-slate-700 dark:text-slate-300">{{ $t('auth.password') }}</label>
             <div class="relative">
               <span
                 class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400 dark:text-slate-500"
@@ -245,13 +247,13 @@ const handleLogin = async () => {
                 type="checkbox"
                 class="w-3.5 h-3.5 rounded text-blue-600 border-slate-300 dark:border-slate-600 focus:ring-blue-500 cursor-pointer"
               />
-              <span>Remember Me</span>
+              <span>{{ $t('auth.remember_me') }}</span>
             </label>
             <router-link
               to="/forgot-password"
               class="font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 underline"
             >
-              Forgot Password?
+              {{ $t('auth.forgot_password') }}
             </router-link>
           </div>
           <div class="pt-2">
@@ -259,7 +261,7 @@ const handleLogin = async () => {
               type="submit"
               class="w-full bg-[#004494] hover:bg-[#003370] text-white font-medium py-2.5 rounded-md shadow-sm flex items-center justify-center gap-1.5 transition-colors text-sm"
             >
-              <span>Sign In</span>
+              <span>{{ $t('auth.sign_in') }}</span>
               <svg
                 class="w-4 h-4"
                 fill="none"
@@ -280,12 +282,12 @@ const handleLogin = async () => {
             class="text-center text-xs text-slate-500 dark:text-slate-400 pt-4 border-t border-slate-100 dark:border-slate-700 flex flex-col gap-3 items-center"
           >
             <div>
-              Don't have an account?
+              {{ $t('auth.no_account') }}
               <router-link
                 to="/register"
                 class="font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 ml-0.5"
               >
-                Create Account
+                {{ $t('auth.create_account') }}
               </router-link>
             </div>
             <div
@@ -304,7 +306,7 @@ const handleLogin = async () => {
                   d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
                 />
               </svg>
-              <span>Secure Authentication</span>
+              <span>{{ $t('auth.secure_auth') }}</span>
             </div>
           </div>
         </form>

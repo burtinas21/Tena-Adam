@@ -1,8 +1,6 @@
 <template>
-  <main class="flex-1 bg-[#F8FAFC] dark:bg-[#0f172a] p-6 overflow-y-auto font-sans dark:text-slate-200">
-
-    <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+  <main class="flex-1 bg-[#F8FAFC] dark:bg-[#0f172a] px-2 py-3 sm:p-6 overflow-y-auto font-sans dark:text-slate-200">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-3 sm:mb-6">
       <div>
         <h1 class="text-2xl font-bold text-gray-800 tracking-tight">Hospital Network Management</h1>
         <p class="text-xs text-gray-500 font-medium mt-0.5">
@@ -16,7 +14,7 @@
     </div>
 
     <!-- Stat cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4 mb-3 sm:mb-6">
       <!-- Total -->
       <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-5 flex items-center gap-4">
         <div class="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center flex-shrink-0">
@@ -51,7 +49,7 @@
 
     <!-- Search + filter bar -->
     <div class="bg-white rounded-xl border border-gray-100 shadow-sm">
-      <div class="flex flex-col sm:flex-row sm:items-center gap-3 px-5 py-4 border-b border-gray-100">
+      <div class="flex flex-col sm:flex-row sm:items-center gap-3 px-2 py-3 sm:px-5 sm:py-4 border-b border-gray-100">
         <!-- Search -->
         <div class="relative flex-1 min-w-0">
           <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
@@ -89,17 +87,26 @@
         <div v-for="n in 4" :key="n" class="h-14 bg-gray-50 rounded-lg animate-pulse" />
       </div>
 
-      <div v-else class="overflow-x-auto">
-        <table class="w-full text-sm text-left">
+      <div v-else class="w-full">
+        <table class="w-full table-fixed">
+          <colgroup>
+            <col style="width:26%" />
+            <col style="width:10%" />
+            <col style="width:18%" />
+            <col style="width:10%" />
+            <col style="width:12%" />
+            <col style="width:14%" />
+            <col style="width:10%" />
+          </colgroup>
           <thead>
             <tr class="border-b border-gray-100">
-              <th class="px-5 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Hospital</th>
-              <th class="px-5 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Code</th>
-              <th class="px-5 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Location</th>
-              <th class="px-5 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider text-center">Doctors</th>
-              <th class="px-5 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider text-center">Departments</th>
-              <th class="px-5 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Status</th>
-              <th class="px-5 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider text-right">Actions</th>
+              <th class="px-2 sm:px-4 py-2.5 text-[9px] sm:text-[10px] font-bold text-gray-400 uppercase tracking-wider text-left">Hospital</th>
+              <th class="px-2 sm:px-4 py-2.5 text-[9px] sm:text-[10px] font-bold text-gray-400 uppercase tracking-wider text-left">Code</th>
+              <th class="px-2 sm:px-4 py-2.5 text-[9px] sm:text-[10px] font-bold text-gray-400 uppercase tracking-wider text-left">Location</th>
+              <th class="px-2 sm:px-4 py-2.5 text-[9px] sm:text-[10px] font-bold text-gray-400 uppercase tracking-wider text-center">Doctors</th>
+              <th class="px-2 sm:px-4 py-2.5 text-[9px] sm:text-[10px] font-bold text-gray-400 uppercase tracking-wider text-center">Depts</th>
+              <th class="px-2 sm:px-4 py-2.5 text-[9px] sm:text-[10px] font-bold text-gray-400 uppercase tracking-wider text-left">Status</th>
+              <th class="px-1 sm:px-4 py-2.5 text-[9px] sm:text-[10px] font-bold text-gray-400 uppercase tracking-wider text-right">Actions</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-50">
@@ -109,51 +116,72 @@
                 <p class="text-sm font-medium">No hospitals found</p>
               </td>
             </tr>
-            <tr v-for="h in paged" :key="h.id" class="hover:bg-gray-50/60 transition-colors">
-              <!-- Hospital name + icon -->
-              <td class="px-5 py-4">
-                <div class="flex items-center gap-3">
-                  <div class="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
-                    <Building2 class="w-4 h-4 text-blue-500" />
+            <tr v-for="h in paged" :key="h.id" class="hover:bg-gray-50/60 transition-colors align-middle">
+              <!-- Hospital name -->
+              <td class="px-2 sm:px-4 py-2 sm:py-3">
+                <div class="flex items-center gap-1.5">
+                  <div class="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+                    <Building2 class="w-3 h-3 sm:w-3.5 sm:h-3.5 text-blue-500" />
                   </div>
-                  <div>
-                    <p class="font-semibold text-gray-800">{{ h.name }}</p>
-                    <p v-if="h.email" class="text-xs text-gray-400 mt-0.5">{{ h.email }}</p>
+                  <div class="min-w-0">
+                    <p class="font-semibold text-[10px] sm:text-xs text-gray-800 truncate">{{ h.name }}</p>
+                    <p v-if="h.email" class="text-[9px] sm:text-[10px] text-gray-400 truncate">{{ h.email }}</p>
                   </div>
                 </div>
               </td>
-              <td class="px-5 py-4 text-gray-500 font-mono text-xs">{{ h.code || '—' }}</td>
-              <td class="px-5 py-4">
-                <p class="text-gray-700 font-medium">{{ h.city || '—' }}</p>
-                <p class="text-xs text-gray-400 mt-0.5">{{ h.region || '' }}</p>
+              <!-- Code -->
+              <td class="px-2 sm:px-4 py-2 sm:py-3 text-[9px] sm:text-[10px] text-gray-500 font-mono truncate">{{ h.code || '—' }}</td>
+              <!-- Location -->
+              <td class="px-2 sm:px-4 py-2 sm:py-3">
+                <p class="text-[10px] sm:text-xs text-gray-700 font-medium truncate">{{ h.city || '—' }}</p>
+                <p class="text-[9px] sm:text-[10px] text-gray-400 truncate">{{ h.region || '' }}</p>
               </td>
-              <td class="px-5 py-4 text-center font-semibold text-gray-700">
+              <!-- Doctors -->
+              <td class="px-2 sm:px-4 py-2 sm:py-3 text-center text-[10px] sm:text-xs font-semibold text-gray-700">
                 {{ h.total_doctors ?? 0 }}
               </td>
-              <td class="px-5 py-4 text-center font-semibold text-gray-700">
+              <!-- Departments -->
+              <td class="px-2 sm:px-4 py-2 sm:py-3 text-center text-[10px] sm:text-xs font-semibold text-gray-700">
                 {{ h.departments?.length ?? 0 }}
               </td>
-              <td class="px-5 py-4">
+              <!-- Status -->
+              <td class="px-2 sm:px-4 py-2 sm:py-3">
                 <span
                   :class="h.is_active
                     ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                     : 'bg-red-50 text-red-600 border-red-200'"
-                  class="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-0.5 rounded-full border"
+                  class="inline-flex items-center gap-1 text-[9px] sm:text-[10px] font-semibold px-1.5 sm:px-2 py-0.5 rounded-full border whitespace-nowrap"
                 >
-                  <span :class="h.is_active ? 'bg-emerald-500' : 'bg-red-400'" class="w-1.5 h-1.5 rounded-full" />
+                  <span :class="h.is_active ? 'bg-emerald-500' : 'bg-red-400'" class="w-1.5 h-1.5 rounded-full flex-shrink-0" />
                   {{ h.is_active ? 'Active' : 'Suspended' }}
                 </span>
               </td>
-              <td class="px-5 py-4 text-right">
-                <div class="flex items-center justify-end gap-1">
-                  <button @click="openEdit(h)" title="Edit"
-                    class="p-1.5 rounded-lg text-gray-400 hover:text-[#004795] hover:bg-[#004795]/10 transition">
-                    <Pencil class="w-3.5 h-3.5" />
+              <!-- Actions — three-dot dropdown -->
+              <td class="px-2 sm:px-4 py-2 sm:py-3 text-right">
+                <div class="relative inline-block" @click.stop>
+                  <button
+                    @click="toggleMenu(h.id)"
+                    class="p-1 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition"
+                  >
+                    <MoreVertical class="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   </button>
-                  <button @click="confirmDelete(h)" title="Delete"
-                    class="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition">
-                    <Trash2 class="w-3.5 h-3.5" />
-                  </button>
+                  <div
+                    v-if="openMenuId === h.id"
+                    class="absolute right-0 mt-1 w-32 bg-white border border-gray-100 rounded-xl shadow-lg z-30 py-1"
+                  >
+                    <button
+                      @click="openEdit(h); closeMenu()"
+                      class="flex items-center gap-2 w-full px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 transition"
+                    >
+                      <Pencil class="w-3.5 h-3.5 text-[#004795]" /> Edit
+                    </button>
+                    <button
+                      @click="confirmDelete(h); closeMenu()"
+                      class="flex items-center gap-2 w-full px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-50 transition"
+                    >
+                      <Trash2 class="w-3.5 h-3.5" /> Delete
+                    </button>
+                  </div>
                 </div>
               </td>
             </tr>
@@ -162,7 +190,7 @@
       </div>
 
       <!-- Pagination footer -->
-      <div v-if="filtered.length" class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-5 py-4 border-t border-gray-100">
+      <div v-if="filtered.length" class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-2 py-3 sm:px-5 sm:py-4 border-t border-gray-100">
         <p class="text-xs text-gray-500">
           Showing {{ (page - 1) * perPage + 1 }} to {{ Math.min(page * perPage, filtered.length) }} of {{ filtered.length }} entries
         </p>
@@ -232,12 +260,23 @@ import { ref, computed, onMounted } from "vue";
 import {
   Plus, Building2, CheckCircle, XCircle, Search,
   SlidersHorizontal, AlertCircle, Pencil, Trash2,
-  Loader2, ChevronLeft, ChevronRight,
+  Loader2, ChevronLeft, ChevronRight, MoreVertical,
 } from "lucide-vue-next";
 import { useHospitalStore } from "../../stores/hospitalStore";
 import HospitalForm from "../../components/hospital/HospitalForm.vue";
 
 const store = useHospitalStore();
+
+// ── Dropdown menu ─────────────────────────────────────────────────────────
+const openMenuId = ref(null);
+function toggleMenu(id) { openMenuId.value = openMenuId.value === id ? null : id; }
+function closeMenu() { openMenuId.value = null; }
+onMounted(() => {
+  store.fetchAll();
+  document.addEventListener("click", closeMenu);
+});
+import { onUnmounted } from "vue";
+onUnmounted(() => document.removeEventListener("click", closeMenu));
 
 // ── Filters ──────────────────────────────────────────────────────────────
 const search       = ref("");
@@ -251,8 +290,6 @@ const selectedHospital = ref(null);
 const formError        = ref(null);
 const showDeleteConfirm = ref(false);
 const hospitalToDelete  = ref(null);
-
-onMounted(() => store.fetchAll());
 
 
 const regions = computed(() =>

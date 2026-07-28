@@ -2,64 +2,92 @@
 
 namespace App\Policies;
 
-use App\Models\Invoice;
 use App\Models\User;
+use App\Models\Invoice;
+
 
 class InvoicePolicy
 {
-    /**
-     * Determine whether the user can view any models.
-     */
-    public function viewAny(User $user): bool
+
+
+    public function view(
+        User $user,
+        Invoice $invoice
+    ): bool
     {
+
+
+        if(
+            $user->hasRole('platform_admin')
+        ){
+            return true;
+        }
+
+
+
+        if(
+            $user->hasRole('hospital_admin')
+        ){
+
+            return $invoice
+                ->payment
+                ->hospital_id
+                ==
+                $user->hospital_id;
+
+        }
+
+
+
+        if(
+            $user->hasRole('patient')
+        ){
+
+            return $invoice
+                ->payment
+                ->patient_id
+                ==
+                $user->patient->id;
+
+        }
+
+
         return false;
+
     }
 
-    /**
-     * Determine whether the user can view the model.
-     */
-    public function view(User $user, Invoice $invoice): bool
-    {
-        return false;
-    }
 
-    /**
-     * Determine whether the user can create models.
-     */
+
     public function create(User $user): bool
     {
-        return false;
+
+        return $user->hasAnyRole([
+            'hospital_admin',
+            'platform_admin'
+        ]);
+
     }
 
-    /**
-     * Determine whether the user can update the model.
-     */
-    public function update(User $user, Invoice $invoice): bool
+
+
+    public function update(User $user): bool
     {
-        return false;
+
+        return $user->hasRole(
+            'platform_admin'
+        );
+
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
-    public function delete(User $user, Invoice $invoice): bool
+
+    public function delete(User $user): bool
     {
-        return false;
+
+        return $user->hasRole(
+            'platform_admin'
+        );
+
     }
 
-    /**
-     * Determine whether the user can restore the model.
-     */
-    public function restore(User $user, Invoice $invoice): bool
-    {
-        return false;
-    }
 
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
-    public function forceDelete(User $user, Invoice $invoice): bool
-    {
-        return false;
-    }
 }

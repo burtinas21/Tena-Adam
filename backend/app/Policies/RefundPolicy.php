@@ -2,64 +2,85 @@
 
 namespace App\Policies;
 
-use App\Models\Refund;
 use App\Models\User;
+use App\Models\Refund;
+
 
 class RefundPolicy
 {
-    /**
-     * Determine whether the user can view any models.
-     */
-    public function viewAny(User $user): bool
-    {
-        return false;
-    }
 
-    /**
-     * Determine whether the user can view the model.
-     */
-    public function view(User $user, Refund $refund): bool
-    {
-        return false;
-    }
 
-    /**
-     * Determine whether the user can create models.
-     */
     public function create(User $user): bool
     {
-        return false;
+
+        return $user->hasAnyRole([
+            'patient',
+            'hospital_admin'
+        ]);
+
     }
 
-    /**
-     * Determine whether the user can update the model.
-     */
-    public function update(User $user, Refund $refund): bool
+
+
+
+    public function view(
+        User $user,
+        Refund $refund
+    ): bool
     {
+
+        if(
+            $user->hasRole('platform_admin')
+        ){
+
+            return true;
+
+        }
+
+
+
+        if(
+            $user->hasRole('hospital_admin')
+        ){
+
+            return $refund
+                ->payment
+                ->hospital_id
+                ==
+                $user->hospital_id;
+
+        }
+
+
+
         return false;
+
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
-    public function delete(User $user, Refund $refund): bool
+
+
+
+    public function approve(User $user): bool
     {
-        return false;
+
+        return $user->hasAnyRole([
+            'platform_admin',
+            'hospital_admin'
+        ]);
+
     }
 
-    /**
-     * Determine whether the user can restore the model.
-     */
-    public function restore(User $user, Refund $refund): bool
+
+
+
+    public function delete(User $user): bool
     {
-        return false;
+
+        return $user->hasRole(
+            'platform_admin'
+        );
+
     }
 
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
-    public function forceDelete(User $user, Refund $refund): bool
-    {
-        return false;
-    }
+
 }

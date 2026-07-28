@@ -34,9 +34,27 @@ use App\Http\Controllers\Api\GoogleAuthController;
 use Illuminate\Support\Facades\Http;
 use App\Http\Controllers\Api\AuditLogController;
 use App\Http\Controllers\Api\TranslationController;
-Route::get( '/translations',[TranslationController::class,'translate']);
-Route::get('/translations/all', [TranslationController::class,'all']);
+use App\Http\Controllers\Api\PaymentController;
+use App\Http\Controllers\Api\InvoiceController;
+use App\Http\Controllers\Api\RefundController;
+Route::post('payments/callback', [PaymentController::class, 'callback'])->name('payments.callback');
+Route::get('invoices/{invoice}/download',  [InvoiceController::class, 'download'])->name('invoices.download');
+Route::post('payments/webhook',[PaymentController::class, 'webhook'])->name('payments.webhook');
+Route::apiResource('payments', PaymentController::class);
+Route::get('invoices', [InvoiceController::class, 'index']);
+Route::get('invoices/{invoice}', [InvoiceController::class, 'show']);
+Route::get('refunds', [RefundController::class, 'index']);
+Route::post('refunds', [RefundController::class, 'store']);
+Route::get('refunds/{refund}', [RefundController::class, 'show']);
+Route::patch('refunds/{refund}/approve', [RefundController::class, 'approve']);
+Route::patch('refunds/{refund}/process', [RefundController::class, 'process']);
+Route::get('/languages', [TranslationController::class, 'languages']);
+Route::get('/translations', [TranslationController::class, 'translate']);
+Route::get('/translations/all', [TranslationController::class, 'all']);
+
 Route::middleware(['auth:sanctum'])->group(function () {
+    // Save authenticated user's language preference
+    Route::put('/user/language', [TranslationController::class, 'saveUserLanguage']);
 
     Route::get(
         '/audit-logs',
@@ -174,6 +192,7 @@ Route::middleware('auth:sanctum')->prefix('telehealth-sessions')->group(function
     Route::post('/{id}/start', [TelehealthSessionController::class, 'start']);
     Route::post('/{id}/complete', [TelehealthSessionController::class, 'complete']);
     Route::post('/{id}/cancel', [TelehealthSessionController::class, 'cancel']);
+    Route::post('/{id}/reschedule', [TelehealthSessionController::class, 'reschedule']);
     Route::post('/google-meet', [TelehealthSessionController::class, 'storeGoogleMeet']);
 });
 Route::middleware('auth:sanctum')
@@ -595,6 +614,19 @@ Route::middleware('auth:sanctum')->group(function () {
         '/appointments/{appointment}/admin-reschedule',
         [AppointmentController::class, 'adminReschedule']
     );
+
+    // ── Appointment referrals ─────────────────────────────────────────────
+    Route::post('/appointments/{appointment}/refer',
+        [\App\Http\Controllers\Api\AppointmentReferralController::class, 'refer']);
+
+    Route::get('/appointments/{appointment}/referrals',
+        [\App\Http\Controllers\Api\AppointmentReferralController::class, 'forAppointment']);
+
+    Route::get('/appointment-referrals/incoming',
+        [\App\Http\Controllers\Api\AppointmentReferralController::class, 'incoming']);
+
+    Route::patch('/appointment-referrals/{referral}/respond',
+        [\App\Http\Controllers\Api\AppointmentReferralController::class, 'respond']);
 
 });
 Route::middleware('auth:sanctum')->group(function () {

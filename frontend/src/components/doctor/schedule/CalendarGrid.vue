@@ -58,37 +58,87 @@
                 {{ s.is_available ? 'Available' : 'Unavailable' }}
               </span>
             </td>
+            <!-- Three-dot action menu -->
             <td class="px-4 py-3 text-right">
-              <div class="flex items-center justify-end gap-1">
-                <button @click="$emit('edit', s)" title="Edit"
-                  class="p-1.5 rounded-lg text-gray-400 hover:text-[#004795] hover:bg-[#004795]/10 transition">
-                  <Pencil class="w-3.5 h-3.5" />
+              <div class="relative inline-block" @click.stop>
+                <button
+                  @click="toggleMenu(s.id)"
+                  class="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition"
+                  title="Actions"
+                >
+                  <MoreVertical class="w-4 h-4" />
                 </button>
-                <button @click="$emit('delete', s)" title="Delete"
-                  class="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition">
-                  <Trash2 class="w-3.5 h-3.5" />
-                </button>
+                <Transition name="dropdown">
+                  <div
+                    v-if="openMenuId === s.id"
+                    class="absolute right-0 top-full mt-1 w-36 bg-white rounded-xl shadow-lg border border-gray-100 z-30 py-1"
+                  >
+                    <button
+                      @click="onEdit(s)"
+                      class="w-full flex items-center gap-2 px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 transition"
+                    >
+                      <Pencil class="w-3.5 h-3.5 text-[#004795]" /> Edit
+                    </button>
+                    <button
+                      @click="onDelete(s)"
+                      class="w-full flex items-center gap-2 px-3 py-2 text-xs text-red-600 hover:bg-red-50 transition"
+                    >
+                      <Trash2 class="w-3.5 h-3.5" /> Delete
+                    </button>
+                  </div>
+                </Transition>
               </div>
             </td>
           </tr>
         </tbody>
       </table>
     </div>
+
+    <!-- Click-outside overlay to close menu -->
+    <div v-if="openMenuId" class="fixed inset-0 z-20" @click="openMenuId = null" />
   </div>
 </template>
 
 <script setup>
-import { computed } from "vue";
-import { Plus, Calendar, Pencil, Trash2 } from "lucide-vue-next";
+import { ref, computed } from "vue";
+import { Plus, Calendar, Pencil, Trash2, MoreVertical } from "lucide-vue-next";
 
 const DAY_LABELS = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
 
 const props = defineProps({
   schedules: { type: Array, default: () => [] },
 });
-defineEmits(["add", "edit", "delete"]);
+const emit = defineEmits(["add", "edit", "delete"]);
+
+const openMenuId = ref(null);
 
 const sortedSchedules = computed(() =>
   [...props.schedules].sort((a, b) => a.day_of_week - b.day_of_week)
 );
+
+function toggleMenu(id) {
+  openMenuId.value = openMenuId.value === id ? null : id;
+}
+
+function onEdit(s) {
+  openMenuId.value = null;
+  emit("edit", s);
+}
+
+function onDelete(s) {
+  openMenuId.value = null;
+  emit("delete", s);
+}
 </script>
+
+<style scoped>
+.dropdown-enter-active,
+.dropdown-leave-active {
+  transition: opacity 0.12s, transform 0.12s;
+}
+.dropdown-enter-from,
+.dropdown-leave-to {
+  opacity: 0;
+  transform: translateY(-4px);
+}
+</style>

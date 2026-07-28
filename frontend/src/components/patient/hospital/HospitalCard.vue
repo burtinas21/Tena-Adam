@@ -69,7 +69,7 @@
               :class="hospital.telemedAvailable ? 'text-emerald-700' : 'text-gray-400'"
               class="text-[10px] font-bold uppercase leading-tight"
             >
-              {{ hospital.telemedAvailable ? 'Telemed Available' : 'Telemed Unavailable' }}
+              {{ hospital.telemedAvailable ? 'Telemedicine Available' : 'Telemed Unavailable' }}
             </p>
           </div>
         </div>
@@ -83,12 +83,12 @@
         >
           View Details
         </router-link>
-        <router-link
+        <!-- <router-link
           to="/patient/appointments"
           class="w-full py-2 bg-[#004bb5] text-white text-xs font-semibold rounded-lg hover:bg-[#003da1] transition-colors text-center"
         >
           Book Appt
-        </router-link>
+        </router-link> -->
       </div>
     </div>
   </div>

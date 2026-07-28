@@ -874,5 +874,87 @@ $event = new Calendar\Event([
         return $session;
     }
 
+    /**
+     * Auto-create a telehealth session when an appointment is confirmed.
+     * Uses a Jitsi-based URL so no third-party credentials are required.
+     * The doctor can update the session URL later if they prefer Google Meet or Zoom.
+     */
+    public function autoCreateSession(Appointment $appointment): TelehealthSession
+    {
+        // Generate a Jitsi room URL — works with zero configuration
+        $roomId  = 'tena-' . \Illuminate\Support\Str::random(12);
+        $meetUrl = "https://meet.jit.si/{$roomId}";
+
+        $session = TelehealthSession::create([
+            'appointment_id'    => $appointment->id,
+            'session_url'       => $meetUrl,
+            'platform'          => 'custom',
+            'room_id'           => $roomId,
+            'recording_consent' => false,
+            'status'            => 'scheduled',
+        ]);
+
+        $session = $this->loadRelations($session);
+
+        // Notify patient with the meeting link
+        $this->notificationService->sendTelehealthNotification(
+            $session,
+            'Telehealth Session Scheduled',
+            "Your telehealth appointment has been confirmed. Join via: {$meetUrl}",
+            true
+        );
+
+        // Notify doctor with the meeting link
+        try {
+            $this->notificationService->createNotification([
+                'user_id'      => $appointment->doctor->user->id,
+                'type'         => 'in_app',
+                'channel'      => 'telehealth',
+                'reference_id' => (string) $session->id,
+                'subject'      => 'Telehealth Session Created',
+                'content'      => "A telehealth session has been auto-created for your confirmed appointment. Join via: {$meetUrl}",
+            ]);
+        } catch (\Throwable) { /* silent */ }
+
+        return $session;
+    }
+
+    /**
+     * Reschedule a telehealth session by adjusting the appointment time.
+     * Used when a doctor needs to push the session by a given number of minutes
+     * (e.g. +10 min because a prior call is running long).
+     *
+     * @throws ValidationException
+     */
+    public function rescheduleSession(string $sessionId, int $addMinutes): TelehealthSession
+    {
+        return DB::transaction(function () use ($sessionId, $addMinutes) {
+
+            $session = $this->findSessionOrFail($sessionId);
+            $this->ensureEditable($session);
+
+            $appointment = $session->appointment;
+            if (! $appointment) {
+                throw ValidationException::withMessages([
+                    'session' => ['Session is not linked to an appointment.'],
+                ]);
+            }
+
+            $newTime = Carbon::parse($appointment->scheduled_time)->addMinutes($addMinutes);
+            $appointment->update(['scheduled_time' => $newTime]);
+
+            // Notify patient of the time change
+            try {
+                $this->notificationService->sendAppointmentNotification(
+                    $appointment->patient->user,
+                    'Telehealth Session Rescheduled',
+                    "Your telehealth session has been rescheduled to {$newTime->format('M d, Y H:i')}.",
+                    false
+                );
+            } catch (\Throwable) { /* silent */ }
+
+            return $this->loadRelations($session->fresh());
+        });
+    }
 
 }

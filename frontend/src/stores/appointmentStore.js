@@ -4,6 +4,7 @@ import appointmentApi from "../api/appointmentApi";
 export const useAppointmentStore = defineStore("appointment", {
   state: () => ({
     appointments: [],
+    incomingReferrals: [],    // referrals assigned to the logged-in doctor
     loading: false,
     error: null,
   }),
@@ -34,7 +35,7 @@ export const useAppointmentStore = defineStore("appointment", {
       try {
         this.loading = true;
         this.error   = null;
-        const res    = await appointmentApi.create(data);
+        const res     = await appointmentApi.create(data);
         const created = res.data?.data ?? res.data;
         this.appointments.unshift(created);
         return created;
@@ -50,7 +51,7 @@ export const useAppointmentStore = defineStore("appointment", {
       try {
         this.loading = true;
         this.error   = null;
-        const res    = await appointmentApi.update(id, { status, ...extra });
+        const res     = await appointmentApi.update(id, { status, ...extra });
         const updated = res.data?.data ?? res.data;
         const idx = this.appointments.findIndex((a) => a.id === id);
         if (idx !== -1) this.appointments[idx] = updated;
@@ -88,6 +89,61 @@ export const useAppointmentStore = defineStore("appointment", {
         this.appointments = this.appointments.filter((a) => a.id !== id);
       } catch (err) {
         this.error = err.response?.data?.message || "Failed to delete appointment";
+        throw err;
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    // ── Referrals ──────────────────────────────────────────────────────────
+
+    /**
+     * Doctor refers an appointment to another doctor/department.
+     */
+    async refer(appointmentId, data) {
+      try {
+        this.loading = true;
+        this.error   = null;
+        const res    = await appointmentApi.refer(appointmentId, data);
+        // Update the local appointment if doctor changed
+        await this.fetchAll();
+        return res.data?.data ?? res.data;
+      } catch (err) {
+        this.error = err.response?.data?.message || "Failed to refer appointment";
+        throw err;
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    /**
+     * Load incoming referrals for the authenticated doctor.
+     */
+    async fetchIncomingReferrals() {
+      try {
+        const res = await appointmentApi.getIncomingReferrals();
+        this.incomingReferrals = res.data?.data ?? res.data ?? [];
+        return this.incomingReferrals;
+      } catch (err) {
+        this.error = err.response?.data?.message || "Failed to load referrals";
+        throw err;
+      }
+    },
+
+    /**
+     * Referred-to doctor accepts or rejects a referral.
+     */
+    async respondReferral(referralId, action, rejectionReason = null) {
+      try {
+        this.loading = true;
+        this.error   = null;
+        const res    = await appointmentApi.respondReferral(referralId, action, rejectionReason);
+        // Remove from incoming list after responding
+        this.incomingReferrals = this.incomingReferrals.filter((r) => r.id !== referralId);
+        await this.fetchAll();
+        return res.data?.data ?? res.data;
+      } catch (err) {
+        this.error = err.response?.data?.message || "Failed to respond to referral";
         throw err;
       } finally {
         this.loading = false;

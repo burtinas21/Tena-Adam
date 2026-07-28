@@ -22,7 +22,9 @@ class HospitalResource extends JsonResource
             'code' => $this->code,
 
             'address' => $this->address,
-
+            'latitude' => $this->latitude,
+            'longitude' => $this->longitude,
+            'google_place_id' => $this->google_place_id,
             'city' => $this->city,
 
             'region' => $this->region,

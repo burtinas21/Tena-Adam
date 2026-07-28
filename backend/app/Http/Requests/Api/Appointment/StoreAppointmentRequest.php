@@ -55,6 +55,10 @@ class StoreAppointmentRequest extends FormRequest
                 'boolean',
             ],
 
+            // Optional documents (PDF, JPG, PNG) uploaded at booking time
+            'files'   => ['nullable', 'array', 'max:5'],
+            'files.*' => ['file', 'mimes:pdf,jpg,jpeg,png', 'max:10240'],
+
         ];
     }
 

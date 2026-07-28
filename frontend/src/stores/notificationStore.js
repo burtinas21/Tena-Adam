@@ -27,7 +27,11 @@ export const useNotificationStore = defineStore("notification", {
         const res = await notificationApi.getAll(unreadOnly);
         // NotificationResource::collection wraps in { data: [...] }
         const raw = res.data?.data ?? res.data ?? [];
-        this.notifications = Array.isArray(raw) ? raw : [];
+        const arr = Array.isArray(raw) ? raw : [];
+        // Always show newest notifications first
+        this.notifications = arr.slice().sort(
+          (a, b) => new Date(b.created_at) - new Date(a.created_at)
+        );
         // Sync unread count from fetched data
         this.unreadCount = this.notifications.filter((n) => n.status !== "read").length;
       } catch (err) {

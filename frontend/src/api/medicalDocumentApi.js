@@ -64,7 +64,35 @@ export default {
   },
 
   /**
-   * Get the download URL for a document (opens directly in browser).
+   * Download a document file with authentication.
+   * Uses fetch with the Bearer token and triggers a browser download via a blob URL.
+   */
+  async download(id, fileName) {
+    const token = localStorage.getItem("token");
+    const baseURL = api.defaults.baseURL;
+    const response = await fetch(`${baseURL}/medical-documents/${id}/download`, {
+      headers: {
+        Authorization: token ? `Bearer ${token}` : "",
+        Accept: "*/*",
+      },
+    });
+    if (!response.ok) {
+      throw new Error(`Download failed: ${response.status}`);
+    }
+    const blob = await response.blob();
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement("a");
+    a.href     = url;
+    a.download = fileName || "document";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  },
+
+  /**
+   * Get the download URL for a document (legacy — only works if the server
+   * is configured to serve storage publicly, prefer download() above instead).
    */
   downloadUrl(id) {
     return `${api.defaults.baseURL}/medical-documents/${id}/download`;

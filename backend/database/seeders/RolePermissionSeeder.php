@@ -89,6 +89,10 @@ class RolePermissionSeeder extends Seeder
 
             'view_notifications',
 
+            'view_departments',   // needed for referral modal doctor/department picker
+
+            'view_doctors',       // needed for referral modal doctor list
+
         ];
 
         foreach ($doctorPermissions as $permission) {

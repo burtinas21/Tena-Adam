@@ -47,8 +47,12 @@
         </div>
         <div v-else class="space-y-2">
           <div v-for="n in store.notifications" :key="n.id"
-            :class="n.status !== 'read' ? 'bg-blue-50/50 border-blue-100' : 'bg-white border-gray-100'"
-            class="rounded-xl border shadow-sm p-4 flex items-start gap-3 hover:shadow-md transition-shadow">
+            :class="[
+              n.status !== 'read' ? 'bg-blue-50/50 border-blue-100' : 'bg-white border-gray-100',
+              getNotifRoute(n) ? 'cursor-pointer' : ''
+            ]"
+            class="rounded-xl border shadow-sm p-4 flex items-start gap-3 hover:shadow-md transition-shadow group"
+            @click="handleNotifClick(n)">
             <div class="text-lg flex-shrink-0 mt-0.5">{{ channelIcon(n.channel) }}</div>
             <div class="flex-1 min-w-0">
               <p class="text-sm font-semibold text-gray-800">{{ n.subject || 'Notification' }}</p>
@@ -57,9 +61,13 @@
                 <span class="text-[10px] text-gray-400">{{ formatTime(n.created_at) }}</span>
                 <span :class="statusClass(n.status)" class="text-[10px] font-semibold px-1.5 py-0.5 rounded-full capitalize">{{ n.status }}</span>
                 <span class="text-[10px] text-gray-400 capitalize">{{ n.type }} · {{ n.channel?.replace(/_/g, ' ') }}</span>
+                <span v-if="getNotifRoute(n)"
+                  class="text-[10px] text-[#004795] font-semibold flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition">
+                  View <svg class="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+                </span>
               </div>
             </div>
-            <div class="flex items-center gap-1 flex-shrink-0">
+            <div class="flex items-center gap-1 flex-shrink-0" @click.stop>
               <button v-if="n.status !== 'read'" @click="store.markAsRead(n.id)"
                 class="p-1.5 text-[#004795] hover:bg-[#004795]/10 rounded-lg transition" title="Mark read">
                 <CheckCheck class="w-3.5 h-3.5" />
@@ -92,9 +100,9 @@
                 </div>
                 <button type="button" @click="store.preferences[pref.key] = !store.preferences[pref.key]"
                   :class="store.preferences[pref.key] ? 'bg-[#004795]' : 'bg-gray-200'"
-                  class="relative w-10 h-5 rounded-full transition-colors duration-200 flex-shrink-0">
-                  <span :class="store.preferences[pref.key] ? 'translate-x-5' : 'translate-x-0.5'"
-                    class="absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200" />
+                  :style="{ justifyContent: store.preferences[pref.key] ? 'flex-end' : 'flex-start' }"
+                  class="flex items-center w-11 h-6 p-1 rounded-full transition-colors duration-200 flex-shrink-0">
+                  <span class="w-4 h-4 bg-white rounded-full shadow" />
                 </button>
               </div>
             </div>
@@ -280,11 +288,13 @@
 
 <script setup>
 import { ref, computed, onMounted } from "vue";
+import { useRouter } from "vue-router";
 import { Bell, CheckCheck, RefreshCw, Trash2, AlertCircle, Send, X, Loader2, Plus } from "lucide-vue-next";
 import { useNotificationStore } from "../../stores/notificationStore";
 import { useAuthStore } from "../../stores/authStore";
 import notificationApi from "../../api/notificationApi";
 
+const router = useRouter();
 const store = useNotificationStore();
 const authStore = useAuthStore();
 const activeTab = ref("mine");
@@ -301,6 +311,26 @@ const tabs = [
 const visibleTabs = computed(() =>
   tabs.filter((t) => !t.adminOnly || isPlatformAdmin.value)
 );
+
+// ── Navigation ────────────────────────────────────────────────────────────
+// Navigation map: channel → named route for hospital_admin
+const channelRouteMap = {
+  appointment:       { name: "Appointments" },
+  queue:             { name: "Queue" },
+  doctor_leave:      { name: "Doctor_Leaves" },
+  doctor_schedule:   { name: "doctors" },
+  telehealth:        { name: "telemanagment" },
+};
+
+function getNotifRoute(n) {
+  return channelRouteMap[n.channel] ?? null;
+}
+
+async function handleNotifClick(n) {
+  if (n.status !== "read") await store.markAsRead(n.id);
+  const target = getNotifRoute(n);
+  if (target) router.push(target);
+}
 
 // ── Send Modal ────────────────────────────────────────────────────────────
 const showSendModal = ref(false);

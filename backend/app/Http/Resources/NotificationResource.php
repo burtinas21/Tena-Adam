@@ -32,6 +32,8 @@ class NotificationResource extends JsonResource
 
             'channel' => $this->channel,
 
+            'reference_id' => $this->reference_id,
+
             'subject' => $this->subject,
 
             'content' => $this->content,

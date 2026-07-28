@@ -28,7 +28,7 @@ class UpdateMedicalDocumentRequest extends FormRequest
 
             'document_type' => [
                 'sometimes',
-                'in:lab_report,xray,mri,ct_scan,prescription,other',
+                'in:lab_report,xray,mri,ct_scan,prescription,other,appointment_upload',
             ],
 
             'description' => [

@@ -2,28 +2,67 @@
 
 namespace App\Http\Requests\Api\Payment;
 
-use Illuminate\Contracts\Validation\ValidationRule;
+
 use Illuminate\Foundation\Http\FormRequest;
 
-class StorePaymentRequest extends FormRequest
+
+class CreatePaymentRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
+
+
     public function authorize(): bool
     {
-        return false;
+
+        return true;
+
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, ValidationRule|array<mixed>|string>
-     */
+
+
     public function rules(): array
     {
+
         return [
-            //
+
+            'appointment_id'
+                =>
+                'nullable|uuid|exists:appointments,id',
+
+
+            'patient_id'
+                =>
+                'required|uuid|exists:patients,id',
+
+
+            'hospital_id'
+                =>
+                'required|uuid|exists:hospitals,id',
+
+
+            'amount'
+                =>
+                'required|numeric|min:0',
+
+
+            'currency'
+                =>
+                'nullable|string|size:3',
+
+
+
+            'payment_method'
+                =>
+                'required|string|max:50',
+
+
+
+            'metadata'
+                =>
+                'nullable|array'
+
         ];
+
     }
+
+
 }

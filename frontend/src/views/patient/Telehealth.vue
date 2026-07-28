@@ -170,7 +170,7 @@ function formatPlatform(p) {
     google_meet: 'Google Meet',
     zoom: 'Zoom',
     microsoft_teams: 'MS Teams',
-    custom: 'Custom',
+    custom: 'Jitsi / Custom',
   };
   return map[p] || p;
 }

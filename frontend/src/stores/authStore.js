@@ -1,76 +1,72 @@
 import { defineStore } from "pinia";
-
 import authService from "../services/authService";
 
-export const useAuthStore = defineStore(
-  "auth",
+export const useAuthStore = defineStore("auth", {
+  state: () => ({
+    user: JSON.parse(localStorage.getItem("user")) || null,
+    token: localStorage.getItem("token") || null,
+    loading: false,
+    error: null,
+  }),
 
-  {
-    state: () => ({
-      user: JSON.parse(localStorage.getItem("user")) || null,
+  actions: {
+    async login(credentials) {
+      try {
+        this.loading = true;
+        this.error = null;
 
-      token: localStorage.getItem("token") || null,
+        const response = await authService.login(credentials);
 
-      loading: false,
+        this.user = response.user;
+        this.token = response.token;
 
-      error: null,
-    }),
+        localStorage.setItem("token", this.token);
+        localStorage.setItem("user", JSON.stringify(this.user));
 
-    actions: {
-      async login(credentials) {
-        try {
-          this.loading = true;
-          this.error = null;
-
-          const response = await authService.login(credentials);
-
-          this.user = response.user;
-          this.token = response.token;
-
-          localStorage.setItem("token", this.token);
-          localStorage.setItem("user", JSON.stringify(this.user));
-
-          return response;
-        } catch (error) {
-          this.error = error.response?.data?.message || "Login failed";
-
-          throw error;
-        } finally {
-          this.loading = false;
+        // Apply user's saved language preference from backend
+        // Import lazily to avoid circular deps
+        const { useLanguageStore } = await import("./languageStore");
+        const langStore = useLanguageStore();
+        const savedLang = response.user?.language?.code;
+        if (savedLang && savedLang !== langStore.currentLanguage) {
+          await langStore.changeLanguage(savedLang);
+        } else {
+          // Ensure current locale translations are loaded
+          await langStore.loadTranslations(langStore.currentLanguage);
         }
-      },
-
-      async register(data) {
-        const response = await authService.register(data);
 
         return response;
-      },
+      } catch (error) {
+        this.error = error.response?.data?.message || "Login failed";
+        throw error;
+      } finally {
+        this.loading = false;
+      }
+    },
 
-      async forgotPassword(data) {
-        const response = await authService.forgotPassword(data);
+    async register(data) {
+      return await authService.register(data);
+    },
 
-        return response;
-      },
+    async forgotPassword(data) {
+      return await authService.forgotPassword(data);
+    },
 
-      async resetPassword(data) {
-        return await authService.resetPassword(data);
-      },
+    async resetPassword(data) {
+      return await authService.resetPassword(data);
+    },
 
-      async logout() {
-        try {
-          await authService.logout();
-        } catch (error) {
-          console.log("Logout error:", error);
-        } finally {
-          this.token = null;
-
-          this.user = null;
-
-          localStorage.removeItem("token");
-
-          localStorage.removeItem("user");
-        }
-      },
+    async logout() {
+      try {
+        await authService.logout();
+      } catch (error) {
+        console.log("Logout error:", error);
+      } finally {
+        this.token = null;
+        this.user = null;
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+      }
     },
   },
-);
+});

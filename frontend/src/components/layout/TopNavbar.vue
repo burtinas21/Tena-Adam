@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch } from "vue";
 import { useRouter, useRoute } from "vue-router";
+import { useI18n } from "vue-i18n";
 import {
   Menu,
   LogOut,
@@ -18,6 +19,7 @@ import ThemeToggle from "../common/ThemeToggle.vue";
 import LanguageSwitcher from "../common/LanguageSwitcher.vue";
 const router = useRouter();
 const route = useRoute();
+const { t } = useI18n();
 const authStore = useAuthStore();
 const notifStore = useNotificationStore();
 const { toggle } = useSidebar();
@@ -67,8 +69,12 @@ const notifRoute = computed(() => {
   return null;
 });
 
-// Recent 5 notifications for the dropdown preview
-const recentNotifs = computed(() => notifStore.notifications.slice(0, 5));
+// Recent 5 notifications for the dropdown preview — always newest first
+const recentNotifs = computed(() =>
+  [...notifStore.notifications]
+    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+    .slice(0, 5)
+);
 
 async function fetchDoctorPhoto() {
   if (!isDoctor.value) return;
@@ -83,11 +89,13 @@ async function fetchDoctorPhoto() {
   }
 }
 
-// Poll unread count every 30s
+// Poll unread count every 60s; refresh full list every 2 min
 let pollInterval = null;
+let fullPollInterval = null;
 async function startPolling() {
   await notifStore.fetchUnreadCount();
-  pollInterval = setInterval(() => notifStore.fetchUnreadCount(), 30000);
+  pollInterval = setInterval(() => notifStore.fetchUnreadCount(), 60000);
+  fullPollInterval = setInterval(() => notifStore.fetchAll(), 120000);
 }
 
 async function openNotifPanel() {
@@ -104,6 +112,56 @@ async function handleMarkAllRead() {
 
 async function handleMarkRead(n) {
   if (n.status !== "read") await notifStore.markAsRead(n.id);
+  // Remove from the in-memory list so it disappears from the dropdown
+  notifStore.notifications = notifStore.notifications.filter((x) => x.id !== n.id);
+  showNotifPanel.value = false;
+  const target = getNotifRoute(n);
+  if (target) router.push(target);
+}
+
+/**
+ * Resolve the router path for a notification based on channel and user role.
+ * Clicking a notification navigates to the relevant page.
+ */
+function getNotifRoute(n) {
+  const role = user.value?.roles?.[0]?.name ?? "";
+
+  // Map channel → route per role
+  const map = {
+    doctor: {
+      appointment:       { name: "doctor-appointments" },
+      queue:             { name: "Doctor_Queue" },
+      telehealth:        { name: "doctor-telehealth" },
+      doctor_leave:      { name: "doctor-schedule" },
+      doctor_schedule:   { name: "doctor-schedule" },
+      medical_encounter: { name: "medicalencounter" },
+      prescription:      { name: "prescription" },
+    },
+    patient: {
+      appointment:       { name: "appointments" },
+      queue:             { name: "patient-queue-status" },
+      telehealth:        { name: "patient-telemedicine" },
+      medical_encounter: { name: "medicalhistory" },
+      prescription:      { name: "patient-prescriptions" },
+    },
+    hospital_admin: {
+      appointment:       { name: "Appointments" },
+      queue:             { name: "Queue" },
+      doctor_leave:      { name: "Doctor_Leaves" },
+      doctor_schedule:   { name: "doctors" },
+      telehealth:        { name: "telemanagment" },
+    },
+    receptionist: {
+      appointment:       { name: "receptionist-appointments" },
+      queue:             { name: "receptionist-queue" },
+    },
+    platform_admin: {
+      appointment:       { path: "/platform/dashboard" },
+      queue:             { path: "/platform/dashboard" },
+    },
+  };
+
+  return map[role]?.[n.channel] ?? null;
 }
 
 function goToAllNotifications() {
@@ -127,14 +185,15 @@ watch(
 
 onUnmounted(() => {
   if (pollInterval) clearInterval(pollInterval);
+  if (fullPollInterval) clearInterval(fullPollInterval);
 });
 
 const searchPlaceholder = computed(() => {
   const p = route.path;
-  if (p.includes("/doctors")) return "Search Doctor Name, Specialization...";
-  if (p.includes("/hospitals")) return "Search hospitals...";
-  if (p.includes("/appointments")) return "Search appointments...";
-  return "Search...";
+  if (p.includes("/doctors")) return t("search.doctors");
+  if (p.includes("/hospitals")) return t("search.hospitals");
+  if (p.includes("/appointments")) return t("search.appointments");
+  return t("search.placeholder");
 });
 
 function handleSearch() {
@@ -167,10 +226,28 @@ function channelIcon(channel) {
   return map[channel] ?? "🔔";
 }
 
+/** For telehealth reminder notifications, highlight the join link in the content. */
+function notifContent(n) {
+  if (n.channel !== "telehealth") return n.content;
+  // Truncate long content for the dropdown but keep the meeting link visible
+  const lines = (n.content ?? "").split("\n").filter(Boolean);
+  return lines.slice(0, 2).join(" — ");
+}
+
+/**
+ * Extract a https:// meeting link from notification content, if present.
+ * Returns the URL string or null.
+ */
+function extractMeetingLink(content) {
+  if (!content) return null;
+  const match = content.match(/https?:\/\/[^\s\n]+/);
+  return match ? match[0] : null;
+}
+
 function timeAgo(dateStr) {
   if (!dateStr) return "";
   const diff = (Date.now() - new Date(dateStr)) / 1000;
-  if (diff < 60) return "just now";
+  if (diff < 60) return t("notification.just_now");
   if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
   if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
   return `${Math.floor(diff / 86400)}d ago`;
@@ -235,16 +312,16 @@ function timeAgo(dateStr) {
             <div
               class="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-slate-700 flex-shrink-0"
             >
-              <span class="text-sm font-bold text-gray-800 dark:text-slate-100"
-                >Notifications</span
-              >
+              <span class="text-sm font-bold text-gray-800 dark:text-slate-100">
+                {{ $t('notification.title') }}
+              </span>
               <div class="flex items-center gap-2">
                 <button
                   v-if="notifStore.unreadCount > 0"
                   @click="handleMarkAllRead"
                   class="text-xs text-[#004795] dark:text-blue-400 hover:underline font-semibold flex items-center gap-1"
                 >
-                  <CheckCheck class="w-3 h-3" /> Mark all read
+                  <CheckCheck class="w-3 h-3" /> {{ $t('button.mark_all_read') }}
                 </button>
                 <button
                   @click="showNotifPanel = false"
@@ -271,19 +348,22 @@ function timeAgo(dateStr) {
                 <Bell
                   class="w-6 h-6 mx-auto mb-2 text-gray-300 dark:text-slate-600"
                 />
-                No notifications yet
+                {{ $t('notification.empty') }}
               </div>
               <div v-else>
-                <button
+                <div
                   v-for="n in recentNotifs"
                   :key="n.id"
-                  @click="handleMarkRead(n)"
-                  :class="
+                  :class="[
                     n.status !== 'read'
                       ? 'bg-blue-50/60 dark:bg-blue-900/20'
-                      : 'bg-white dark:bg-slate-800'
-                  "
-                  class="w-full text-left px-4 py-3 border-b border-gray-50 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700 transition flex items-start gap-3"
+                      : 'bg-white dark:bg-slate-800',
+                    n.channel === 'telehealth' && n.subject?.includes('Reminder')
+                      ? 'border-l-2 border-l-blue-400'
+                      : '',
+                  ]"
+                  class="w-full text-left px-4 py-3 border-b border-gray-50 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700 transition flex items-start gap-3 group cursor-pointer"
+                  @click="handleMarkRead(n)"
                 >
                   <span class="text-lg flex-shrink-0 mt-0.5">{{
                     channelIcon(n.channel)
@@ -297,19 +377,39 @@ function timeAgo(dateStr) {
                     <p
                       class="text-xs text-gray-500 dark:text-slate-400 mt-0.5 line-clamp-2"
                     >
-                      {{ n.content }}
+                      {{ notifContent(n) }}
                     </p>
+                    <!-- Inline "Join Meeting" button for telehealth reminder notifications -->
+                    <a
+                      v-if="n.channel === 'telehealth' && extractMeetingLink(n.content)"
+                      :href="extractMeetingLink(n.content)"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      @click.stop
+                      class="mt-1.5 inline-flex items-center gap-1 text-[10px] font-bold text-white bg-[#004795] hover:bg-[#003670] px-2 py-0.5 rounded transition"
+                    >
+                      Join Meeting →
+                    </a>
                     <p
                       class="text-[10px] text-gray-400 dark:text-slate-500 mt-1"
                     >
                       {{ timeAgo(n.created_at) }}
                     </p>
                   </div>
-                  <span
-                    v-if="n.status !== 'read'"
-                    class="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 mt-1"
-                  />
-                </button>
+                  <div class="flex items-center gap-1 flex-shrink-0 mt-1">
+                    <span
+                      v-if="n.status !== 'read'"
+                      class="w-2 h-2 bg-blue-500 rounded-full"
+                    />
+                    <svg
+                      v-if="getNotifRoute(n)"
+                      class="w-3 h-3 text-gray-300 dark:text-slate-600 group-hover:text-[#004795] dark:group-hover:text-blue-400 transition"
+                      fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"
+                    >
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                    </svg>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -322,7 +422,7 @@ function timeAgo(dateStr) {
                 @click="goToAllNotifications"
                 class="text-xs font-semibold text-[#004795] dark:text-blue-400 hover:underline w-full text-center"
               >
-                View all notifications →
+                {{ $t('notification.view_all') }}
               </button>
             </div>
           </div>
@@ -415,7 +515,7 @@ function timeAgo(dateStr) {
               class="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition"
             >
               <LogOut class="w-4 h-4" />
-              Sign out
+              {{ $t('logout') }}
             </button>
           </div>
         </Transition>

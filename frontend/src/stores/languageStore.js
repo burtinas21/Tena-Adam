@@ -1,37 +1,51 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
-import { useI18n } from "vue-i18n";
-
+import i18n from "../i18n";
 import translationService from "../services/translationService";
+import axios from "../api/axios";
 
 export const useLanguageStore = defineStore("language", () => {
   const currentLanguage = ref(localStorage.getItem("language") || "en");
+  const loaded = ref(new Set());
 
-  async function loadTranslations() {
-    const messages = await translationService.loadTranslations(
-      currentLanguage.value,
-    );
+  /**
+   * Load translations for a locale from the backend and register with vue-i18n.
+   * Skips the fetch if that locale was already loaded.
+   */
+  async function loadTranslations(lang) {
+    const locale = lang ?? currentLanguage.value;
 
-    const { locale, setLocaleMessage } = useI18n();
+    if (loaded.value.has(locale)) {
+      i18n.global.locale.value = locale;
+      return;
+    }
 
-    setLocaleMessage(currentLanguage.value, messages);
-
-    locale.value = currentLanguage.value;
+    const messages = await translationService.fetchTranslations(locale);
+    i18n.global.setLocaleMessage(locale, messages);
+    i18n.global.locale.value = locale;
+    loaded.value.add(locale);
   }
 
-  async function changeLanguage(language) {
-    currentLanguage.value = language;
+  /**
+   * Switch language: persist to localStorage + backend (if authenticated),
+   * fetch translations, update active i18n locale.
+   */
+  async function changeLanguage(lang) {
+    currentLanguage.value = lang;
+    localStorage.setItem("language", lang);
+    await loadTranslations(lang);
 
-    localStorage.setItem("language", language);
-
-    await loadTranslations();
+    // Persist to backend for authenticated users (fire-and-forget)
+    try {
+      await axios.put("/user/language", { language_code: lang });
+    } catch {
+      // Not logged in or request failed — silently ignore
+    }
   }
 
   return {
     currentLanguage,
-
     loadTranslations,
-
     changeLanguage,
   };
 });

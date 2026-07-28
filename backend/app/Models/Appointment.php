@@ -137,4 +137,25 @@ public function review()
         ReviewRating::class
     );
 }
+
+public function referrals()
+{
+    return $this->hasMany(
+        AppointmentReferral::class,
+        'appointment_id'
+    );
+}
+
+/** Documents uploaded at booking time (before an encounter exists). */
+public function documents()
+{
+    return $this->hasMany(
+        MedicalDocument::class,
+        'appointment_id'
+    );
+}
+public function payment()
+{
+    return $this->hasOne(Payment::class);
+}
 }

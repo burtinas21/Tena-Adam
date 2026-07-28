@@ -203,27 +203,19 @@ class TranslationService
 
     private function getCurrentUserLanguage(): string
     {
-
-
-        if(Auth::check()
-            &&
-            Auth::user()->language
-        ){
-
-            return Auth::user()
-                ->language
-                ->code;
-
+        // 1. Authenticated user's saved preference
+        if (Auth::check() && Auth::user()->language) {
+            return Auth::user()->language->code;
         }
 
+        // 2. Locale set by SetLocaleFromHeader middleware (Accept-Language header)
+        $appLocale = app()->getLocale();
+        if ($appLocale && $appLocale !== 'en') {
+            return $appLocale;
+        }
 
-
-        return config(
-            'app.locale',
-            'en'
-        );
-
-
+        // 3. App default
+        return config('app.locale', 'en');
     }
 
 

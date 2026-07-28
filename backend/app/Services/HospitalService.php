@@ -25,6 +25,11 @@ class HospitalService
 
                 'address' => $data['address'],
 
+                 'latitude' => $data['latitude'] ?? null,
+
+                'longitude' => $data['longitude'] ?? null,
+
+                'google_place_id' => $data['google_place_id'] ?? null,
                 'city' => $data['city'],
 
                 'region' => $data['region'] ?? null,

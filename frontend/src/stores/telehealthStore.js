@@ -209,6 +209,24 @@ export const useTelehealthStore = defineStore("telehealth", {
       }
     },
 
+    async rescheduleSession(id, addMinutes) {
+      try {
+        this.actionLoading = true;
+        this.error = null;
+        const res = await telehealthApi.rescheduleSession(id, addMinutes);
+        const updated = res.data?.data ?? res.data;
+        this._replaceInList(updated);
+        if (this.currentSession?.id === id) this.currentSession = updated;
+        return updated;
+      } catch (err) {
+        this.error =
+          err.response?.data?.message || "Failed to reschedule session";
+        throw err;
+      } finally {
+        this.actionLoading = false;
+      }
+    },
+
     // ── Attendance ─────────────────────────────────────────────────────────
 
     async fetchAttendance(sessionId) {
