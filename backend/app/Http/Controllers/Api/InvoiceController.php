@@ -10,7 +10,12 @@ class InvoiceController extends Controller
 {
     public function index()
     {
-        $invoices = Invoice::with('payment')
+        $invoices = Invoice::with(['payment.appointment'])
+            ->when(request('appointment_id'), function ($q) {
+                $q->whereHas('payment', function ($pq) {
+                    $pq->where('appointment_id', request('appointment_id'));
+                });
+            })
             ->latest()
             ->paginate(15);
 

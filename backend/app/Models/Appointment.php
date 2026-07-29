@@ -33,6 +33,7 @@ class Appointment extends Model
         'approved_at',
         'approved_by',
         'is_telehealth',
+        'patient_hidden',
     ];
 
     protected $casts = [
@@ -40,6 +41,7 @@ class Appointment extends Model
         'approved_at'    => 'datetime',
         'cancelled_at'   => 'datetime',
         'is_telehealth'  => 'boolean',
+        'patient_hidden' => 'boolean',
     ];
 
     protected static function boot()

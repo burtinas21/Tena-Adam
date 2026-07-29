@@ -27,6 +27,18 @@ class Department extends Model
 
     ];
 
+    /**
+     * Decode the name if stored as a JSON translation object {"en":"..."}.
+     */
+    public function getNameAttribute($value): string
+    {
+        $decoded = json_decode($value, true);
+        if (is_array($decoded)) {
+            return $decoded['en'] ?? $decoded[array_key_first($decoded)] ?? $value;
+        }
+        return $value ?? '';
+    }
+
 
     protected static function boot()
     {

@@ -25,13 +25,16 @@ export default {
 
     // Build FormData for multipart upload
     const form = new FormData();
-    form.append("doctor_id",         data.doctor_id);
-    form.append("appointment_date",  data.appointment_date);
-    form.append("appointment_time",  data.appointment_time);
-    form.append("reason",            data.reason);
-    form.append("is_telehealth",     data.is_telehealth ? "1" : "0");
-    if (data.notes)       form.append("notes",       data.notes);
-    if (data.patient_id)  form.append("patient_id",  data.patient_id);
+    form.append("doctor_id",          data.doctor_id);
+    form.append("appointment_date",   data.appointment_date);
+    form.append("appointment_time",   data.appointment_time);
+    form.append("reason",             data.reason);
+    form.append("is_telehealth",      data.is_telehealth ? "1" : "0");
+    form.append("visit_type",         data.visit_type || "in_person");
+    if (data.notes)              form.append("notes",              data.notes);
+    if (data.patient_id)         form.append("patient_id",         data.patient_id);
+    if (data.payment_method_id)  form.append("payment_method_id",  data.payment_method_id);
+    if (data.amount != null)     form.append("amount",             data.amount);
 
     data.files.forEach((file) => form.append("files[]", file));
 
@@ -69,6 +72,14 @@ export default {
 
   destroy(id) {
     return api.delete(`/appointments/${id}`);
+  },
+
+  /**
+   * Patient hides a completed/cancelled appointment from their own history.
+   * The record stays in the DB — doctors and admins still see it.
+   */
+  hideFromHistory(id) {
+    return api.patch(`/appointments/${id}/hide`);
   },
 
   // ── Referrals ──────────────────────────────────────────────────────────

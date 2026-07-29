@@ -100,6 +100,27 @@ class AppointmentController extends Controller
         ]);
     }
 
+    /**
+     * Patient hides a completed/cancelled appointment from their own history.
+     * The record remains visible to doctors and hospital admins.
+     */
+    public function hideFromPatient(Appointment $appointment)
+    {
+        $user = auth()->user();
+
+        if (! $user->hasRole('patient') || $appointment->patient_id !== $user->id) {
+            abort(403, 'You are not authorized to hide this appointment.');
+        }
+
+        if (! in_array($appointment->status, ['completed', 'cancelled'])) {
+            return response()->json(['message' => 'Only completed or cancelled appointments can be hidden.'], 422);
+        }
+
+        $this->service->hideForPatient($appointment);
+
+        return response()->json(['message' => 'Appointment hidden from your history.']);
+    }
+
     public function destroy(Appointment $appointment)
     {
         $this->authorize('delete', $appointment);

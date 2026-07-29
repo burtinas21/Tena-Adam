@@ -71,7 +71,15 @@ class AppointmentPolicy
 
     public function delete(User $user, Appointment $appointment): bool
     {
-        return $user->hasRole('platform_admin');
+        if ($user->hasRole('platform_admin')) return true;
+
+        // Patients may remove completed or cancelled appointments from their history
+        if ($user->hasRole('patient')) {
+            return $appointment->patient_id === $user->id
+                && in_array($appointment->status, ['completed', 'cancelled']);
+        }
+
+        return false;
     }
 
     /**

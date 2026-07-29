@@ -55,6 +55,24 @@ class StoreAppointmentRequest extends FormRequest
                 'boolean',
             ],
 
+            'visit_type' => [
+                'nullable',
+                'string',
+                'in:in_person,telehealth,follow_up,urgent',
+            ],
+
+            'payment_method_id' => [
+                'nullable',
+                'uuid',
+                'exists:payment_methods,id',
+            ],
+
+            'amount' => [
+                'nullable',
+                'numeric',
+                'min:0',
+            ],
+
             // Optional documents (PDF, JPG, PNG) uploaded at booking time
             'files'   => ['nullable', 'array', 'max:5'],
             'files.*' => ['file', 'mimes:pdf,jpg,jpeg,png', 'max:10240'],

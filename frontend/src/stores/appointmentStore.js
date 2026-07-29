@@ -10,7 +10,8 @@ export const useAppointmentStore = defineStore("appointment", {
   }),
 
   getters: {
-    pending:   (s) => s.appointments.filter((a) => a.status === "pending"),
+    pending:         (s) => s.appointments.filter((a) => a.status === "pending"),
+    pendingPayment:  (s) => s.appointments.filter((a) => a.status === "pending_payment"),
     confirmed: (s) => s.appointments.filter((a) => a.status === "confirmed"),
     completed: (s) => s.appointments.filter((a) => a.status === "completed"),
     cancelled: (s) => s.appointments.filter((a) => a.status === "cancelled"),
@@ -36,9 +37,13 @@ export const useAppointmentStore = defineStore("appointment", {
         this.loading = true;
         this.error   = null;
         const res     = await appointmentApi.create(data);
-        const created = res.data?.data ?? res.data;
-        this.appointments.unshift(created);
-        return created;
+        // Response contains appointment + checkout_url for Chapa redirect
+        const appointment = res.data?.appointment ?? res.data?.data ?? res.data;
+        const checkoutUrl = res.data?.checkout_url ?? null;
+        if (appointment?.id) {
+          this.appointments.unshift(appointment);
+        }
+        return { appointment, checkoutUrl };
       } catch (err) {
         this.error = err.response?.data?.message || "Failed to book appointment";
         throw err;
@@ -89,6 +94,24 @@ export const useAppointmentStore = defineStore("appointment", {
         this.appointments = this.appointments.filter((a) => a.id !== id);
       } catch (err) {
         this.error = err.response?.data?.message || "Failed to delete appointment";
+        throw err;
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    /**
+     * Patient hides a completed/cancelled appointment from their own list.
+     * The record is NOT deleted from the DB — doctors/admins still see it.
+     */
+    async hideFromHistory(id) {
+      try {
+        this.loading = true;
+        this.error   = null;
+        await appointmentApi.hideFromHistory(id);
+        this.appointments = this.appointments.filter((a) => a.id !== id);
+      } catch (err) {
+        this.error = err.response?.data?.message || "Failed to hide appointment";
         throw err;
       } finally {
         this.loading = false;

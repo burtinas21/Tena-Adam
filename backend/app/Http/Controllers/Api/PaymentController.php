@@ -126,4 +126,46 @@ public function webhook(Request $request): JsonResponse
 
     return response()->json($result);
 }
+
+/**
+ * Find the pending payment for a given appointment (patient-facing).
+ */
+public function byAppointment(Request $request): JsonResponse
+{
+    $request->validate([
+        'appointment_id' => ['required', 'uuid', 'exists:appointments,id'],
+    ]);
+
+    $payment = Payment::with(['invoice'])
+        ->where('appointment_id', $request->appointment_id)
+        ->where('status', 'pending')
+        ->latest()
+        ->first();
+
+    if (! $payment) {
+        return response()->json(['message' => 'No pending payment found for this appointment.'], 404);
+    }
+
+    return response()->json(['data' => new PaymentResource($payment)]);
+}
+
+/**
+ * Re-initialize a pending Chapa payment and return a fresh checkout URL.
+ * Used by the "Pay Now" button when the original checkout URL was not stored.
+ */
+public function reinitialize(Payment $payment): JsonResponse
+{
+    // Only the owning patient or admin may do this
+    $this->authorize('view', $payment);
+
+    if ($payment->status !== 'pending') {
+        return response()->json(['message' => 'Payment is not in a pending state.'], 422);
+    }
+
+    $checkoutUrl = $this->paymentService->reinitialize($payment);
+
+    return response()->json([
+        'checkout_url' => $checkoutUrl,
+    ]);
+}
 }

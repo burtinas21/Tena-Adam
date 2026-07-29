@@ -21,12 +21,38 @@
         </div>
       </div>
 
-      <!-- Stat pills -->
-      <div class="flex flex-wrap gap-3 mb-6">
-        <StatPill label="Pending"   :count="store.pending.length"   color="amber" />
-        <StatPill label="Confirmed" :count="store.confirmed.length" color="blue" />
-        <StatPill label="Completed" :count="store.completed.length" color="emerald" />
-        <StatPill label="Cancelled" :count="store.cancelled.length" color="red" />
+      <!-- Stat cards -->
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
+        <!-- Awaiting Payment -->
+        <div class="bg-white rounded-xl border border-orange-100 shadow-sm p-4 flex flex-col gap-1">
+          <span class="text-2xl font-extrabold text-orange-500">{{ store.pendingPayment.length }}</span>
+          <span class="text-xs font-semibold text-gray-500 leading-tight">Awaiting Payment</span>
+          <div class="mt-1 h-1 rounded-full bg-orange-100"><div class="h-1 rounded-full bg-orange-400 transition-all" :style="{ width: store.appointments.length ? (store.pendingPayment.length / store.appointments.length * 100) + '%' : '0%' }"></div></div>
+        </div>
+        <!-- Pending -->
+        <div class="bg-white rounded-xl border border-amber-100 shadow-sm p-4 flex flex-col gap-1">
+          <span class="text-2xl font-extrabold text-amber-500">{{ store.pending.length }}</span>
+          <span class="text-xs font-semibold text-gray-500 leading-tight">Pending</span>
+          <div class="mt-1 h-1 rounded-full bg-amber-100"><div class="h-1 rounded-full bg-amber-400 transition-all" :style="{ width: store.appointments.length ? (store.pending.length / store.appointments.length * 100) + '%' : '0%' }"></div></div>
+        </div>
+        <!-- Confirmed -->
+        <div class="bg-white rounded-xl border border-blue-100 shadow-sm p-4 flex flex-col gap-1">
+          <span class="text-2xl font-extrabold text-blue-600">{{ store.confirmed.length }}</span>
+          <span class="text-xs font-semibold text-gray-500 leading-tight">Confirmed</span>
+          <div class="mt-1 h-1 rounded-full bg-blue-100"><div class="h-1 rounded-full bg-blue-500 transition-all" :style="{ width: store.appointments.length ? (store.confirmed.length / store.appointments.length * 100) + '%' : '0%' }"></div></div>
+        </div>
+        <!-- Completed -->
+        <div class="bg-white rounded-xl border border-emerald-100 shadow-sm p-4 flex flex-col gap-1">
+          <span class="text-2xl font-extrabold text-emerald-600">{{ store.completed.length }}</span>
+          <span class="text-xs font-semibold text-gray-500 leading-tight">Completed</span>
+          <div class="mt-1 h-1 rounded-full bg-emerald-100"><div class="h-1 rounded-full bg-emerald-500 transition-all" :style="{ width: store.appointments.length ? (store.completed.length / store.appointments.length * 100) + '%' : '0%' }"></div></div>
+        </div>
+        <!-- Cancelled -->
+        <div class="bg-white rounded-xl border border-red-100 shadow-sm p-4 flex flex-col gap-1 col-span-2 sm:col-span-1">
+          <span class="text-2xl font-extrabold text-red-500">{{ store.cancelled.length }}</span>
+          <span class="text-xs font-semibold text-gray-500 leading-tight">Cancelled</span>
+          <div class="mt-1 h-1 rounded-full bg-red-100"><div class="h-1 rounded-full bg-red-400 transition-all" :style="{ width: store.appointments.length ? (store.cancelled.length / store.appointments.length * 100) + '%' : '0%' }"></div></div>
+        </div>
       </div>
 
       <!-- Error -->
@@ -99,9 +125,21 @@
               </div>
             </div>
             <div class="flex items-center gap-3 flex-shrink-0">
-              <span :class="statusClass(appt.status)" class="text-xs font-semibold px-2.5 py-0.5 rounded-full border capitalize">{{ appt.status }}</span>
+              <span :class="statusClass(appt.status)" class="text-xs font-semibold px-2.5 py-0.5 rounded-full border capitalize">{{ appt.status === 'pending_payment' ? 'Awaiting Payment' : appt.status }}</span>
+              <button v-if="appt.status === 'pending_payment'" @click="retryPayment(appt)" class="text-xs font-semibold text-white bg-orange-500 hover:bg-orange-600 px-3 py-1 rounded-lg transition">Pay Now</button>
               <button v-if="appt.status === 'pending'" @click="handleCancel(appt.id)" :disabled="store.loading" class="text-xs font-semibold text-red-500 hover:text-red-700 transition">Cancel</button>
               <button v-if="appt.status === 'pending'" @click="openReschedule(appt)" class="text-xs font-semibold text-[#004795] hover:underline transition">Reschedule</button>
+              <!-- Hide from history for completed/cancelled -->
+              <button
+                v-if="appt.status === 'completed' || appt.status === 'cancelled'"
+                @click="promptHideHistory(appt)"
+                :disabled="hidingId === appt.id"
+                class="inline-flex items-center gap-1 text-xs font-semibold text-gray-400 hover:text-red-500 transition disabled:opacity-50"
+                title="Remove from my history"
+              >
+                <Loader2 v-if="hidingId === appt.id" class="w-3 h-3 animate-spin" />
+                <Trash2 v-else class="w-3 h-3" />
+              </button>
             </div>
           </div>
         </div>
@@ -190,6 +228,17 @@
             </div>
           </div>
 
+          <!-- Visit Type -->
+          <div v-if="bookForm.appointment_time">
+            <label class="block text-xs font-semibold text-gray-700 mb-1.5">Visit Type <span class="text-red-500">*</span></label>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <button v-for="vt in visitTypes" :key="vt.value" type="button"
+                @click="bookForm.visit_type = vt.value"
+                :class="bookForm.visit_type === vt.value ? 'bg-[#004795] text-white border-[#004795]' : 'bg-white text-gray-700 border-gray-200 hover:border-[#004795] hover:text-[#004795]'"
+                class="py-2 text-xs font-semibold rounded-lg border transition">{{ vt.label }}</button>
+            </div>
+          </div>
+
           <!-- Reason -->
           <div v-if="bookForm.appointment_time">
             <label class="block text-xs font-semibold text-gray-700 mb-1.5">Reason <span class="text-red-500">*</span></label>
@@ -232,11 +281,19 @@
           </div>
         </div>
 
-        <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-100 flex-shrink-0">
-          <button type="button" @click="closeBook" class="px-4 py-2 text-sm font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition">Cancel</button>
-          <button @click="handleBook" :disabled="!canBook || bookSaving" class="px-5 py-2 text-sm font-semibold text-white bg-[#004795] hover:bg-[#003670] rounded-lg transition disabled:opacity-50 flex items-center gap-2">
-            <Loader2 v-if="bookSaving" class="w-3.5 h-3.5 animate-spin" /> Confirm Booking
-          </button>
+        <div class="flex items-center justify-between gap-3 px-6 py-4 border-t border-gray-100 flex-shrink-0">
+          <!-- Consultation fee notice -->
+          <p v-if="selectedDoctorObj?.consultation_fee" class="text-xs text-gray-500 flex-1">
+            Consultation fee: <span class="font-bold text-gray-800">{{ selectedDoctorObj.consultation_fee }} ETB</span>
+            <span class="text-gray-400"> — you will be redirected to Chapa to pay</span>
+          </p>
+          <div class="flex items-center gap-3 flex-shrink-0">
+            <button type="button" @click="closeBook" class="px-4 py-2 text-sm font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition">Cancel</button>
+            <button @click="handleBook" :disabled="!canBook || bookSaving" class="px-5 py-2 text-sm font-semibold text-white bg-[#004795] hover:bg-[#003670] rounded-lg transition disabled:opacity-50 flex items-center gap-2">
+              <Loader2 v-if="bookSaving" class="w-3.5 h-3.5 animate-spin" />
+              {{ selectedDoctorObj?.consultation_fee ? 'Confirm & Pay' : 'Confirm Booking' }}
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -274,31 +331,59 @@
         </div>
       </div>
     </div>
+    <!-- ── Hide-from-history Confirmation Modal ──────────────────────── -->
+    <div v-if="showHideConfirm" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+      <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6">
+        <div class="flex items-center gap-3 mb-3">
+          <div class="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center flex-shrink-0">
+            <Trash2 class="w-5 h-5 text-red-500" />
+          </div>
+          <div>
+            <h3 class="text-sm font-bold text-gray-800">Remove from history?</h3>
+            <p class="text-xs text-gray-500 mt-0.5">This appointment will be removed from your list. The doctor and hospital will still have access to the record.</p>
+          </div>
+        </div>
+        <div class="flex gap-3 mt-5">
+          <button @click="cancelHide" class="flex-1 px-4 py-2 text-sm font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition">
+            Cancel
+          </button>
+          <button @click="confirmHide" :disabled="hidingId !== null" class="flex-1 px-4 py-2 text-sm font-semibold text-white bg-red-500 hover:bg-red-600 rounded-xl transition disabled:opacity-50 flex items-center justify-center gap-2">
+            <Loader2 v-if="hidingId !== null" class="w-3.5 h-3.5 animate-spin" />
+            Remove
+          </button>
+        </div>
+      </div>
+    </div>
   </main>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, watch, defineComponent, h } from "vue";
+import { ref, computed, onMounted, onUnmounted, watch } from "vue";
 import { useRoute } from "vue-router";
-import { Plus, CalendarDays, Clock, Monitor, AlertCircle, X, Loader2, ChevronDown, Search, Building2, Paperclip, FileText, Image, ArrowRightLeft } from "lucide-vue-next";
+import { Plus, CalendarDays, Clock, Monitor, AlertCircle, X, Loader2, ChevronDown, Search, Building2, Paperclip, FileText, Image, ArrowRightLeft, Download, Trash2 } from "lucide-vue-next";
 import { useAppointmentStore } from "../../stores/appointmentStore";
 import doctorApi from "../../api/doctorApi";
 import slotApi from "../../api/slotApi";
 import api from "../../api/axios";
 import hospitalApi from "../../api/hospitalApi";
 import medicalDocumentApi from "../../api/medicalDocumentApi";
+import paymentApi from "../../api/paymentApi";
 
 const baseUrl = api.defaults.baseURL;
-
-// ── StatPill ─────────────────────────────────────────────────────────────
-const colorMap = { amber:"bg-amber-50 text-amber-700 border-amber-200", blue:"bg-blue-50 text-blue-700 border-blue-200", emerald:"bg-emerald-50 text-emerald-700 border-emerald-200", red:"bg-red-50 text-red-600 border-red-200" };
-const StatPill = defineComponent({ props:{label:String,count:Number,color:String}, setup(p){ return ()=>h("div",{class:`inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-semibold ${colorMap[p.color]}`},[h("span",{},p.count),h("span",{},p.label)]) } });
 
 const store = useAppointmentStore();
 const route = useRoute();
 const doctors   = ref([]);
 const hospitals = ref([]);
 const today     = new Date().toISOString().split("T")[0];
+
+// Visit type options
+const visitTypes = [
+  { value: "in_person",  label: "In Person"  },
+  { value: "telehealth", label: "Telehealth"  },
+  { value: "follow_up",  label: "Follow Up"   },
+  { value: "urgent",     label: "Urgent"      },
+];
 
 // Dropdown state
 const hospitalSearch = ref(""); const doctorSearch = ref("");
@@ -333,7 +418,7 @@ const slotsLoading = ref(false); const availableSlots = ref([]); const selectedS
 const prefilledHospitalId = ref(""); const prefilledDoctorId = ref("");
 const fileInput = ref(null); const bookFiles = ref([]);
 
-const bookForm = ref({ hospital_id:"", doctor_id:"", appointment_date:"", appointment_time:"", reason:"", is_telehealth:false });
+const bookForm = ref({ hospital_id:"", doctor_id:"", appointment_date:"", appointment_time:"", reason:"", is_telehealth:false, visit_type:"in_person" });
 const selectedHospitalObj = computed(() => hospitals.value.find((h) => h.id === bookForm.value.hospital_id) ?? null);
 const selectedDoctorObj   = computed(() => doctors.value.find((d) => d.id === bookForm.value.doctor_id) ?? null);
 const canBook = computed(() => bookForm.value.doctor_id && bookForm.value.appointment_date && bookForm.value.appointment_time && bookForm.value.reason.trim());
@@ -418,7 +503,7 @@ function onDoctorChange() { bookForm.value.appointment_date = ""; bookForm.value
 function selectSlot(slot) { selectedSlotTime.value = formatSlotTime(slot.start_time); bookForm.value.appointment_time = slot.start_time.substring(11, 16); }
 
 async function openBookWithDoctor(doctorId, hospitalId) {
-  bookForm.value = { hospital_id: hospitalId ?? "", doctor_id: doctorId, appointment_date:"", appointment_time:"", reason:"", is_telehealth:false };
+  bookForm.value = { hospital_id: hospitalId ?? "", doctor_id: doctorId, appointment_date:"", appointment_time:"", reason:"", is_telehealth:false, visit_type:"in_person" };
   prefilledHospitalId.value = hospitalId ?? ""; prefilledDoctorId.value = doctorId;
   selectedSlotTime.value = ""; availableSlots.value = []; bookError.value = null; bookFiles.value = [];
   hospitalSearch.value = ""; doctorSearch.value = ""; hospitalDropdownOpen.value = false; doctorDropdownOpen.value = false;
@@ -426,7 +511,7 @@ async function openBookWithDoctor(doctorId, hospitalId) {
 }
 function openBook() {
   if (!profileActive.value) return;
-  bookForm.value = { hospital_id:"", doctor_id:"", appointment_date:"", appointment_time:"", reason:"", is_telehealth:false };
+  bookForm.value = { hospital_id:"", doctor_id:"", appointment_date:"", appointment_time:"", reason:"", is_telehealth:false, visit_type:"in_person" };
   selectedSlotTime.value = ""; availableSlots.value = []; bookError.value = null; bookFiles.value = [];
   hospitalSearch.value = ""; doctorSearch.value = ""; hospitalDropdownOpen.value = false; doctorDropdownOpen.value = false;
   prefilledHospitalId.value = ""; prefilledDoctorId.value = "";
@@ -438,15 +523,20 @@ async function handleBook() {
   bookError.value = null;
   try {
     bookSaving.value = true;
-    await store.create({
+    const result = await store.create({
       doctor_id:        bookForm.value.doctor_id,
       appointment_date: bookForm.value.appointment_date,
       appointment_time: bookForm.value.appointment_time,
       reason:           bookForm.value.reason,
       is_telehealth:    bookForm.value.is_telehealth,
-      files:            bookFiles.value,    // array of File objects (may be empty)
+      visit_type:       bookForm.value.visit_type || "in_person",
+      files:            bookFiles.value,
     });
     closeBook();
+    // Redirect to Chapa payment page
+    if (result?.checkoutUrl) {
+      window.location.href = result.checkoutUrl;
+    }
   } catch (err) {
     const errors = err.response?.data?.errors;
     bookError.value = errors ? Object.values(errors).flat().join(" ") : err.response?.data?.message || "Something went wrong.";
@@ -455,13 +545,104 @@ async function handleBook() {
 
 async function handleCancel(id) { try { await store.updateStatus(id, "cancelled"); } catch { } }
 
+// ── Hide from history (in-page confirmation modal) ────────────────────────
+const showHideConfirm = ref(false);
+const hidingId        = ref(null);
+const pendingHideId   = ref(null);
+
+function promptHideHistory(appt) {
+  pendingHideId.value  = appt.id;
+  showHideConfirm.value = true;
+}
+function cancelHide() {
+  showHideConfirm.value = false;
+  pendingHideId.value   = null;
+}
+async function confirmHide() {
+  if (!pendingHideId.value) return;
+  hidingId.value = pendingHideId.value;
+  try {
+    await store.hideFromHistory(pendingHideId.value);
+    showHideConfirm.value = false;
+    pendingHideId.value   = null;
+  } catch (err) {
+    // Show error inline — no alert
+    store.error = err.response?.data?.message || "Failed to remove appointment.";
+    showHideConfirm.value = false;
+  } finally {
+    hidingId.value = null;
+  }
+}
+
+// Retry payment for pending_payment appointments
+async function retryPayment(appt) {
+  try {
+    // Step 1: find the pending payment record for this appointment
+    const res = await paymentApi.getByAppointment(appt.id);
+    const payment = res.data?.data ?? res.data;
+
+    if (!payment?.id) {
+      alert("No pending payment found. Please contact support.");
+      return;
+    }
+
+    // Step 2: re-initialize with Chapa to get a fresh checkout URL
+    const reinitRes = await paymentApi.reinitialize(payment.id);
+    const checkoutUrl = reinitRes.data?.checkout_url;
+
+    if (checkoutUrl) {
+      window.location.href = checkoutUrl;
+    } else {
+      alert("Payment link not available. Please contact support.");
+    }
+  } catch (err) {
+    const msg = err.response?.data?.message || "Unable to retrieve payment link. Please try again.";
+    alert(msg);
+  }
+}
+
+// Download invoice for a completed appointment
+const downloadingInvoice = ref({});
+async function downloadInvoice(appt) {
+  if (downloadingInvoice.value[appt.id]) return;
+  downloadingInvoice.value[appt.id] = true;
+  try {
+    // Fetch invoices filtered by appointment_id
+    const res = await api.get(`/invoices`, { params: { appointment_id: appt.id } });
+    const list = res.data?.data ?? res.data ?? [];
+    const invoices = Array.isArray(list) ? list : (list.data ?? []);
+    const invoice = invoices.find(
+      (inv) => inv.appointment_id === appt.id || inv.payment?.appointment_id === appt.id
+    );
+
+    if (!invoice?.id) {
+      alert("Invoice not available yet. Payment may still be processing.");
+      return;
+    }
+
+    const blob = await paymentApi.downloadInvoice(invoice.id);
+    const url = window.URL.createObjectURL(new Blob([blob.data], { type: "application/pdf" }));
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", `invoice-${invoice.invoice_number ?? invoice.id}.pdf`);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+  } catch {
+    alert("Invoice download failed. Please try again.");
+  } finally {
+    downloadingInvoice.value[appt.id] = false;
+  }
+}
+
 // Helpers
 function initials(doctor) { const u = doctor?.user; return u ? ((u.first_name?.[0] ?? "")+(u.last_name?.[0] ?? "")).toUpperCase() : "?"; }
 function formatDate(dt) { return dt ? new Date(dt).toLocaleDateString("en-ET", { day:"numeric", month:"short", year:"numeric" }) : "—"; }
 function formatTime(dt) { return dt ? new Date(dt).toLocaleTimeString("en-ET", { hour:"2-digit", minute:"2-digit" }) : "—"; }
 function formatSlotTime(t) { if (!t) return ""; const d = new Date(t); return isNaN(d) ? t.substring(11,16) : d.toLocaleTimeString("en-ET",{hour:"2-digit",minute:"2-digit"}); }
 function statusClass(status) {
-  return { pending:"bg-amber-50 text-amber-700 border-amber-200", confirmed:"bg-blue-50 text-blue-700 border-blue-200", completed:"bg-emerald-50 text-emerald-700 border-emerald-200", cancelled:"bg-red-50 text-red-600 border-red-200", no_show:"bg-gray-50 text-gray-500 border-gray-200" }[status] ?? "bg-gray-50 text-gray-500 border-gray-200";
+  return { pending:"bg-amber-50 text-amber-700 border-amber-200", pending_payment:"bg-orange-50 text-orange-700 border-orange-200", confirmed:"bg-blue-50 text-blue-700 border-blue-200", completed:"bg-emerald-50 text-emerald-700 border-emerald-200", cancelled:"bg-red-50 text-red-600 border-red-200", no_show:"bg-gray-50 text-gray-500 border-gray-200" }[status] ?? "bg-gray-50 text-gray-500 border-gray-200";
 }
 function referralBadgeClass(status) {
   return { pending:"bg-amber-50 text-amber-700 border-amber-200", accepted:"bg-emerald-50 text-emerald-700 border-emerald-200", rejected:"bg-red-50 text-red-600 border-red-200" }[status] ?? "bg-gray-50 text-gray-500 border-gray-200";

@@ -10,6 +10,16 @@ export default {
     return axios.get("/payments", { params });
   },
 
+  getByAppointment(appointmentId) {
+    return axios.get("/payments/by-appointment", {
+      params: { appointment_id: appointmentId },
+    });
+  },
+
+  reinitialize(paymentId) {
+    return axios.post(`/payments/${paymentId}/reinitialize`);
+  },
+
   getById(id) {
     return axios.get(`/payments/${id}`);
   },

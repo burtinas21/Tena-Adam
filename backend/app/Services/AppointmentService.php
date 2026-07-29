@@ -91,7 +91,8 @@ public function __construct(
         } elseif ($user->hasRole('doctor')) {
             $query->where('doctor_id', $user->id);
         } elseif ($user->hasRole('patient')) {
-            $query->where('patient_id', $user->id);
+            $query->where('patient_id', $user->id)
+                  ->where('patient_hidden', false);
         } else {
             return collect();
         }
@@ -221,7 +222,7 @@ public function __construct(
                 'scheduled_time'=> $scheduledDatetime,
                 'duration_min'  => $schedule->slot_duration_min,
                 // 'status'        => 'pending',
-                'visit_type'      => $data['visit_type'],
+                'visit_type'      => $data['visit_type'] ?? 'in_person',
                 'status'          => 'pending_payment',
                 'reason'        => $data['reason'],
                 'notes'         => $data['notes'] ?? null,
@@ -235,11 +236,17 @@ public function __construct(
 
             'hospital_id'       => $appointment->hospital_id,
 
-            'payment_method_id' => $data['payment_method_id'],
+            'payment_method_id' => $data['payment_method_id'] ?? null,
 
-            'amount'            => $data['amount'],
+            'amount'            => $data['amount'] ?? ($appointment->doctor->consultation_fee ?? 0),
 
             'currency'          => 'ETB',
+
+            'email'             => $patient->email ?? ($authUser->email ?? ''),
+
+            'first_name'        => $patient->first_name ?? ($authUser->first_name ?? ''),
+
+            'last_name'         => $patient->last_name ?? ($authUser->last_name ?? ''),
 
         ]);
             $this->notificationService
@@ -289,15 +296,16 @@ public function __construct(
 ]);
 
 
-return [
+            return [
 
-    'appointment' => $appointment,
+                'appointment' => $appointment,
 
-    'payment' => $payment['payment'],
+                'payment' => $payment['payment'],
 
-    'checkout_url' => $payment['checkout_url'],
+                'checkout_url' => $payment['checkout_url'],
 
-];
+            ];
+        });
     }
 
 
@@ -603,6 +611,15 @@ if (
             }
             $appointment->delete();
         });
+    }
+
+    /**
+     * Hide an appointment from the patient's view without deleting the record.
+     * Doctors and hospital admins still see it.
+     */
+    public function hideForPatient(Appointment $appointment): void
+    {
+        $appointment->update(['patient_hidden' => true]);
     }
     public function reschedule(
     Appointment $appointment,

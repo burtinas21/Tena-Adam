@@ -30,6 +30,9 @@ class InvoiceResource extends JsonResource
                 $this->whenLoaded('payment')
             ),
 
+            // Convenience field so frontend can match invoice → appointment
+            'appointment_id' => $this->payment?->appointment_id ?? $this->whenLoaded('payment', fn() => $this->payment->appointment_id),
+
             'created_at' => $this->created_at,
 
             'updated_at' => $this->updated_at,

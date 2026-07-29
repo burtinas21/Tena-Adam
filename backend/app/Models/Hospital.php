@@ -45,6 +45,57 @@ class Hospital extends Model
 
 ];
 
+    /**
+     * Decode the name if stored as a JSON translation object {"en":"..."}.
+     */
+    public function getNameAttribute($value): string
+    {
+        $decoded = json_decode($value, true);
+        if (is_array($decoded)) {
+            return $decoded['en'] ?? $decoded[array_key_first($decoded)] ?? $value;
+        }
+        return $value ?? '';
+    }
+
+    /**
+     * Decode the city if stored as a JSON translation object {"en":"..."}.
+     */
+    public function getCityAttribute($value): ?string
+    {
+        if (!$value) return null;
+        $decoded = json_decode($value, true);
+        if (is_array($decoded)) {
+            return $decoded['en'] ?? $decoded[array_key_first($decoded)] ?? $value;
+        }
+        return $value;
+    }
+
+    /**
+     * Decode the region if stored as a JSON translation object {"en":"..."}.
+     */
+    public function getRegionAttribute($value): ?string
+    {
+        if (!$value) return null;
+        $decoded = json_decode($value, true);
+        if (is_array($decoded)) {
+            return $decoded['en'] ?? $decoded[array_key_first($decoded)] ?? $value;
+        }
+        return $value;
+    }
+
+    /**
+     * Decode the address if stored as a JSON translation object {"en":"..."}.
+     */
+    public function getAddressAttribute($value): ?string
+    {
+        if (!$value) return null;
+        $decoded = json_decode($value, true);
+        if (is_array($decoded)) {
+            return $decoded['en'] ?? $decoded[array_key_first($decoded)] ?? $value;
+        }
+        return $value;
+    }
+
 
     protected static function boot()
     {
