@@ -1,7 +1,7 @@
 <template>
   <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex flex-col h-full">
     <div class="flex items-center justify-between mb-4">
-      <h2 class="text-base font-bold text-gray-800">Recent Appointments</h2>
+      <h2 class="text-base font-bold text-gray-800">Recent Activities</h2>
       <button
         class="text-gray-400 hover:text-gray-600 transition"
         :class="{ 'animate-spin': store.loading }"
@@ -54,7 +54,7 @@
       <RouterLink
         to="/hospital-admin/appointments"
         class="text-xs font-semibold text-blue-600 hover:underline"
-      >View All Appointments</RouterLink>
+      >View Full Log</RouterLink>
     </div>
   </div>
 </template>

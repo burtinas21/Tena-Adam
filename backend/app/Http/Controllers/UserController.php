@@ -8,58 +8,33 @@ use Illuminate\Http\Request;
 class UserController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Return a paginated, searchable list of users.
+     * Used by the platform admin "Send Notification" modal to pick recipients.
      */
-    public function index()
+    public function index(Request $request)
     {
-        //
-    }
+        $query = User::with('roles')
+            ->when($request->filled('search'), function ($q) use ($request) {
+                $search = '%' . $request->search . '%';
+                $q->where(function ($inner) use ($search) {
+                    $inner->where('first_name', 'like', $search)
+                          ->orWhere('last_name',  'like', $search)
+                          ->orWhere('email',       'like', $search)
+                          ->orWhere('phone',       'like', $search);
+                });
+            })
+            ->orderBy('first_name')
+            ->orderBy('last_name');
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
+        $users = $query->paginate($request->integer('per_page', 20));
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(User $user)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(User $user)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, User $user)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(User $user)
-    {
-        //
+        return response()->json([
+            'data' => $users->items(),
+            'meta' => [
+                'current_page' => $users->currentPage(),
+                'last_page'    => $users->lastPage(),
+                'total'        => $users->total(),
+            ],
+        ]);
     }
 }

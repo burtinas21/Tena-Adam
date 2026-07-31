@@ -71,6 +71,21 @@ export default [
         name: "platform-symptoms",
         component: () => import("../views/hospital-admin/Symptoms.vue"),
       },
+      {
+        path: "appointments",
+        name: "platform-appointments",
+        component: () => import("../views/hospital-admin/appointments.vue"),
+      },
+      {
+        path: "telemanagement",
+        name: "platform-telemanagement",
+        component: () => import("../views/hospital-admin/TelehealthManagement.vue"),
+      },
+      {
+        path: "doctor-leaves",
+        name: "platform-doctor-leaves",
+        component: () => import("../views/hospital-admin/leaves.vue"),
+      },
     ],
   },
 ];

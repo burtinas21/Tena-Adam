@@ -34,4 +34,14 @@ export default [
       guest: true,
     },
   },
+
+  {
+    path: "/accept-invitation",
+    name: "accept-invitation",
+    component: () => import("../views/auth/AcceptInvitation.vue"),
+    // No guest: true — this link must work whether the visitor is
+    // logged-in (e.g. the platform admin who sent it tests the link)
+    // or not (the new hospital admin who has no account yet).
+    meta: {},
+  },
 ];

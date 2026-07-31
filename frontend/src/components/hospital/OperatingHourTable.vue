@@ -13,11 +13,6 @@
 
     <div v-else class="w-full">
       <table class="w-full table-fixed">
-        <!--
-          All columns always visible.
-          On mobile: smaller text + tighter padding = fits without scroll.
-          Day 22% | Open 16% | Close 16% | Status 20% | Created 18% | Actions 8%
-        -->
         <colgroup>
           <col style="width:22%" />
           <col style="width:16%" />
@@ -80,13 +75,9 @@
                 {{ hour.is_holiday ? 'Holiday' : 'Open' }}
               </span>
             </td>
-
-            <!-- Created -->
             <td class="px-2 sm:px-4 py-2 sm:py-3 text-[10px] sm:text-xs text-gray-400 whitespace-nowrap">
               {{ formatDate(hour.created_at) }}
             </td>
-
-            <!-- Actions -->
             <td class="px-2 sm:px-4 py-2 sm:py-3 text-right">
               <div class="relative inline-block" @click.stop>
                 <button
@@ -97,7 +88,7 @@
                 </button>
                 <div
                   v-if="openMenuId === hour.id"
-                  class="absolute right-0 mt-1 w-32 bg-white border border-gray-100 rounded-xl shadow-lg z-30 py-1"
+                  class="absolute right-1 bottom-full mb-3 w-32 bg-white border border-gray-100 rounded-xl shadow-lg z-30 py-1"
                 >
                   <button
                     @click="emit('edit', hour); closeMenu()"

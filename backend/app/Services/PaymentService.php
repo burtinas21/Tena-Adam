@@ -253,6 +253,16 @@ class PaymentService
                 'status'      => 'confirmed',
                 'approved_at' => now(),
             ]);
+
+            // Auto-create telehealth session for telehealth appointments
+            if ($appointment->is_telehealth && ! $appointment->telehealthSession) {
+                try {
+                    app(\App\Services\TelehealthSessionService::class)
+                        ->autoCreateSession($appointment);
+                } catch (\Throwable) {
+                    // Non-blocking — never fail the payment callback
+                }
+            }
         }
 
         // Generate queue entry for this appointment
@@ -310,6 +320,34 @@ public function handleCallback(array $callbackData): array
             'success' => false,
 
             'message' => 'Payment not found.'
+
+        ];
+
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Already Completed — return invoice_id immediately without re-verifying
+    |--------------------------------------------------------------------------
+    */
+
+    if ($payment->status === 'completed') {
+
+        $payment->load('invoice');
+
+        // Ensure the PDF exists (regenerate if missing)
+        if ($payment->invoice && !$payment->invoice->pdf_url) {
+            $this->invoiceService->generatePdf($payment->invoice);
+            $payment->load('invoice');
+        }
+
+        return [
+
+            'success'    => true,
+
+            'message'    => 'Payment already processed.',
+
+            'invoice_id' => $payment->invoice?->id,
 
         ];
 

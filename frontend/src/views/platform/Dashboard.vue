@@ -24,13 +24,13 @@
           <Download class="w-3.5 h-3.5 text-gray-500" />
           Export Report
         </RouterLink>
-        <RouterLink
+        <!-- <RouterLink
           to="/platform/hospitalnetwork"
           class="bg-[#004795] hover:bg-[#003670] text-white font-semibold text-xs py-2 px-4 rounded-lg flex items-center gap-x-1.5 transition shadow-sm"
         >
           <Plus class="w-4 h-4 text-white" />
           New Action
-        </RouterLink>
+        </RouterLink> -->
       </div>
     </div>
 

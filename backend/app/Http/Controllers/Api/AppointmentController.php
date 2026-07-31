@@ -14,6 +14,7 @@ use App\Services\AppointmentSlotService;
 use Illuminate\Http\Request;
 use App\Http\Resources\PaymentResource;
 use Carbon\Carbon;
+use Illuminate\Database\QueryException;
 
 class AppointmentController extends Controller
 {
@@ -48,19 +49,30 @@ class AppointmentController extends Controller
             $data['uploaded_files'] = $request->file('files');
         }
 
-       $result = $this->service->create($data);
+        try {
+            $result = $this->service->create($data);
+        } catch (QueryException $e) {
+            // Unique constraint on (doctor_id, scheduled_time) — slot was taken
+            // by a concurrent request that slipped past the soft-check.
+            if (str_contains($e->getMessage(), 'appointments_doctor_id_scheduled_time_unique')
+                || $e->getCode() === '23000') {
+                return response()->json([
+                    'message' => 'This appointment slot has just been taken. Please select a different time.',
+                    'errors'  => [
+                        'appointment_time' => ['This time slot is no longer available. Please choose another.'],
+                    ],
+                ], 422);
+            }
 
-    return response()->json([
+            throw $e;
+        }
 
-        'message' => 'Appointment created successfully.',
-        'appointment' => $result['appointment'],
-        'payment' => new PaymentResource(
-            $result['payment']
-        ),
-
-        'checkout_url' => $result['checkout_url'],
-
-    ]);
+        return response()->json([
+            'message'      => 'Appointment created successfully.',
+            'appointment'  => $result['appointment'],
+            'payment'      => new PaymentResource($result['payment']),
+            'checkout_url' => $result['checkout_url'],
+        ]);
     }
 
     public function show(Appointment $appointment)

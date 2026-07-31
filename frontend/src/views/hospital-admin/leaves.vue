@@ -1,5 +1,5 @@
 <template>
-  <main class="flex-1 bg-[#F8FAFC] dark:bg-[#0f172a] p-6 overflow-y-auto font-sans dark:text-slate-200">
+  <main class="flex-1 bg-[#F8FAFC] dark:bg-[#0f172a] p-3 sm:p-5 overflow-y-auto font-sans dark:text-slate-200">
     <div class="max-w-6xl mx-auto">
 
       <!-- Header -->
@@ -40,72 +40,67 @@
         </div>
 
         <!-- Table -->
-        <div v-else class="overflow-x-auto">
-          <table class="w-full text-sm text-left min-w-[700px]">
+        <div v-else>
+          <table class="w-full text-xs text-left table-fixed">
+            <colgroup>
+              <col style="width:24%" />
+              <col style="width:16%" />
+              <col style="width:13%" class="hidden sm:table-column" />
+              <col style="width:22%" class="hidden md:table-column" />
+              <col style="width:13%" />
+              <col style="width:12%" />
+            </colgroup>
             <thead>
-              <tr class="border-b border-gray-100">
-                <th class="px-5 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Doctor</th>
-                <th class="px-5 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Leave Date</th>
-                <th class="px-5 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Type</th>
-                <th class="px-5 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Reason</th>
-                <th class="px-5 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Status</th>
-                <th class="px-5 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider text-right">Actions</th>
+              <tr class="border-b border-gray-100 bg-gray-50">
+                <th class="px-2 sm:px-3 py-2.5 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Doctor</th>
+                <th class="px-2 sm:px-3 py-2.5 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Date</th>
+                <th class="px-2 sm:px-3 py-2.5 text-[10px] font-bold text-gray-400 uppercase tracking-wider hidden sm:table-cell">Type</th>
+                <th class="px-2 sm:px-3 py-2.5 text-[10px] font-bold text-gray-400 uppercase tracking-wider hidden md:table-cell">Reason</th>
+                <th class="px-2 sm:px-3 py-2.5 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Status</th>
+                <th class="px-2 sm:px-3 py-2.5 text-[10px] font-bold text-gray-400 uppercase tracking-wider text-right">Actions</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-50">
-              <tr v-if="!filtered.length">
-                <td colspan="6" class="px-5 py-12 text-center text-gray-400">
+              <tr v-if="!paginatedLeaves.length">
+                <td colspan="6" class="px-3 py-10 text-center text-gray-400">
                   <CalendarOff class="w-8 h-8 mx-auto mb-2 text-gray-300" />
                   <p class="text-sm font-medium">No leave requests found</p>
                 </td>
               </tr>
-              <tr v-for="leave in filtered" :key="leave.id" class="hover:bg-gray-50/60 transition-colors">
-                <!-- Doctor -->
-                <td class="px-5 py-4">
-                  <div class="flex items-center gap-2.5">
-                    <div class="w-7 h-7 rounded-full bg-[#004795]/10 flex items-center justify-center flex-shrink-0">
-                      <span class="text-[10px] font-bold text-[#004795]">
-                        {{ doctorInitials(leave.doctor) }}
-                      </span>
+              <tr v-for="leave in paginatedLeaves" :key="leave.id" class="hover:bg-gray-50/60 transition-colors">
+                <td class="px-2 sm:px-3 py-2.5">
+                  <div class="flex items-center gap-1.5">
+                    <div class="w-6 h-6 rounded-full bg-[#004795]/10 flex items-center justify-center flex-shrink-0">
+                      <span class="text-[9px] font-bold text-[#004795]">{{ doctorInitials(leave.doctor) }}</span>
                     </div>
-                    <div>
-                      <p class="font-semibold text-gray-800 text-xs">
-                        Dr. {{ leave.doctor?.user?.first_name }} {{ leave.doctor?.user?.last_name }}
-                      </p>
-                      <p class="text-[10px] text-gray-400">{{ leave.doctor?.department?.name ?? '—' }}</p>
+                    <div class="min-w-0">
+                      <p class="font-semibold text-gray-800 truncate">Dr. {{ leave.doctor?.user?.first_name }} {{ leave.doctor?.user?.last_name }}</p>
+                      <p class="text-[10px] text-gray-400 truncate">{{ leave.doctor?.department?.name ?? '—' }}</p>
                     </div>
                   </div>
                 </td>
-                <!-- Date -->
-                <td class="px-5 py-4">
-                  <p class="text-xs font-medium text-gray-700">{{ formatDate(leave.leave_date) }}</p>
+                <td class="px-2 sm:px-3 py-2.5">
+                  <p class="font-medium text-gray-700 whitespace-nowrap">{{ formatDate(leave.leave_date) }}</p>
                 </td>
-                <!-- Type -->
-                <td class="px-5 py-4">
-                  <span class="text-xs text-gray-600 capitalize">{{ leave.leave_type ?? '—' }}</span>
+                <td class="px-2 sm:px-3 py-2.5 hidden sm:table-cell">
+                  <span class="text-gray-600 capitalize whitespace-nowrap">{{ leave.leave_type ?? '—' }}</span>
                 </td>
-                <!-- Reason -->
-                <td class="px-5 py-4">
-                  <p class="text-xs text-gray-600 max-w-[180px] truncate" :title="leave.reason">
-                    {{ leave.reason ?? '—' }}
-                  </p>
+                <td class="px-2 sm:px-3 py-2.5 hidden md:table-cell">
+                  <p class="text-gray-600 truncate" :title="leave.reason">{{ leave.reason ?? '—' }}</p>
                 </td>
-                <!-- Status -->
-                <td class="px-5 py-4">
-                  <span :class="statusClass(leave.status)"
-                    class="text-[10px] font-semibold px-2.5 py-0.5 rounded-full border capitalize">
+                <td class="px-2 sm:px-3 py-2.5">
+                  <span :class="statusClass(leave.status)" class="text-[10px] font-semibold px-1.5 py-0.5 rounded-full border capitalize whitespace-nowrap">
                     {{ leave.status }}
                   </span>
                 </td>
-                <!-- Actions -->
-                <td class="px-5 py-4 text-right">
+                <td class="px-2 sm:px-3 py-2.5 text-right">
                   <div v-if="leave.status === 'pending'" class="flex items-center justify-end gap-1">
-                    <button @click="processLeave(leave, 'approved')" :disabled="processing === leave.id"
-                      class="px-2 py-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition">
+                    <button @click="processLeave(leave,'approved')" :disabled="processing === leave.id"
+                      class="px-1.5 py-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition whitespace-nowrap">
                       Approve
                     </button>
-                    <button @click="processLeave(leave, 'rejected')" :disabled="processing === leave.id"
-                      class="px-2 py-1 text-[10px] font-bold text-red-500 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition">
+                    <button @click="processLeave(leave,'rejected')" :disabled="processing === leave.id"
+                      class="px-1.5 py-1 text-[10px] font-bold text-red-500 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition whitespace-nowrap">
                       Reject
                     </button>
                   </div>
@@ -114,6 +109,10 @@
               </tr>
             </tbody>
           </table>
+          <TablePagination
+            :page="lvPage" :total-pages="lvTotalPages" :total="lvTotal" :per-page="lvPerPage"
+            @prev="lvPrev" @next="lvNext" @go-to="lvGoTo"
+          />
         </div>
       </div>
     </div>
@@ -247,52 +246,34 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, reactive } from "vue";
+import { ref, computed, onMounted, reactive, watch } from "vue";
 import {
   Search, AlertCircle, CalendarOff, CheckCircle,
   X, Loader2
 } from "lucide-vue-next";
-import leaveApi      from "../../api/leaveApi";
+import leaveApi       from "../../api/leaveApi";
 import appointmentApi from "../../api/appointmentApi";
+import { usePagination }  from "../../composables/usePagination";
+import TablePagination    from "../../components/common/TablePagination.vue";
 
 // ── State ────────────────────────────────────────────────────────────────────
-const leaves      = ref([]);
-const loading     = ref(false);
-const processing  = ref(null);   // leave id currently being approved/rejected
-const error       = ref(null);
-const search      = ref("");
+const leaves       = ref([]);
+const loading      = ref(false);
+const processing   = ref(null);
+const error        = ref(null);
+const search       = ref("");
 const statusFilter = ref("");
 
 // Reassign modal
-const reassignModal = reactive({
-  open: false,
-  leaveDate: null,
-  leaveDoctor: null,   // { hospital_id, department_id, id }
-  appointments: [],
-});
-const availableSlots = reactive({});  // appt.id → [{ doctor, available_slots }]
-const loadingSlots   = ref(null);     // appt.id being loaded
-const picks          = reactive({});  // appt.id → { doctorIdx, slotId }
-const submitting     = ref(null);     // appt.id being submitted
+const reassignModal = reactive({ open: false, leaveDate: null, leaveDoctor: null, appointments: [] });
+const availableSlots = reactive({});
+const loadingSlots   = ref(null);
+const picks          = reactive({});
+const submitting     = ref(null);
 const reassignedIds  = ref(new Set());
 const reassignError  = reactive({});
 
-// ── Fetch leaves ─────────────────────────────────────────────────────────────
-async function fetchLeaves() {
-  loading.value = true;
-  error.value   = null;
-  try {
-    const res  = await leaveApi.getAll();
-    leaves.value = res.data.data ?? [];
-  } catch (e) {
-    error.value = e.response?.data?.message ?? "Failed to load leave requests.";
-  } finally {
-    loading.value = false;
-  }
-}
-onMounted(fetchLeaves);
-
-// ── Filtered list ─────────────────────────────────────────────────────────────
+// ── Filtered list — declared BEFORE usePagination ────────────────────────────
 const filtered = computed(() => {
   let list = leaves.value;
   if (search.value.trim()) {
@@ -302,11 +283,30 @@ const filtered = computed(() => {
       return name.includes(q);
     });
   }
-  if (statusFilter.value) {
-    list = list.filter((l) => l.status === statusFilter.value);
-  }
+  if (statusFilter.value) list = list.filter((l) => l.status === statusFilter.value);
   return list;
 });
+
+const {
+  page: lvPage, perPage: lvPerPage, total: lvTotal, totalPages: lvTotalPages,
+  paginated: paginatedLeaves, reset: lvReset, prev: lvPrev, next: lvNext, goTo: lvGoTo,
+} = usePagination(filtered, 10);
+watch(filtered, lvReset);
+
+// ── Fetch leaves ─────────────────────────────────────────────────────────────
+async function fetchLeaves() {
+  loading.value = true;
+  error.value   = null;
+  try {
+    const res    = await leaveApi.getAll();
+    leaves.value = res.data.data ?? [];
+  } catch (e) {
+    error.value = e.response?.data?.message ?? "Failed to load leave requests.";
+  } finally {
+    loading.value = false;
+  }
+}
+onMounted(fetchLeaves);
 
 // ── Approve / Reject ──────────────────────────────────────────────────────────
 async function processLeave(leave, status) {
@@ -314,20 +314,10 @@ async function processLeave(leave, status) {
   error.value      = null;
   try {
     const res = await leaveApi.approve(leave.id, status);
-
-    // Update this leave's status in the list
     const idx = leaves.value.findIndex((l) => l.id === leave.id);
-    if (idx !== -1) {
-      leaves.value[idx] = { ...leaves.value[idx], ...res.data.data };
-    }
-
-    // If approved AND there are confirmed appointments → open reassign modal
+    if (idx !== -1) leaves.value[idx] = { ...leaves.value[idx], ...res.data.data };
     const affectedAppointments = res.data.appointments ?? [];
-    if (
-      status === "approved" &&
-      res.data.appointments_to_reschedule > 0 &&
-      affectedAppointments.length > 0
-    ) {
+    if (status === "approved" && res.data.appointments_to_reschedule > 0 && affectedAppointments.length > 0) {
       openReassignModal(res.data.data, affectedAppointments);
     }
   } catch (e) {
@@ -344,12 +334,9 @@ async function openReassignModal(leave, appointments) {
   reassignModal.leaveDoctor  = leave.doctor;
   reassignModal.appointments = appointments;
   reassignedIds.value        = new Set();
-
-  // Initialise picks + load available doctors for each appointment
   for (const appt of appointments) {
     picks[appt.id]         = { doctorIdx: "", slotId: "" };
     reassignError[appt.id] = null;
-    // Use the leave_date string (YYYY-MM-DD) so the slot query targets the right day
     await loadAvailableSlots(appt, leave.leave_date);
   }
 }
@@ -358,10 +345,8 @@ async function loadAvailableSlots(appt, leaveDate) {
   loadingSlots.value = appt.id;
   try {
     const res = await appointmentApi.getAvailableDoctorSlots({
-      hospital_id:       appt.hospital_id,
-      department_id:     appt.department_id,
-      date:              leaveDate,
-      exclude_doctor_id: appt.doctor_id,
+      hospital_id: appt.hospital_id, department_id: appt.department_id,
+      date: leaveDate, exclude_doctor_id: appt.doctor_id,
     });
     availableSlots[appt.id] = res.data.data ?? [];
   } catch {
@@ -374,7 +359,6 @@ async function loadAvailableSlots(appt, leaveDate) {
 async function doReassign(appt) {
   const pick = picks[appt.id];
   if (!pick?.slotId) return;
-
   submitting.value       = appt.id;
   reassignError[appt.id] = null;
   try {

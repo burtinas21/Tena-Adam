@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\Role;
 use App\Models\HospitalStaff;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
 
@@ -123,7 +124,6 @@ class HospitalStaffController extends Controller
             'last_name'   => 'required|string',
             'email'       => 'required|email|unique:users,email',
             'phone'       => 'nullable|string',
-            'password'    => 'required|min:8',
             'hospital_id' => 'sometimes|nullable|exists:hospitals,id',
         ]);
 
@@ -145,8 +145,8 @@ class HospitalStaffController extends Controller
             'last_name'  => $request->last_name,
             'email'      => $request->email,
             'phone'      => $request->phone,
-            'password'   => Hash::make($request->password),
-            'is_active'  => true,
+            'password'   => null,
+            'is_active'  => false,
         ]);
 
         $role = Role::where('name', $staffRole)->first();
@@ -157,6 +157,29 @@ class HospitalStaffController extends Controller
             'user_id'     => $user->id,
             'position'    => $staffRole,
         ]);
+
+        // Generate invitation token
+        $plainToken = \Illuminate\Support\Str::random(64);
+        DB::table('password_reset_tokens')->updateOrInsert(
+            ['email' => $user->email],
+            ['token' => Hash::make($plainToken), 'created_at' => now()]
+        );
+
+        // Audit log
+        \App\Models\AuditLog::create([
+            'user_id'      => auth()->id(),
+            'action'       => 'invitation_sent',
+            'target_table' => 'users',
+            'target_id'    => $user->id,
+            'details'      => ['email' => $user->email, 'hospital_id' => $hospitalId],
+            'ip_address'   => request()->ip(),
+            'user_agent'   => request()->userAgent(),
+        ]);
+
+        // Send invitation email
+        \Illuminate\Support\Facades\Mail::to($user->email)->send(
+            new \App\Mail\StaffInvitationMail($user, $plainToken)
+        );
 
         $label = $staffRole === 'receptionist' ? 'Receptionist' : 'Hospital admin';
 

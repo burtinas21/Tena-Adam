@@ -18,16 +18,24 @@
     </div>
 
     <!-- Table -->
-    <div v-else class="overflow-x-auto">
-      <table class="w-full text-xs">
+    <div v-else>
+      <table class="w-full table-fixed text-[10px] sm:text-xs">
+        <colgroup>
+          <col style="width:30%" />
+          <col style="width:20%" />
+          <col style="width:13%" />
+          <col style="width:13%" />
+          <col style="width:13%" />
+          <col style="width:11%" />
+        </colgroup>
         <thead>
           <tr class="border-b border-slate-100 bg-slate-50/50">
-            <th class="text-left px-5 py-3 font-bold text-slate-500 tracking-wide">Doctor</th>
-            <th class="text-left px-4 py-3 font-bold text-slate-500 tracking-wide">Department</th>
-            <th class="text-right px-4 py-3 font-bold text-slate-500 tracking-wide">Appointments</th>
-            <th class="text-right px-4 py-3 font-bold text-slate-500 tracking-wide">Completed</th>
-            <th class="text-right px-4 py-3 font-bold text-slate-500 tracking-wide">Telehealth</th>
-            <th class="text-right px-5 py-3 font-bold text-slate-500 tracking-wide">Rating</th>
+            <th class="text-left px-1.5 sm:px-5 py-2 sm:py-3 font-bold text-slate-500 tracking-wide">Doctor</th>
+            <th class="text-left px-1 sm:px-4 py-2 sm:py-3 font-bold text-slate-500 tracking-wide">Dept</th>
+            <th class="text-right px-1 sm:px-4 py-2 sm:py-3 font-bold text-slate-500 tracking-wide">Appts</th>
+            <th class="text-right px-1 sm:px-4 py-2 sm:py-3 font-bold text-slate-500 tracking-wide">Done</th>
+            <th class="text-right px-1 sm:px-4 py-2 sm:py-3 font-bold text-slate-500 tracking-wide">Tel</th>
+            <th class="text-right px-1.5 sm:px-5 py-2 sm:py-3 font-bold text-slate-500 tracking-wide">★</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-slate-50">
@@ -36,34 +44,34 @@
             :key="doc.doctor_id"
             class="hover:bg-slate-50/60 transition-colors"
           >
-            <td class="px-5 py-3.5">
-              <div class="flex items-center gap-2.5">
-                <div class="w-7 h-7 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                  <span class="text-[10px] font-bold text-blue-600">
+            <td class="px-1.5 sm:px-5 py-1.5 sm:py-3.5">
+              <div class="flex items-center gap-1 sm:gap-2.5">
+                <div class="w-5 h-5 sm:w-7 sm:h-7 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                  <span class="text-[8px] sm:text-[10px] font-bold text-blue-600">
                     {{ initials(doc.doctor_name) }}
                   </span>
                 </div>
-                <span class="font-semibold text-slate-800">{{ doc.doctor_name }}</span>
+                <span class="font-semibold text-slate-800 truncate leading-tight">{{ doc.doctor_name }}</span>
               </div>
             </td>
-            <td class="px-4 py-3.5 text-slate-500">{{ doc.department ?? '—' }}</td>
-            <td class="px-4 py-3.5 text-right font-semibold text-slate-600">
+            <td class="px-1 sm:px-4 py-1.5 sm:py-3.5 text-slate-500 truncate">{{ doc.department ?? '—' }}</td>
+            <td class="px-1 sm:px-4 py-1.5 sm:py-3.5 text-right font-semibold text-slate-600">
               {{ doc.total_appointments }}
             </td>
-            <td class="px-4 py-3.5 text-right font-semibold text-emerald-600">
+            <td class="px-1 sm:px-4 py-1.5 sm:py-3.5 text-right font-semibold text-emerald-600">
               {{ doc.completed_encounters }}
             </td>
-            <td class="px-4 py-3.5 text-right font-semibold text-indigo-600">
+            <td class="px-1 sm:px-4 py-1.5 sm:py-3.5 text-right font-semibold text-indigo-600">
               {{ doc.telehealth_sessions }}
             </td>
-            <td class="px-5 py-3.5 text-right">
-              <div class="flex items-center justify-end gap-1">
-                <Star class="w-3 h-3 text-amber-400 fill-amber-400" />
+            <td class="px-1.5 sm:px-5 py-1.5 sm:py-3.5 text-right">
+              <div class="flex items-center justify-end gap-0.5">
+                <Star class="w-2.5 h-2.5 sm:w-3 sm:h-3 text-amber-400 fill-amber-400 flex-shrink-0" />
                 <span class="font-bold text-slate-700">
                   {{ doc.average_rating > 0 ? doc.average_rating : '–' }}
                 </span>
-                <span class="text-slate-400 text-[10px]">({{ doc.total_reviews }})</span>
               </div>
+              <span class="text-[9px] sm:text-[10px] text-slate-400 block text-right">({{ doc.total_reviews }})</span>
             </td>
           </tr>
         </tbody>

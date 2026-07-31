@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-[#F8FAFC] dark:bg-[#0f172a] p-4 sm:p-6 lg:p-8 font-sans antialiased text-slate-600 dark:text-slate-300">
+  <div class="min-h-screen bg-[#F8FAFC] dark:bg-[#0f172a] p-3 sm:p-5 font-sans antialiased text-slate-600 dark:text-slate-300">
     <div class="max-w-[1440px] mx-auto space-y-6">
 
       <!-- Header -->
@@ -95,57 +95,68 @@
         </div>
 
         <!-- Data -->
-        <div v-else class="overflow-x-auto">
-          <table class="w-full text-left border-collapse">
+        <div v-else>
+          <table class="w-full text-left table-fixed">
+            <colgroup>
+              <col style="width:20%" />
+              <col style="width:18%" class="hidden sm:table-column" />
+              <col style="width:16%" />
+              <col style="width:12%" class="hidden md:table-column" />
+              <col style="width:12%" class="hidden md:table-column" />
+              <col style="width:11%" class="hidden lg:table-column" />
+              <col style="width:11%" />
+            </colgroup>
             <thead>
               <tr class="bg-slate-50/60 border-b border-slate-100 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-                <th class="py-3 px-5">Patient</th>
-                <th class="py-3 px-5">Doctor</th>
-                <th class="py-3 px-5">Scheduled</th>
-                <th class="py-3 px-5">Start Time</th>
-                <th class="py-3 px-5">End Time</th>
-                <th class="py-3 px-5">Platform</th>
-                <th class="py-3 px-5">Duration</th>
-                <th class="py-3 px-5">Status</th>
+                <th class="py-2.5 px-2 sm:px-3">Patient</th>
+                <th class="py-2.5 px-2 sm:px-3 hidden sm:table-cell">Doctor</th>
+                <th class="py-2.5 px-2 sm:px-3">Scheduled</th>
+                <th class="py-2.5 px-2 sm:px-3 hidden md:table-cell">Start</th>
+                <th class="py-2.5 px-2 sm:px-3 hidden md:table-cell">End</th>
+                <th class="py-2.5 px-2 sm:px-3 hidden lg:table-cell">Platform</th>
+                <th class="py-2.5 px-2 sm:px-3">Status</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-100 text-xs text-slate-700">
-              <tr v-for="session in filteredSessions" :key="session.id" class="hover:bg-slate-50/40 transition">
-                <td class="py-3.5 px-5">
-                  <div class="flex items-center space-x-2">
-                    <div class="w-6 h-6 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center font-bold text-blue-400 text-[9px]">
+              <tr v-for="session in paginatedSessions" :key="session.id" class="hover:bg-slate-50/40 transition">
+                <td class="py-2.5 px-2 sm:px-3">
+                  <div class="flex items-center gap-1.5">
+                    <div class="w-6 h-6 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center font-bold text-blue-400 text-[9px] flex-shrink-0">
                       {{ getInitials(session.patient?.name) }}
                     </div>
-                    <span class="font-medium text-slate-800">{{ session.patient?.name || '—' }}</span>
+                    <span class="font-medium text-slate-800 truncate">{{ session.patient?.name || '—' }}</span>
                   </div>
                 </td>
-                <td class="py-3.5 px-5 text-slate-600">{{ session.doctor?.name || '—' }}</td>
-                <td class="py-3.5 px-5">
-                  <div class="font-medium text-slate-800">{{ formatTime(session.appointment?.scheduled_time) }}</div>
-                  <div class="text-[10px] text-slate-400">{{ formatDate(session.appointment?.scheduled_time) }}</div>
+                <td class="py-2.5 px-2 sm:px-3 text-slate-600 truncate hidden sm:table-cell">{{ session.doctor?.name || '—' }}</td>
+                <td class="py-2.5 px-2 sm:px-3">
+                  <div class="font-medium text-slate-800 whitespace-nowrap">{{ formatTime(session.appointment?.scheduled_time) }}</div>
+                  <div class="text-[10px] text-slate-400 whitespace-nowrap">{{ formatDate(session.appointment?.scheduled_time) }}</div>
                 </td>
-                <td class="py-3.5 px-5">
+                <td class="py-2.5 px-2 sm:px-3 hidden md:table-cell">
                   <template v-if="session.started_at">
-                    <div class="font-medium text-slate-800">{{ formatTime(session.started_at) }}</div>
+                    <div class="font-medium text-slate-800 whitespace-nowrap">{{ formatTime(session.started_at) }}</div>
                     <div class="text-[10px] text-slate-400">{{ formatDate(session.started_at) }}</div>
                   </template>
                   <span v-else class="text-slate-400">—</span>
                 </td>
-                <td class="py-3.5 px-5">
+                <td class="py-2.5 px-2 sm:px-3 hidden md:table-cell">
                   <template v-if="session.ended_at">
-                    <div class="font-medium text-slate-800">{{ formatTime(session.ended_at) }}</div>
+                    <div class="font-medium text-slate-800 whitespace-nowrap">{{ formatTime(session.ended_at) }}</div>
                     <div class="text-[10px] text-slate-400">{{ formatDate(session.ended_at) }}</div>
                   </template>
                   <span v-else class="text-slate-400">—</span>
                 </td>
-                <td class="py-3.5 px-5 text-slate-500">{{ formatPlatform(session.platform) }}</td>
-                <td class="py-3.5 px-5 text-slate-500">{{ session.duration_min ? session.duration_min + ' min' : '—' }}</td>
-                <td class="py-3.5 px-5">
+                <td class="py-2.5 px-2 sm:px-3 text-slate-500 truncate hidden lg:table-cell">{{ formatPlatform(session.platform) }}</td>
+                <td class="py-2.5 px-2 sm:px-3">
                   <StatusBadge :status="session.status" />
                 </td>
               </tr>
             </tbody>
           </table>
+          <TablePagination
+            :page="tlPage" :total-pages="tlTotalPages" :total="tlTotal" :per-page="tlPerPage"
+            @prev="tlPrev" @next="tlNext" @go-to="tlGoTo"
+          />
         </div>
       </div>
 
@@ -154,10 +165,12 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { CalendarClock, Clock, Radio, CheckCircle, Video } from 'lucide-vue-next';
 import { useTelehealthStore } from '../../stores/telehealthStore';
 import StatusBadge from '../../components/telehealth/StatusBadge.vue';
+import { usePagination } from '../../composables/usePagination';
+import TablePagination from '../../components/common/TablePagination.vue';
 
 const store = useTelehealthStore();
 const statusFilter = ref('');
@@ -176,6 +189,12 @@ const filteredSessions = computed(() => {
   }
   return list;
 });
+
+const {
+  page: tlPage, perPage: tlPerPage, total: tlTotal, totalPages: tlTotalPages,
+  paginated: paginatedSessions, reset: tlReset, prev: tlPrev, next: tlNext, goTo: tlGoTo,
+} = usePagination(filteredSessions, 10);
+watch(filteredSessions, tlReset);
 
 onMounted(async () => {
   await store.fetchMySessions();

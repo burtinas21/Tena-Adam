@@ -18,16 +18,24 @@
     </div>
 
     <!-- Table -->
-    <div v-else class="overflow-x-auto">
-      <table class="w-full text-xs">
+    <div v-else>
+      <table class="w-full table-fixed text-[10px] sm:text-xs">
+        <colgroup>
+          <col style="width:28%" />
+          <col style="width:12%" />
+          <col style="width:16%" />
+          <col style="width:20%" />
+          <col style="width:14%" />
+          <col style="width:10%" />
+        </colgroup>
         <thead>
           <tr class="border-b border-slate-100 bg-slate-50/50">
-            <th class="text-left px-5 py-3 font-bold text-slate-500 tracking-wide">Department</th>
-            <th class="text-right px-4 py-3 font-bold text-slate-500 tracking-wide">Doctors</th>
-            <th class="text-right px-4 py-3 font-bold text-slate-500 tracking-wide">Appointments</th>
-            <th class="text-right px-4 py-3 font-bold text-slate-500 tracking-wide">Completed</th>
-            <th class="text-right px-4 py-3 font-bold text-slate-500 tracking-wide">Patients Served</th>
-            <th class="text-right px-5 py-3 font-bold text-slate-500 tracking-wide">Avg Rating</th>
+            <th class="text-left px-1.5 sm:px-5 py-2 sm:py-3 font-bold text-slate-500 tracking-wide">Department</th>
+            <th class="text-right px-1 sm:px-4 py-2 sm:py-3 font-bold text-slate-500 tracking-wide">Docs</th>
+            <th class="text-right px-1 sm:px-4 py-2 sm:py-3 font-bold text-slate-500 tracking-wide">Appts</th>
+            <th class="text-right px-1 sm:px-4 py-2 sm:py-3 font-bold text-slate-500 tracking-wide">Completed</th>
+            <th class="text-right px-1 sm:px-4 py-2 sm:py-3 font-bold text-slate-500 tracking-wide">Patients</th>
+            <th class="text-right px-1.5 sm:px-5 py-2 sm:py-3 font-bold text-slate-500 tracking-wide">★</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-slate-50">
@@ -36,35 +44,30 @@
             :key="dept.department_id"
             class="hover:bg-slate-50/60 transition-colors"
           >
-            <td class="px-5 py-3.5">
-              <span class="font-semibold text-slate-800">{{ dept.department_name }}</span>
+            <td class="px-1.5 sm:px-5 py-1.5 sm:py-3.5">
+              <span class="font-semibold text-slate-800 leading-tight block truncate">{{ dept.department_name }}</span>
             </td>
-            <td class="px-4 py-3.5 text-right font-semibold text-slate-600">
+            <td class="px-1 sm:px-4 py-1.5 sm:py-3.5 text-right font-semibold text-slate-600">
               {{ dept.total_doctors }}
             </td>
-            <td class="px-4 py-3.5 text-right font-semibold text-slate-600">
+            <td class="px-1 sm:px-4 py-1.5 sm:py-3.5 text-right font-semibold text-slate-600">
               {{ dept.total_appointments.toLocaleString() }}
             </td>
-            <td class="px-4 py-3.5 text-right">
-              <span class="inline-flex items-center gap-1 font-semibold text-emerald-600">
-                <span>{{ dept.completed_consultations.toLocaleString() }}</span>
-                <span
-                  v-if="dept.total_appointments > 0"
-                  class="text-[10px] text-slate-400"
-                >
-                  ({{ Math.round((dept.completed_consultations / dept.total_appointments) * 100) }}%)
-                </span>
+            <td class="px-1 sm:px-4 py-1.5 sm:py-3.5 text-right">
+              <span class="font-semibold text-emerald-600">{{ dept.completed_consultations.toLocaleString() }}</span>
+              <span v-if="dept.total_appointments > 0" class="block text-[9px] sm:text-[10px] text-slate-400 leading-none">
+                {{ Math.round((dept.completed_consultations / dept.total_appointments) * 100) }}%
               </span>
             </td>
-            <td class="px-4 py-3.5 text-right font-semibold text-slate-600">
+            <td class="px-1 sm:px-4 py-1.5 sm:py-3.5 text-right font-semibold text-slate-600">
               {{ dept.patients_served.toLocaleString() }}
             </td>
-            <td class="px-5 py-3.5 text-right">
-              <div class="flex items-center justify-end gap-1">
-                <Star class="w-3 h-3 text-amber-400 fill-amber-400" />
+            <td class="px-1.5 sm:px-5 py-1.5 sm:py-3.5 text-right">
+              <div class="flex items-center justify-end gap-0.5">
+                <Star class="w-2.5 h-2.5 sm:w-3 sm:h-3 text-amber-400 fill-amber-400 flex-shrink-0" />
                 <span class="font-bold text-slate-700">{{ dept.average_rating || '–' }}</span>
-                <span class="text-slate-400 text-[10px]">({{ dept.total_reviews }})</span>
               </div>
+              <span class="text-[9px] sm:text-[10px] text-slate-400 block text-right">({{ dept.total_reviews }})</span>
             </td>
           </tr>
         </tbody>

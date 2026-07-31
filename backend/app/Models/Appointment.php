@@ -33,6 +33,7 @@ class Appointment extends Model
         'approved_at',
         'approved_by',
         'is_telehealth',
+        'visit_type',
         'patient_hidden',
     ];
 

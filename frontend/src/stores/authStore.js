@@ -68,5 +68,13 @@ export const useAuthStore = defineStore("auth", {
         localStorage.removeItem("user");
       }
     },
+
+    async checkInvitation(params) {
+      return await authService.checkInvitation(params);
+    },
+
+    async acceptInvitation(data) {
+      return await authService.acceptInvitation(data);
+    },
   },
 });

@@ -170,11 +170,11 @@
     <!-- ── Send Notification Modal ────────────────────────────────── -->
     <div v-if="showSendModal"
       class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
-      @click.self="showSendModal = false">
+      @click.self="closeSendModal()">
       <div class="bg-white rounded-2xl shadow-xl w-full max-w-md">
         <div class="flex items-center justify-between px-6 pt-5 pb-4 border-b border-gray-100">
           <h3 class="text-sm font-bold text-gray-800">Send Notification</h3>
-          <button @click="showSendModal = false" class="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 transition">
+          <button @click="closeSendModal()" class="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 transition">
             <X class="w-4 h-4" />
           </button>
         </div>
@@ -183,9 +183,61 @@
             <AlertCircle class="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />{{ sendError }}
           </div>
           <div>
-            <label class="block text-xs font-semibold text-gray-700 mb-1.5">Recipient User ID <span class="text-red-500">*</span></label>
-            <input v-model="sendForm.user_id" type="text" placeholder="UUID of the user"
-              class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#004795]/30 focus:border-[#004795] transition" />
+            <label class="block text-xs font-semibold text-gray-700 mb-1.5">Recipient <span class="text-red-500">*</span></label>
+            <div class="relative">
+              <div v-if="selectedUser" class="flex items-center gap-2 w-full border border-[#004795] rounded-lg px-3 py-2.5 bg-blue-50/40">
+                <div class="w-6 h-6 rounded-full bg-[#004795]/10 flex items-center justify-center flex-shrink-0">
+                  <span class="text-[9px] font-bold text-[#004795]">
+                    {{ ((selectedUser.first_name?.[0] ?? '') + (selectedUser.last_name?.[0] ?? '')).toUpperCase() || '?' }}
+                  </span>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-semibold text-gray-800 truncate">{{ (selectedUser.first_name + ' ' + selectedUser.last_name).trim() }}</p>
+                  <p class="text-[10px] text-gray-400 truncate">{{ selectedUser.email }}</p>
+                </div>
+                <button type="button" @click="clearSelectedUser" class="p-1 text-gray-400 hover:text-red-500 transition flex-shrink-0">
+                  <X class="w-3.5 h-3.5" />
+                </button>
+              </div>
+              <div v-else>
+                <input
+                  v-model="userSearch"
+                  @input="onUserSearchInput"
+                  type="text"
+                  placeholder="Search by name, email or phone..."
+                  class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#004795]/30 focus:border-[#004795] transition"
+                />
+                <!-- Loading spinner -->
+                <div v-if="userSearchLoading" class="absolute right-3 top-1/2 -translate-y-1/2">
+                  <Loader2 class="w-4 h-4 animate-spin text-gray-400" />
+                </div>
+                <!-- Dropdown results -->
+                <div v-if="userSearchResults.length" class="absolute z-50 left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden max-h-52 overflow-y-auto">
+                  <button
+                    v-for="user in userSearchResults"
+                    :key="user.id"
+                    type="button"
+                    @click="selectUser(user)"
+                    class="flex items-center gap-3 w-full px-3 py-2.5 hover:bg-blue-50 transition text-left"
+                  >
+                    <div class="w-7 h-7 rounded-full bg-[#004795]/10 flex items-center justify-center flex-shrink-0">
+                      <span class="text-[10px] font-bold text-[#004795]">
+                        {{ ((user.first_name?.[0] ?? '') + (user.last_name?.[0] ?? '')).toUpperCase() || '?' }}
+                      </span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <p class="text-sm font-semibold text-gray-800 truncate">{{ (user.first_name + ' ' + user.last_name).trim() }}</p>
+                      <p class="text-[10px] text-gray-400 truncate">{{ user.email }} <span v-if="user.phone">· {{ user.phone }}</span></p>
+                    </div>
+                    <span v-if="user.roles?.length" class="text-[10px] text-gray-400 capitalize flex-shrink-0">{{ user.roles[0]?.name?.replace(/_/g, ' ') }}</span>
+                  </button>
+                </div>
+                <!-- No results -->
+                <div v-else-if="userSearch.length >= 2 && !userSearchLoading && !userSearchResults.length" class="absolute z-50 left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg px-4 py-3 text-xs text-gray-400">
+                  No users found for "{{ userSearch }}"
+                </div>
+              </div>
+            </div>
           </div>
           <div class="grid grid-cols-2 gap-3">
             <div>
@@ -215,7 +267,7 @@
           </div>
         </div>
         <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-100">
-          <button @click="showSendModal = false" class="px-4 py-2 text-sm font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition">Cancel</button>
+          <button @click="closeSendModal()" class="px-4 py-2 text-sm font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition">Cancel</button>
           <button @click="handleSend" :disabled="!canSend || sendSaving"
             class="px-5 py-2 text-sm font-semibold text-white bg-[#004795] hover:bg-[#003670] rounded-lg transition disabled:opacity-50 flex items-center gap-2">
             <Loader2 v-if="sendSaving" class="w-3.5 h-3.5 animate-spin" />
@@ -293,6 +345,7 @@ import { Bell, CheckCheck, RefreshCw, Trash2, AlertCircle, Send, X, Loader2, Plu
 import { useNotificationStore } from "../../stores/notificationStore";
 import { useAuthStore } from "../../stores/authStore";
 import notificationApi from "../../api/notificationApi";
+import api from "../../api/axios";
 
 const router = useRouter();
 const store = useNotificationStore();
@@ -339,13 +392,57 @@ const sendError = ref(null);
 const sendForm = ref({ user_id: "", type: "in_app", channel: "general", subject: "", content: "" });
 const canSend = computed(() => sendForm.value.user_id.trim() && sendForm.value.content.trim() && sendForm.value.channel.trim());
 
+function closeSendModal() {
+  showSendModal.value = false;
+  sendError.value = null;
+  sendForm.value = { user_id: "", type: "in_app", channel: "general", subject: "", content: "" };
+  clearSelectedUser();
+}
+
+// ── User search for recipient picker ─────────────────────────────────────
+const userSearch = ref("");
+const userSearchResults = ref([]);
+const userSearchLoading = ref(false);
+const selectedUser = ref(null);
+let userSearchTimer = null;
+
+async function searchUsers(query) {
+  if (!query.trim()) { userSearchResults.value = []; return; }
+  userSearchLoading.value = true;
+  try {
+    const res = await api.get("/users", { params: { search: query, per_page: 10 } });
+    userSearchResults.value = res.data?.data ?? [];
+  } catch { userSearchResults.value = []; }
+  finally { userSearchLoading.value = false; }
+}
+
+function onUserSearchInput() {
+  selectedUser.value = null;
+  sendForm.value.user_id = "";
+  clearTimeout(userSearchTimer);
+  userSearchTimer = setTimeout(() => searchUsers(userSearch.value), 300);
+}
+
+function selectUser(user) {
+  selectedUser.value = user;
+  sendForm.value.user_id = user.id;
+  userSearch.value = `${user.first_name ?? ""} ${user.last_name ?? ""}`.trim() + (user.email ? ` (${user.email})` : "");
+  userSearchResults.value = [];
+}
+
+function clearSelectedUser() {
+  selectedUser.value = null;
+  sendForm.value.user_id = "";
+  userSearch.value = "";
+  userSearchResults.value = [];
+}
+
 async function handleSend() {
   sendError.value = null;
   sendSaving.value = true;
   try {
     await store.send(sendForm.value);
-    showSendModal.value = false;
-    sendForm.value = { user_id: "", type: "in_app", channel: "general", subject: "", content: "" };
+    closeSendModal();
     await store.fetchAll();
   } catch (err) {
     const errors = err.response?.data?.errors;

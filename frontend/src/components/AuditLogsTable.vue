@@ -101,36 +101,43 @@
 
     <!-- ── Data Table ── -->
     <template v-else>
-      <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse">
+      <div>
+        <table class="w-full table-fixed text-left border-collapse text-[10px] sm:text-xs">
+          <colgroup>
+            <col style="width:26%" />
+            <col style="width:20%" />
+            <col style="width:18%" />
+            <col style="width:24%" />
+            <col style="width:12%" />
+          </colgroup>
           <thead>
-            <tr class="bg-slate-50/60 border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-              <th class="py-3 px-6">User</th>
-              <th class="py-3 px-6">Action</th>
-              <th class="py-3 px-6">Module</th>
-              <th class="py-3 px-6">Timestamp</th>
-              <th class="py-3 px-6">IP Address</th>
+            <tr class="bg-slate-50/60 border-b border-slate-100 font-bold text-slate-400 uppercase tracking-wider">
+              <th class="py-2 sm:py-3 px-2 sm:px-6">User</th>
+              <th class="py-2 sm:py-3 px-1.5 sm:px-6">Action</th>
+              <th class="py-2 sm:py-3 px-1.5 sm:px-6">Module</th>
+              <th class="py-2 sm:py-3 px-1.5 sm:px-6">Timestamp</th>
+              <th class="py-2 sm:py-3 px-1.5 sm:px-6">IP</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-slate-100 text-xs font-medium text-slate-700">
+          <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
             <tr
               v-for="log in store.logs"
               :key="log.id"
               class="hover:bg-slate-50/40 transition"
             >
               <!-- User -->
-              <td class="py-4 px-6">
-                <div class="flex items-center space-x-3.5">
+              <td class="py-2.5 sm:py-4 px-2 sm:px-6">
+                <div class="flex items-center gap-1.5 sm:space-x-3.5">
                   <div
-                    class="w-8 h-8 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center font-bold text-blue-600 text-[11px] tracking-wider shadow-inner shrink-0"
+                    class="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center font-bold text-blue-600 text-[9px] sm:text-[11px] tracking-wider shadow-inner shrink-0"
                   >
                     {{ initials(log.user?.name) }}
                   </div>
-                  <div>
-                    <div class="font-bold text-slate-800 tracking-tight">
+                  <div class="min-w-0">
+                    <div class="font-bold text-slate-800 tracking-tight truncate">
                       {{ log.user?.name || "System" }}
                     </div>
-                    <div class="text-[10px] text-slate-400 font-semibold mt-0.5">
+                    <div class="text-[9px] sm:text-[10px] text-slate-400 font-semibold mt-0.5 truncate">
                       {{ log.user?.email || "—" }}
                     </div>
                   </div>
@@ -138,21 +145,21 @@
               </td>
 
               <!-- Action -->
-              <td class="py-4 px-6">
+              <td class="py-2.5 sm:py-4 px-1.5 sm:px-6">
                 <div
-                  class="flex items-center space-x-1.5 font-bold tracking-tight"
+                  class="flex items-center gap-1 font-bold tracking-tight"
                   :class="actionColor(log.action)"
                 >
                   <span class="w-1.5 h-1.5 rounded-full shrink-0" :class="actionDotColor(log.action)"></span>
-                  <span>{{ log.action }}</span>
+                  <span class="truncate">{{ log.action }}</span>
                 </div>
               </td>
 
               <!-- Module -->
-              <td class="py-4 px-6">
+              <td class="py-2.5 sm:py-4 px-1.5 sm:px-6">
                 <span
                   v-if="log.target_table"
-                  class="px-2 py-0.5 rounded text-[10px] font-bold tracking-wide border"
+                  class="px-1 sm:px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-bold tracking-wide border truncate block w-fit max-w-full"
                   :class="moduleChipClass(log.target_table)"
                 >
                   {{ formatModule(log.target_table) }}
@@ -161,12 +168,12 @@
               </td>
 
               <!-- Timestamp -->
-              <td class="py-4 px-6 font-mono text-slate-500 text-[11px]">
+              <td class="py-2.5 sm:py-4 px-1.5 sm:px-6 font-mono text-slate-500 text-[9px] sm:text-[11px]">
                 {{ formatDate(log.created_at) }}
               </td>
 
               <!-- IP Address -->
-              <td class="py-4 px-6 font-mono text-slate-500 text-[11px]">
+              <td class="py-2.5 sm:py-4 px-1.5 sm:px-6 font-mono text-slate-500 text-[9px] sm:text-[11px] truncate">
                 {{ log.ip_address || "—" }}
               </td>
             </tr>
@@ -175,7 +182,7 @@
       </div>
 
       <!-- ── Pagination Footer ── -->
-      <div class="px-6 py-4 bg-white border-t border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <div class="px-3 sm:px-6 py-3 sm:py-4 bg-white border-t border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3">
 
         <!-- Left: entry count + per-page selector -->
         <div class="flex items-center gap-3 text-xs text-slate-400 font-medium">

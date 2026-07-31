@@ -1,5 +1,5 @@
 <template>
-  <main class="flex-1 bg-[#F8FAFC] dark:bg-[#0f172a] p-4 sm:p-6 overflow-y-auto font-sans dark:text-slate-200">
+  <main class="flex-1 bg-[#F8FAFC] dark:bg-[#0f172a] p-3 sm:p-5 overflow-y-auto font-sans dark:text-slate-200">
     <div class="max-w-7xl mx-auto">
 
       <!-- Header -->
@@ -83,108 +83,82 @@
         </div>
 
         <!-- Table -->
-        <div v-else class="overflow-x-auto">
-          <table class="w-full text-xs text-left min-w-[640px]">
+        <div v-else>
+          <table class="w-full text-xs text-left table-fixed">
+            <colgroup>
+              <col style="width:22%" />
+              <col style="width:20%" class="hidden sm:table-column" />
+              <col style="width:18%" />
+              <col style="width:14%" class="hidden md:table-column" />
+              <col style="width:14%" />
+              <col style="width:12%" />
+            </colgroup>
             <thead>
               <tr class="bg-gray-50 border-b border-gray-100">
-                <th class="px-4 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Patient</th>
-                <th class="px-4 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider hidden sm:table-cell">Doctor</th>
-                <th class="px-4 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Date & Time</th>
-                <th class="px-4 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider hidden lg:table-cell">Department</th>
-                <th class="px-4 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider hidden md:table-cell">Type</th>
-                <th class="px-4 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Status</th>
-                <th class="px-4 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider w-12 text-right">Actions</th>
+                <th class="px-2 sm:px-3 py-2.5 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Patient</th>
+                <th class="px-2 sm:px-3 py-2.5 text-[10px] font-bold text-gray-400 uppercase tracking-wider hidden sm:table-cell">Doctor</th>
+                <th class="px-2 sm:px-3 py-2.5 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Date & Time</th>
+                <th class="px-2 sm:px-3 py-2.5 text-[10px] font-bold text-gray-400 uppercase tracking-wider hidden md:table-cell">Type</th>
+                <th class="px-2 sm:px-3 py-2.5 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Status</th>
+                <th class="px-2 sm:px-3 py-2.5 text-[10px] font-bold text-gray-400 uppercase tracking-wider text-right">Act.</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-100">
-              <tr v-if="!filtered.length">
-                <td colspan="7" class="px-4 py-12 text-center text-gray-400">
+              <tr v-if="!paginated.length">
+                <td colspan="6" class="px-3 py-10 text-center text-gray-400">
                   <CalendarDays class="w-8 h-8 mx-auto mb-2 text-gray-300" />
                   <p class="text-sm font-medium">No appointments found</p>
                 </td>
               </tr>
-              <tr v-for="appt in filtered" :key="appt.id" class="hover:bg-gray-50/60 transition-colors">
-                <!-- Patient -->
-                <td class="px-4 py-3">
-                  <div class="flex items-center gap-2">
-                    <div class="w-7 h-7 rounded-full bg-[#004795]/10 flex items-center justify-center flex-shrink-0">
-                      <span class="text-[10px] font-bold text-[#004795]">{{ personInitials(appt.patient) }}</span>
+              <tr v-for="appt in paginated" :key="appt.id" class="hover:bg-gray-50/60 transition-colors">
+                <td class="px-2 sm:px-3 py-2.5">
+                  <div class="flex items-center gap-1.5">
+                    <div class="w-6 h-6 rounded-full bg-[#004795]/10 flex items-center justify-center flex-shrink-0">
+                      <span class="text-[9px] font-bold text-[#004795]">{{ personInitials(appt.patient) }}</span>
                     </div>
-                    <p class="font-semibold text-gray-800 truncate max-w-[80px] sm:max-w-none">{{ personName(appt.patient) }}</p>
+                    <p class="font-semibold text-gray-800 truncate">{{ personName(appt.patient) }}</p>
                   </div>
                 </td>
-                <!-- Doctor -->
-                <td class="px-4 py-3 hidden sm:table-cell">
-                  <p class="font-medium text-gray-700 truncate max-w-[110px]">
-                    Dr. {{ appt.doctor?.user?.first_name }} {{ appt.doctor?.user?.last_name }}
-                  </p>
-                  <p class="text-[10px] text-gray-400 mt-0.5">{{ appt.doctor?.department?.name ?? '—' }}</p>
+                <td class="px-2 sm:px-3 py-2.5 hidden sm:table-cell">
+                  <p class="font-medium text-gray-700 truncate">Dr. {{ appt.doctor?.user?.first_name }} {{ appt.doctor?.user?.last_name }}</p>
+                  <p class="text-[10px] text-gray-400 truncate">{{ appt.doctor?.department?.name ?? '—' }}</p>
                 </td>
-                <!-- Date/time -->
-                <td class="px-4 py-3">
-                  <p class="font-medium text-gray-700">{{ formatDate(appt.scheduled_time) }}</p>
-                  <p class="text-[10px] text-gray-400 mt-0.5">{{ formatTime(appt.scheduled_time) }}</p>
+                <td class="px-2 sm:px-3 py-2.5">
+                  <p class="font-medium text-gray-700 whitespace-nowrap">{{ formatDate(appt.scheduled_time) }}</p>
+                  <p class="text-[10px] text-gray-400">{{ formatTime(appt.scheduled_time) }}</p>
                 </td>
-                <!-- Department -->
-                <td class="px-4 py-3 hidden lg:table-cell">
-                  <span class="text-gray-600 truncate max-w-[100px] block">{{ appt.department?.name ?? appt.doctor?.department?.name ?? '—' }}</span>
-                </td>
-                <!-- Type -->
-                <td class="px-4 py-3 hidden md:table-cell">
-                  <span v-if="appt.is_telehealth"
-                    class="inline-flex items-center gap-1 text-[10px] font-medium text-blue-600 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded">
+                <td class="px-2 sm:px-3 py-2.5 hidden md:table-cell">
+                  <span v-if="appt.is_telehealth" class="inline-flex items-center gap-1 text-[10px] font-medium text-blue-600 bg-blue-50 border border-blue-100 px-1.5 py-0.5 rounded whitespace-nowrap">
                     <Monitor class="w-3 h-3" /> Telemed
                   </span>
-                  <span v-else class="text-gray-500">In-Person</span>
+                  <span v-else class="text-[10px] text-gray-500 whitespace-nowrap">In-Person</span>
                 </td>
-                <!-- Status -->
-                <td class="px-4 py-3">
-                  <span :class="statusClass(appt.status)"
-                    class="inline-flex items-center gap-1 text-[10px] font-semibold px-2.5 py-0.5 rounded-full border capitalize">
-                    <span class="w-1.5 h-1.5 rounded-full" :class="statusDotClass(appt.status)" />
+                <td class="px-2 sm:px-3 py-2.5">
+                  <span :class="statusClass(appt.status)" class="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full border capitalize whitespace-nowrap">
+                    <span class="w-1.5 h-1.5 rounded-full flex-shrink-0" :class="statusDotClass(appt.status)" />
                     {{ appt.status }}
                   </span>
                 </td>
-                <!-- 3-dot actions -->
-                <td class="px-4 py-3 text-right">
+                <td class="px-2 sm:px-3 py-2.5 text-right">
                   <div class="relative inline-block" @click.stop>
-                    <button
-                      @click="toggleMenu(appt.id)"
-                      :disabled="isTerminal(appt.status)"
-                      class="p-1.5 rounded-lg transition"
-                      :class="isTerminal(appt.status)
-                        ? 'text-gray-200 cursor-not-allowed'
-                        : 'text-gray-400 hover:text-gray-700 hover:bg-gray-100'"
-                    >
-                      <MoreVertical class="w-4 h-4" />
+                    <button @click="toggleMenu(appt.id)" :disabled="isTerminal(appt.status)"
+                      class="p-1 rounded-lg transition"
+                      :class="isTerminal(appt.status) ? 'text-gray-200 cursor-not-allowed' : 'text-gray-400 hover:text-gray-700 hover:bg-gray-100'">
+                      <MoreVertical class="w-3.5 h-3.5" />
                     </button>
-                    <div
-                      v-if="openMenuId === appt.id && !isTerminal(appt.status)"
-                      class="absolute right-0 mt-1 w-40 bg-white border border-gray-100 rounded-xl shadow-lg z-30 py-1"
-                    >
-                      <button
-                        v-if="appt.status === 'pending'"
-                        @click="handleAction(appt.id, 'confirmed'); closeMenu()"
-                        :disabled="store.loading"
-                        class="flex items-center gap-2.5 w-full px-3 py-2 text-xs font-medium text-blue-700 hover:bg-blue-50 transition disabled:opacity-50"
-                      >
-                        <CheckCircle class="w-3.5 h-3.5" /> Confirm
+                    <div v-if="openMenuId === appt.id && !isTerminal(appt.status)"
+                      class="absolute right-1 bottom-full mb-2 w-28 bg-white border border-gray-100 rounded-xl shadow-lg z-30 py-1">
+                      <button v-if="appt.status === 'pending'" @click="handleAction(appt.id,'confirmed');closeMenu()" :disabled="store.loading"
+                        class="flex items-center gap-2 w-full px-3 py-1.5 text-xs font-medium text-blue-700 hover:bg-blue-50 transition disabled:opacity-50">
+                        <CheckCircle class="w-3 h-3" /> Confirm
                       </button>
-                      <button
-                        v-if="appt.status === 'confirmed'"
-                        @click="handleAction(appt.id, 'completed'); closeMenu()"
-                        :disabled="store.loading"
-                        class="flex items-center gap-2.5 w-full px-3 py-2 text-xs font-medium text-emerald-700 hover:bg-emerald-50 transition disabled:opacity-50"
-                      >
-                        <CheckCircle class="w-3.5 h-3.5" /> Complete
+                      <button v-if="appt.status === 'confirmed'" @click="handleAction(appt.id,'completed');closeMenu()" :disabled="store.loading"
+                        class="flex items-center gap-2 w-full px-3 py-1.5 text-xs font-medium text-emerald-700 hover:bg-emerald-50 transition disabled:opacity-50">
+                        <CheckCircle class="w-3 h-3" /> Complete
                       </button>
-                      <button
-                        v-if="['pending', 'confirmed'].includes(appt.status)"
-                        @click="handleAction(appt.id, 'cancelled'); closeMenu()"
-                        :disabled="store.loading"
-                        class="flex items-center gap-2.5 w-full px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-50 transition disabled:opacity-50"
-                      >
-                        <XCircle class="w-3.5 h-3.5" /> Cancel
+                      <button v-if="['pending','confirmed'].includes(appt.status)" @click="handleAction(appt.id,'cancelled');closeMenu()" :disabled="store.loading"
+                        class="flex items-center gap-2 w-full px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 transition disabled:opacity-50">
+                        <XCircle class="w-3 h-3" /> Cancel
                       </button>
                     </div>
                   </div>
@@ -192,6 +166,11 @@
               </tr>
             </tbody>
           </table>
+          <!-- Pagination -->
+          <TablePagination
+            :page="page" :total-pages="totalPages" :total="total" :per-page="perPage"
+            @prev="prev" @next="next" @go-to="goTo"
+          />
         </div>
       </div>
     </div>
@@ -199,18 +178,39 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from "vue";
+import { ref, computed, onMounted, onUnmounted, watch } from "vue";
 import {
   CalendarDays, Clock, CheckCircle, XCircle,
   AlertCircle, Search, Monitor, MoreVertical,
 } from "lucide-vue-next";
 import { useAppointmentStore } from "../../stores/appointmentStore";
+import { usePagination } from "../../composables/usePagination";
+import TablePagination from "../../components/common/TablePagination.vue";
 
 const store = useAppointmentStore();
 const search       = ref("");
 const statusFilter = ref("");
 const typeFilter   = ref("");
 const openMenuId   = ref(null);
+
+// ── Filtered list — must be declared BEFORE usePagination ────────────────────
+const filtered = computed(() => {
+  let list = store.appointments;
+  if (search.value.trim()) {
+    const q = search.value.toLowerCase();
+    list = list.filter((a) =>
+      personName(a.patient).toLowerCase().includes(q) ||
+      `${a.doctor?.user?.first_name ?? ""} ${a.doctor?.user?.last_name ?? ""}`.toLowerCase().includes(q)
+    );
+  }
+  if (statusFilter.value) list = list.filter((a) => a.status === statusFilter.value);
+  if (typeFilter.value === "telehealth") list = list.filter((a) => a.is_telehealth);
+  if (typeFilter.value === "inperson")   list = list.filter((a) => !a.is_telehealth);
+  return list;
+});
+
+const { page, perPage, total, totalPages, paginated, reset, prev, next, goTo } = usePagination(filtered, 10);
+watch(filtered, reset);
 
 onMounted(() => {
   store.fetchAll();
@@ -234,21 +234,6 @@ const todayCount = computed(() =>
     new Date(a.scheduled_time).toDateString() === new Date().toDateString()
   ).length
 );
-
-const filtered = computed(() => {
-  let list = store.appointments;
-  if (search.value.trim()) {
-    const q = search.value.toLowerCase();
-    list = list.filter((a) =>
-      personName(a.patient).toLowerCase().includes(q) ||
-      `${a.doctor?.user?.first_name ?? ""} ${a.doctor?.user?.last_name ?? ""}`.toLowerCase().includes(q)
-    );
-  }
-  if (statusFilter.value) list = list.filter((a) => a.status === statusFilter.value);
-  if (typeFilter.value === "telehealth") list = list.filter((a) => a.is_telehealth);
-  if (typeFilter.value === "inperson")   list = list.filter((a) => !a.is_telehealth);
-  return list;
-});
 
 function personName(p) {
   if (!p) return "—";

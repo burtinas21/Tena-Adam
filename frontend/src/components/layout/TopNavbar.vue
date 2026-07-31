@@ -258,10 +258,11 @@ function timeAgo(dateStr) {
   <header
     class="h-16 w-full bg-white dark:bg-slate-800 border-b border-gray-100 dark:border-slate-700 flex items-center px-4 gap-3 flex-shrink-0 z-20 transition-colors duration-300"
   >
+    <!-- Mobile-only hamburger (sidebar is hidden on mobile so we need this) -->
     <button
       @click="toggle"
-      class="p-2 rounded-lg text-gray-500 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800 transition flex-shrink-0"
-      aria-label="Toggle sidebar"
+      class="lg:hidden p-2 rounded-lg text-gray-500 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800 transition flex-shrink-0"
+      aria-label="Open sidebar"
     >
       <Menu class="w-5 h-5" />
     </button>

@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+  <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-visible">
     <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100">
       <h2 class="text-sm font-bold text-gray-800">Hospital Admins</h2>
       <span class="text-xs text-gray-400 font-medium">{{ admins.length }} total</span>
@@ -62,32 +62,15 @@
                 {{ admin.is_active ? 'Active' : 'Inactive' }}
               </span>
             </td>
-            <!-- Actions — three-dot dropdown -->
+            <!-- Actions — three-dot dropdown (fixed position to avoid overflow clipping) -->
             <td class="px-2 sm:px-4 py-2 sm:py-3 text-right">
               <div class="relative inline-block" @click.stop>
                 <button
-                  @click="toggleMenu(admin.id)"
+                  @click="toggleMenu(admin.id, $event, admin)"
                   class="p-1 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition"
                 >
                   <MoreVertical class="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </button>
-                <div
-                  v-if="openMenuId === admin.id"
-                  class="absolute right-0 mt-1 w-32 bg-white border border-gray-100 rounded-xl shadow-lg z-30 py-1"
-                >
-                  <button
-                    @click="$emit('edit', admin); closeMenu()"
-                    class="flex items-center gap-2 w-full px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 transition"
-                  >
-                    <Pencil class="w-3.5 h-3.5 text-[#004795]" /> Edit
-                  </button>
-                  <button
-                    @click="$emit('delete', admin); closeMenu()"
-                    class="flex items-center gap-2 w-full px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-50 transition"
-                  >
-                    <Trash2 class="w-3.5 h-3.5" /> Delete
-                  </button>
-                </div>
               </div>
             </td>
           </tr>
@@ -95,6 +78,29 @@
       </table>
     </div>
   </div>
+
+  <!-- Fixed-position dropdown — rendered outside the table so it's never clipped -->
+  <Teleport to="body">
+    <div
+      v-if="openMenuId !== null && menuPosition"
+      :style="{ position: 'fixed', top: menuPosition.top + 'px', left: menuPosition.left + 'px' }"
+      class="w-32 bg-white border border-gray-100 rounded-xl shadow-lg z-[9999] py-1"
+      @click.stop
+    >
+      <button
+        @click="$emit('edit', activeAdmin); closeMenu()"
+        class="flex items-center gap-2 w-full px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 transition"
+      >
+        <Pencil class="w-3.5 h-3.5 text-[#004795]" /> Edit
+      </button>
+      <button
+        @click="$emit('delete', activeAdmin); closeMenu()"
+        class="flex items-center gap-2 w-full px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-50 transition"
+      >
+        <Trash2 class="w-3.5 h-3.5" /> Delete
+      </button>
+    </div>
+  </Teleport>
 </template>
 
 <script setup>
@@ -107,12 +113,33 @@ defineProps({
 defineEmits(["edit", "delete"]);
 
 const openMenuId = ref(null);
+const menuPosition = ref(null);
+const activeAdmin = ref(null);
 
-function toggleMenu(id) {
-  openMenuId.value = openMenuId.value === id ? null : id;
+function toggleMenu(id, event, admin) {
+  if (openMenuId.value === id) {
+    closeMenu();
+    return;
+  }
+  // Calculate position from the button's bounding rect so the dropdown
+  // is rendered via Teleport at a fixed position — never clipped by overflow.
+  const btn = event.currentTarget;
+  const rect = btn.getBoundingClientRect();
+  menuPosition.value = {
+    top: rect.bottom + 4,
+    left: rect.right - 128, // 128px = w-32
+  };
+  activeAdmin.value = admin;
+  openMenuId.value = id;
 }
-function closeMenu() { openMenuId.value = null; }
-function handleOutsideClick() { openMenuId.value = null; }
+
+function closeMenu() {
+  openMenuId.value = null;
+  menuPosition.value = null;
+  activeAdmin.value = null;
+}
+
+function handleOutsideClick() { closeMenu(); }
 
 onMounted(() => document.addEventListener("click", handleOutsideClick));
 onUnmounted(() => document.removeEventListener("click", handleOutsideClick));

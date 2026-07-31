@@ -5,14 +5,14 @@
       <div :class="['w-9 h-9 rounded-lg flex items-center justify-center', iconBgColor]">
         <component :is="icon" class="w-5 h-5" :class="iconColor" />
       </div>
-      <div
+      <!-- <div
         v-if="!loading"
         :class="['flex items-center gap-x-1 px-2 py-0.5 rounded-full text-xs font-semibold', trendBgColor, trendTextColor]"
       >
         <TrendingUp v-if="!trendDown" class="w-3 h-3" />
         <TrendingDown v-else class="w-3 h-3" />
         {{ trend }}
-      </div>
+      </div> -->
     </div>
 
     <!-- Label + Value -->

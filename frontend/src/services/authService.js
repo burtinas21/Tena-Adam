@@ -38,4 +38,14 @@ export default {
 
     return response.data;
   },
+
+  async checkInvitation(params) {
+    const response = await authApi.checkInvitation(params);
+    return response.data;
+  },
+
+  async acceptInvitation(data) {
+    const response = await authApi.acceptInvitation(data);
+    return response.data;
+  },
 };

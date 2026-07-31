@@ -58,7 +58,7 @@ class StoreAppointmentRequest extends FormRequest
             'visit_type' => [
                 'nullable',
                 'string',
-                'in:in_person,telehealth,follow_up,urgent',
+                'in:normal,follow_up,urgent',
             ],
 
             'payment_method_id' => [

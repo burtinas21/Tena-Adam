@@ -25,6 +25,17 @@ return Application::configure(basePath: dirname(__DIR__))
 
         ]);
 
+        // Replace framework Authenticate so API routes return 401 JSON
+        // instead of trying to redirect to a non-existent named 'login' route.
+        $middleware->replace(
+            \Illuminate\Auth\Middleware\Authenticate::class,
+            \App\Http\Middleware\Authenticate::class,
+        );
+
+        // Unauthenticated API requests always get a 401 JSON response —
+        // never a redirect to a login route that doesn't exist.
+        $middleware->redirectGuestsTo(fn () => null);
+
         // Apply audit logging automatically to all authenticated API requests
         $middleware->appendToGroup('api', AuditMiddleware::class);
 

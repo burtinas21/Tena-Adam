@@ -61,9 +61,9 @@ class AppointmentPolicy
         }
 
         if ($user->hasRole('patient')) {
-           
+            // Patients can cancel or reschedule pending and pending_payment appointments
             return $appointment->patient_id === $user->id
-                && $appointment->status === 'pending';
+                && in_array($appointment->status, ['pending', 'pending_payment']);
         }
 
         return false;

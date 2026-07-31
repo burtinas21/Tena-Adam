@@ -187,17 +187,9 @@ public function __construct(
 
             $scheduledDatetime = Carbon::parse($data['appointment_date'] . ' ' . $time);
 
-            $exists = Appointment::where('doctor_id', $doctor->id)
-                ->where('scheduled_time', $scheduledDatetime)
-                ->whereNotIn('status', ['cancelled', 'completed'])
-                ->exists();
-
-            if ($exists) {
-                throw ValidationException::withMessages([
-                    'appointment_time' => ['This appointment slot is already booked.'],
-                ]);
-            }
-
+            // Use a pessimistic lock on the slot row to prevent race conditions.
+            // If the slot is already booked we throw a friendly validation error
+            // before the DB unique constraint can fire.
             $slotEnd = (clone $scheduledDatetime)->addMinutes($schedule->slot_duration_min);
 
             $slot = AppointmentSlot::firstOrCreate(
@@ -211,6 +203,30 @@ public function __construct(
                 ]
             );
 
+            // Lock the slot row for the duration of this transaction
+            $slot = AppointmentSlot::lockForUpdate()->find($slot->id);
+
+            if ($slot->status === 'booked') {
+                throw ValidationException::withMessages([
+                    'appointment_time' => ['This appointment slot is already booked. Please choose another time.'],
+                ]);
+            }
+
+            // Also check for an existing active appointment at this time
+            // (handles cases where slot table and appointments table diverge)
+            $exists = Appointment::where('doctor_id', $doctor->id)
+                ->where('scheduled_time', $scheduledDatetime)
+                ->whereNotIn('status', ['cancelled', 'completed'])
+                ->exists();
+
+            if ($exists) {
+                // Mark the slot as booked so UI won't offer it again
+                $slot->update(['status' => 'booked']);
+                throw ValidationException::withMessages([
+                    'appointment_time' => ['This appointment slot is already booked. Please choose another time.'],
+                ]);
+            }
+
             $slot->update(['status' => 'booked']);
 
    
@@ -222,7 +238,7 @@ public function __construct(
                 'scheduled_time'=> $scheduledDatetime,
                 'duration_min'  => $schedule->slot_duration_min,
                 // 'status'        => 'pending',
-                'visit_type'      => $data['visit_type'] ?? 'in_person',
+                'visit_type'      => $data['visit_type'] ?? 'normal',
                 'status'          => 'pending_payment',
                 'reason'        => $data['reason'],
                 'notes'         => $data['notes'] ?? null,

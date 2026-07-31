@@ -10,7 +10,7 @@ use App\Models\HealthcareProvider;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 
@@ -61,28 +61,12 @@ class HealthcareProviderService
 
 
             $doctor = User::create([
-
-
-                'first_name'=>$data['first_name'],
-
-
-                'last_name'=>$data['last_name'],
-
-
-                'email'=>$data['email'],
-
-
-                'phone'=>$data['phone'] ?? null,
-
-
-                'password'=>Hash::make(
-                    $data['password']
-                ),
-
-
-                'is_active'=>true,
-
-
+                'first_name' => $data['first_name'],
+                'last_name'  => $data['last_name'],
+                'email'      => $data['email'],
+                'phone'      => $data['phone'] ?? null,
+                'password'   => null,        // set by the doctor via invitation link
+                'is_active'  => false,       // activated when they set their password
             ]);
 
             $doctorRole = Role::where(
@@ -128,32 +112,43 @@ if (isset($data['profile_picture'])) {
     );
 
 }           $provider = HealthcareProvider::create([
-                'id'=>$doctor->id,
-                'license_number'=>$data['license_number'],
-                'department_id'=>$data['department_id'],
-                'hospital_id'=>$hospitalId,
-                'consultation_fee'=>$data['consultation_fee'] ?? 0,
-                'years_experience'=>null,
-                'practice_start_date'=> $data['practice_start_date'] ?? null,
-                'bio'=>$data['bio'] ?? null,
-               'profile_picture'=>$imagePath,
-                'is_telehealth_available'=>$data['is_telehealth_available'] ?? false,
-
-
+                'id'                     => $doctor->id,
+                'license_number'         => $data['license_number'],
+                'department_id'          => $data['department_id'],
+                'hospital_id'            => $hospitalId,
+                'consultation_fee'       => $data['consultation_fee'] ?? 0,
+                'years_experience'       => null,
+                'practice_start_date'    => $data['practice_start_date'] ?? null,
+                'bio'                    => $data['bio'] ?? null,
+                'profile_picture'        => $imagePath,
+                'is_telehealth_available'=> $data['is_telehealth_available'] ?? false,
             ]);
 
+            // Generate invitation token and send activation email
+            $plainToken = Str::random(64);
+            DB::table('password_reset_tokens')->updateOrInsert(
+                ['email' => $doctor->email],
+                ['token' => Hash::make($plainToken), 'created_at' => now()]
+            );
 
+            \App\Models\AuditLog::create([
+                'user_id'      => auth()->id(),
+                'action'       => 'invitation_sent',
+                'target_table' => 'users',
+                'target_id'    => $doctor->id,
+                'details'      => ['email' => $doctor->email, 'role' => 'doctor', 'hospital_id' => $hospitalId],
+                'ip_address'   => request()->ip(),
+                'user_agent'   => request()->userAgent(),
+            ]);
 
-
+            \Illuminate\Support\Facades\Mail::to($doctor->email)->send(
+                new \App\Mail\StaffInvitationMail($doctor, $plainToken)
+            );
 
             return $provider->load([
-
                 'user',
-
                 'department',
-
-                'hospital'
-
+                'hospital',
             ]);
 
 

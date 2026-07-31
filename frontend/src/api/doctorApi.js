@@ -13,7 +13,6 @@ export default {
   },
   updateMe(data) {
     const form = new FormData();
-    form.append("_method", "PUT");
     Object.entries(data).forEach(([k, v]) => {
       if (v !== null && v !== undefined) {
         form.append(k, typeof v === "boolean" ? (v ? "1" : "0") : v);

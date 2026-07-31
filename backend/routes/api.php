@@ -38,7 +38,6 @@ use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\InvoiceController;
 use App\Http\Controllers\Api\RefundController;
 Route::post('payments/callback', [PaymentController::class, 'callback'])->name('payments.callback');
-Route::get('invoices/{invoice}/download',  [InvoiceController::class, 'download'])->name('invoices.download');
 Route::post('payments/webhook',[PaymentController::class, 'webhook'])->name('payments.webhook');
 // Patient: look up pending payment by appointment, re-initialize Chapa for "Pay Now"
 // IMPORTANT: these explicit routes must be declared BEFORE apiResource to prevent
@@ -46,6 +45,7 @@ Route::post('payments/webhook',[PaymentController::class, 'webhook'])->name('pay
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('payments/by-appointment', [PaymentController::class, 'byAppointment']);
     Route::post('payments/{payment}/reinitialize', [PaymentController::class, 'reinitialize']);
+    Route::get('invoices/{invoice}/download', [InvoiceController::class, 'download'])->name('invoices.download');
 });
 Route::apiResource('payments', PaymentController::class);
 Route::get('invoices', [InvoiceController::class, 'index']);
@@ -311,6 +311,27 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     
+    Route::post('/doctor/me', function (\Illuminate\Http\Request $request) {
+        $user = auth()->user();
+        $provider = \App\Models\HealthcareProvider::findOrFail($user->id);
+        $data = $request->validate([
+            'bio'                    => 'nullable|string',
+            'consultation_fee'       => 'nullable|numeric',
+            'is_telehealth_available'=> 'boolean',
+            'profile_picture'        => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+        ]);
+        if ($request->hasFile('profile_picture')) {
+            if ($provider->profile_picture) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($provider->profile_picture);
+            }
+            $data['profile_picture'] = $request->file('profile_picture')->store('doctor-profiles','public');
+        }
+        // remove _method from the data if present
+        unset($data['_method']);
+        $provider->update($data);
+        return new \App\Http\Resources\HealthcareProviderResource($provider->fresh(['user','department','hospital']));
+    });
+
     Route::put('/doctor/me', function (\Illuminate\Http\Request $request) {
         $user = auth()->user();
         $provider = \App\Models\HealthcareProvider::findOrFail($user->id);
@@ -436,20 +457,16 @@ Route::post(
     ]
 );
 
+// Staff invitation – public routes (no auth required)
+Route::get('/accept-invitation/check', [\App\Http\Controllers\Api\InvitationController::class, 'check']);
+Route::post('/accept-invitation',      [\App\Http\Controllers\Api\InvitationController::class, 'accept']);
+
 Route::middleware(['auth:sanctum',  'permission:view_users',
 
 ])
     ->group(function () {
 
-        Route::get('/users', function () {
-
-            return response()->json([
-
-                'message' => 'You have manage_users permission',
-
-            ]);
-
-        });
+        Route::get('/users', [\App\Http\Controllers\UserController::class, 'index']);
 
     });
 

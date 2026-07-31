@@ -52,14 +52,7 @@ class CreateDoctorRequest extends FormRequest
                 'max:20'
             ],
 
-
-            'password'=>[
-                'required',
-                'string',
-                'min:8'
-            ],
-
-
+            // No password — doctor sets their own via invitation email
 
             // Doctor profile
 
@@ -108,7 +101,7 @@ class CreateDoctorRequest extends FormRequest
 
 
             'profile_picture' => [
-            'required',
+            'nullable',
             'image',
             'mimes:jpg,jpeg,png,webp',
             'max:2048',

@@ -295,11 +295,16 @@
                 <input v-model="doctorForm.phone" type="text" placeholder="+251911000000"
                   class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#004795]/30 focus:border-[#004795] transition" />
               </div>
-              <div>
-                <label class="block text-xs font-semibold text-gray-700 mb-1.5">Password <span class="text-red-500">*</span></label>
-                <input v-model="doctorForm.password" type="password" required minlength="8"
-                  class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#004795]/30 focus:border-[#004795] transition" />
-              </div>
+            </div>
+            <!-- Invitation notice -->
+            <div class="flex items-start gap-2.5 bg-blue-50 border border-blue-200 rounded-lg px-3 py-3">
+              <svg class="w-4 h-4 text-[#004795] flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+              <p class="text-xs text-blue-700 leading-relaxed">
+                An invitation email will be sent to the doctor. They will set their own password by clicking the activation link.
+              </p>
             </div>
             <div>
               <label class="block text-xs font-semibold text-gray-700 mb-1.5">License Number <span class="text-red-500">*</span></label>
@@ -409,17 +414,20 @@
             <input v-model="receptionistForm.email" type="email" required placeholder="reception@hospital.et"
               class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#004795]/30 focus:border-[#004795] transition" />
           </div>
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="block text-xs font-semibold text-gray-700 mb-1.5">Phone</label>
-              <input v-model="receptionistForm.phone" type="text" placeholder="+251911000000"
-                class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#004795]/30 focus:border-[#004795] transition" />
-            </div>
-            <div>
-              <label class="block text-xs font-semibold text-gray-700 mb-1.5">Password <span class="text-red-500">*</span></label>
-              <input v-model="receptionistForm.password" type="password" required minlength="8"
-                class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#004795]/30 focus:border-[#004795] transition" />
-            </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 mb-1.5">Phone</label>
+            <input v-model="receptionistForm.phone" type="text" placeholder="+251911000000"
+              class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#004795]/30 focus:border-[#004795] transition" />
+          </div>
+          <!-- Invitation notice -->
+          <div class="flex items-start gap-2.5 bg-blue-50 border border-blue-200 rounded-lg px-3 py-3">
+            <svg class="w-4 h-4 text-[#004795] flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+            <p class="text-xs text-blue-700 leading-relaxed">
+              An invitation email will be sent to the receptionist. They will set their own password by clicking the activation link.
+            </p>
           </div>
         </form>
         <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-100 flex-shrink-0">
@@ -575,7 +583,7 @@ function openCreate() {
   doctorFormError.value = null;
   profilePicFile.value  = null;
   doctorForm.value = {
-    first_name: "", last_name: "", email: "", phone: "", password: "",
+    first_name: "", last_name: "", email: "", phone: "",
     license_number: "", department_id: "", practice_start_date: "",
     consultation_fee: 0, is_telehealth_available: false,
   };
@@ -751,7 +759,7 @@ async function fetchReceptionists() {
 function openReceptionistForm() {
   receptionistFormError.value = null;
   receptionistForm.value = {
-    first_name: "", last_name: "", email: "", phone: "", password: "",
+    first_name: "", last_name: "", email: "", phone: "",
   };
   showReceptionistForm.value = true;
 }

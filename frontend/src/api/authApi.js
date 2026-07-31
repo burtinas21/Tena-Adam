@@ -20,4 +20,12 @@ export default {
   logout() {
     return api.post("/logout");
   },
+
+  checkInvitation(params) {
+    return api.get("/accept-invitation/check", { params });
+  },
+
+  acceptInvitation(data) {
+    return api.post("/accept-invitation", data);
+  },
 };

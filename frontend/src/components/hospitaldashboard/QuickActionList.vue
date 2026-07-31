@@ -24,7 +24,7 @@
         class="w-full bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 font-semibold text-xs py-2.5 px-4 rounded-lg flex items-center justify-center gap-x-2 transition"
       >
         <CalendarRange class="w-4 h-4 text-gray-500" />
-        Manage Appointments
+        Manage Schedule
       </RouterLink>
 
       <RouterLink
