@@ -9,6 +9,7 @@ import {
   ChevronDown,
   Search,
   X,
+  PanelLeft,
   CheckCheck,
 } from "lucide-vue-next";
 import { useAuthStore } from "../../stores/authStore";
@@ -73,7 +74,7 @@ const notifRoute = computed(() => {
 const recentNotifs = computed(() =>
   [...notifStore.notifications]
     .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-    .slice(0, 5)
+    .slice(0, 5),
 );
 
 async function fetchDoctorPhoto() {
@@ -113,7 +114,9 @@ async function handleMarkAllRead() {
 async function handleMarkRead(n) {
   if (n.status !== "read") await notifStore.markAsRead(n.id);
   // Remove from the in-memory list so it disappears from the dropdown
-  notifStore.notifications = notifStore.notifications.filter((x) => x.id !== n.id);
+  notifStore.notifications = notifStore.notifications.filter(
+    (x) => x.id !== n.id,
+  );
   showNotifPanel.value = false;
   const target = getNotifRoute(n);
   if (target) router.push(target);
@@ -129,35 +132,35 @@ function getNotifRoute(n) {
   // Map channel → route per role
   const map = {
     doctor: {
-      appointment:       { name: "doctor-appointments" },
-      queue:             { name: "Doctor_Queue" },
-      telehealth:        { name: "doctor-telehealth" },
-      doctor_leave:      { name: "doctor-schedule" },
-      doctor_schedule:   { name: "doctor-schedule" },
+      appointment: { name: "doctor-appointments" },
+      queue: { name: "Doctor_Queue" },
+      telehealth: { name: "doctor-telehealth" },
+      doctor_leave: { name: "doctor-schedule" },
+      doctor_schedule: { name: "doctor-schedule" },
       medical_encounter: { name: "medicalencounter" },
-      prescription:      { name: "prescription" },
+      prescription: { name: "prescription" },
     },
     patient: {
-      appointment:       { name: "appointments" },
-      queue:             { name: "patient-queue-status" },
-      telehealth:        { name: "patient-telemedicine" },
+      appointment: { name: "appointments" },
+      queue: { name: "patient-queue-status" },
+      telehealth: { name: "patient-telemedicine" },
       medical_encounter: { name: "medicalhistory" },
-      prescription:      { name: "patient-prescriptions" },
+      prescription: { name: "patient-prescriptions" },
     },
     hospital_admin: {
-      appointment:       { name: "Appointments" },
-      queue:             { name: "Queue" },
-      doctor_leave:      { name: "Doctor_Leaves" },
-      doctor_schedule:   { name: "doctors" },
-      telehealth:        { name: "telemanagment" },
+      appointment: { name: "Appointments" },
+      queue: { name: "Queue" },
+      doctor_leave: { name: "Doctor_Leaves" },
+      doctor_schedule: { name: "doctors" },
+      telehealth: { name: "telemanagment" },
     },
     receptionist: {
-      appointment:       { name: "receptionist-appointments" },
-      queue:             { name: "receptionist-queue" },
+      appointment: { name: "receptionist-appointments" },
+      queue: { name: "receptionist-queue" },
     },
     platform_admin: {
-      appointment:       { path: "/platform/dashboard" },
-      queue:             { path: "/platform/dashboard" },
+      appointment: { path: "/platform/dashboard" },
+      queue: { path: "/platform/dashboard" },
     },
   };
 
@@ -260,12 +263,12 @@ function timeAgo(dateStr) {
   >
     <!-- Mobile-only hamburger (sidebar is hidden on mobile so we need this) -->
     <button
-      @click="toggle"
-      class="lg:hidden p-2 rounded-lg text-gray-500 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800 transition flex-shrink-0"
-      aria-label="Open sidebar"
-    >
-      <Menu class="w-5 h-5" />
-    </button>
+  @click="toggle"
+  class="lg:hidden w-10 h-10 flex items-center justify-center rounded-lg
+         hover:bg-gray-100 dark:hover:bg-slate-700 transition"
+>
+  <PanelLeft class="w-5 h-5 text-gray-600 dark:text-slate-300" />
+</button>
 
     <!-- Search bar -->
     <div class="flex-1 max-w-md relative">
@@ -314,7 +317,7 @@ function timeAgo(dateStr) {
               class="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-slate-700 flex-shrink-0"
             >
               <span class="text-sm font-bold text-gray-800 dark:text-slate-100">
-                {{ $t('notification.title') }}
+                {{ $t("notification.title") }}
               </span>
               <div class="flex items-center gap-2">
                 <button
@@ -322,7 +325,8 @@ function timeAgo(dateStr) {
                   @click="handleMarkAllRead"
                   class="text-xs text-[#004795] dark:text-blue-400 hover:underline font-semibold flex items-center gap-1"
                 >
-                  <CheckCheck class="w-3 h-3" /> {{ $t('button.mark_all_read') }}
+                  <CheckCheck class="w-3 h-3" />
+                  {{ $t("button.mark_all_read") }}
                 </button>
                 <button
                   @click="showNotifPanel = false"
@@ -349,7 +353,7 @@ function timeAgo(dateStr) {
                 <Bell
                   class="w-6 h-6 mx-auto mb-2 text-gray-300 dark:text-slate-600"
                 />
-                {{ $t('notification.empty') }}
+                {{ $t("notification.empty") }}
               </div>
               <div v-else>
                 <div
@@ -359,7 +363,8 @@ function timeAgo(dateStr) {
                     n.status !== 'read'
                       ? 'bg-blue-50/60 dark:bg-blue-900/20'
                       : 'bg-white dark:bg-slate-800',
-                    n.channel === 'telehealth' && n.subject?.includes('Reminder')
+                    n.channel === 'telehealth' &&
+                    n.subject?.includes('Reminder')
                       ? 'border-l-2 border-l-blue-400'
                       : '',
                   ]"
@@ -382,7 +387,10 @@ function timeAgo(dateStr) {
                     </p>
                     <!-- Inline "Join Meeting" button for telehealth reminder notifications -->
                     <a
-                      v-if="n.channel === 'telehealth' && extractMeetingLink(n.content)"
+                      v-if="
+                        n.channel === 'telehealth' &&
+                        extractMeetingLink(n.content)
+                      "
                       :href="extractMeetingLink(n.content)"
                       target="_blank"
                       rel="noopener noreferrer"
@@ -405,9 +413,16 @@ function timeAgo(dateStr) {
                     <svg
                       v-if="getNotifRoute(n)"
                       class="w-3 h-3 text-gray-300 dark:text-slate-600 group-hover:text-[#004795] dark:group-hover:text-blue-400 transition"
-                      fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      stroke-width="2.5"
                     >
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M9 5l7 7-7 7"
+                      />
                     </svg>
                   </div>
                 </div>
@@ -423,7 +438,7 @@ function timeAgo(dateStr) {
                 @click="goToAllNotifications"
                 class="text-xs font-semibold text-[#004795] dark:text-blue-400 hover:underline w-full text-center"
               >
-                {{ $t('notification.view_all') }}
+                {{ $t("notification.view_all") }}
               </button>
             </div>
           </div>
@@ -516,7 +531,7 @@ function timeAgo(dateStr) {
               class="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition"
             >
               <LogOut class="w-4 h-4" />
-              {{ $t('logout') }}
+              {{ $t("logout") }}
             </button>
           </div>
         </Transition>

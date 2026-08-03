@@ -200,7 +200,10 @@
               v-for="entry in store.entries"
               :key="entry.id"
               class="hover:bg-gray-50/50 transition-colors"
-              :class="{ 'bg-blue-50/50': entry.status === 'in_consultation' }"
+              :class="{
+                'bg-blue-50/50': entry.status === 'in_consultation',
+                'bg-red-50/40':  entry.status === 'waiting' && entry.priority >= 100,
+              }"
             >
               <td class="px-4 py-3">
                 <span
@@ -227,16 +230,25 @@
                 </p>
               </td>
               <td class="px-4 py-3 hidden sm:table-cell">
-                <span
-                  class="text-[11px] font-semibold px-2 py-0.5 rounded"
-                  :class="
-                    entry.appointment_id
-                      ? 'bg-blue-50 text-blue-700'
-                      : 'bg-orange-50 text-orange-700'
-                  "
-                >
-                  {{ entry.appointment_id ? "Appointment" : "Walk-in" }}
-                </span>
+                <div class="flex flex-col gap-1">
+                  <span
+                    class="text-[11px] font-semibold px-2 py-0.5 rounded w-fit"
+                    :class="
+                      entry.appointment_id
+                        ? 'bg-blue-50 text-blue-700'
+                        : 'bg-orange-50 text-orange-700'
+                    "
+                  >
+                    {{ entry.appointment_id ? "Appointment" : "Walk-in" }}
+                  </span>
+                  <!-- Priority badge for urgent / walk-in priority -->
+                  <span
+                    v-if="entry.priority >= 100"
+                    class="text-[10px] font-bold px-2 py-0.5 rounded w-fit bg-red-100 text-red-700 flex items-center gap-1"
+                  >
+                    ⚡ {{ entry.appointment_id ? "Urgent" : "Priority" }}
+                  </span>
+                </div>
               </td>
               <td class="px-4 py-3">
                 <StatusBadge :status="entry.status" />
@@ -360,6 +372,7 @@ import {
 } from "lucide-vue-next";
 import { useAuthStore } from "../../../stores/authStore";
 import { useQueueStore } from "../../../stores/queueStore";
+import { echo } from "../../../plugins/echo";
 
 // ── Tiny inline components ────────────────────────────────────────────────
 const colorMap = {
@@ -483,9 +496,29 @@ onMounted(async () => {
   await reload();
   // Poll every 30 seconds as a fallback when WebSocket is not configured
   pollInterval = setInterval(reload, 30_000);
+
+  // ── WebSocket: real-time queue updates ────────────────────────────────
+  // Listen on the private channel for this doctor so the queue refreshes
+  // immediately when call-next / complete / skip is fired from any client.
+  if (doctorId.value) {
+    try {
+      echo.private(`queue.${doctorId.value}`)
+        .listen(".queue.updated", (e) => {
+          if (e.queue) store.applyBroadcast(e.queue);
+        });
+    } catch {
+      /* WebSocket unavailable — polling fallback is active */
+    }
+  }
 });
 
-onUnmounted(() => clearInterval(pollInterval));
+onUnmounted(() => {
+  clearInterval(pollInterval);
+  // Leave the WebSocket channel to avoid memory leaks
+  if (doctorId.value) {
+    try { echo.leave(`queue.${doctorId.value}`); } catch { /* noop */ }
+  }
+});
 
 async function reload() {
   if (!doctorId.value) return;

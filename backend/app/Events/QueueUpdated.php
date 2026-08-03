@@ -47,6 +47,7 @@ class QueueUpdated implements ShouldBroadcastNow
     {
         return [
             new PrivateChannel('queue.' . $this->queue['doctor_id']),
+            new PrivateChannel('reception.queue'),
         ];
     }
 

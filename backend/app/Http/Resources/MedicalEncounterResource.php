@@ -51,6 +51,11 @@ class MedicalEncounterResource extends JsonResource
 
             ],
 
+            // Walk-in patient fields (populated when no registered patient record)
+            'walk_in_patient_name' => $this->walk_in_patient_name,
+
+            'walk_in_phone' => $this->walk_in_phone,
+
             /*
             |--------------------------------------------------------------------------
             | Doctor

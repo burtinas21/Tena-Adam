@@ -47,9 +47,13 @@ export const useQueueStore = defineStore("queue", {
         this.error = null;
         const res    = await queueApi.generate(data);
         const entry  = res.data?.data ?? res.data;
-        // Insert in order by queue_number
+        // Insert in order: priority DESC, then queue_number ASC
         this.entries.push(entry);
-        this.entries.sort((a, b) => a.queue_number - b.queue_number);
+        this.entries.sort((a, b) =>
+          b.priority !== a.priority
+            ? b.priority - a.priority
+            : a.queue_number - b.queue_number
+        );
         return entry;
       } catch (err) {
         this.error = err.response?.data?.message || "Failed to add walk-in.";
@@ -131,7 +135,11 @@ export const useQueueStore = defineStore("queue", {
         this.entries[idx] = { ...this.entries[idx], ...updatedEntry };
       } else {
         this.entries.push(updatedEntry);
-        this.entries.sort((a, b) => a.queue_number - b.queue_number);
+        this.entries.sort((a, b) =>
+          b.priority !== a.priority
+            ? b.priority - a.priority
+            : a.queue_number - b.queue_number
+        );
       }
     },
   },

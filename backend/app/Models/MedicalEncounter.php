@@ -30,6 +30,10 @@ class MedicalEncounter extends Model
 
         'appointment_id',
 
+        'walk_in_patient_name',
+
+        'walk_in_phone',
+
         'encounter_date',
 
         'chief_complaint',

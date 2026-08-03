@@ -2,7 +2,7 @@
 import { computed } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { useI18n } from "vue-i18n";
-import { Menu } from "lucide-vue-next";
+import { PanelLeft } from "lucide-vue-next";
 import { useAuthStore } from "../../stores/authStore";
 import { useSidebar } from "../../composables/useSidebar";
 import platformAdmin from "../../config/sidebar/platformAdmin";
@@ -12,8 +12,8 @@ import patient from "../../config/sidebar/patient";
 import receptionist from "../../config/sidebar/receptionist";
 
 const router = useRouter();
-const route  = useRoute();
-const { t }  = useI18n();
+const route = useRoute();
+const { t } = useI18n();
 const authStore = useAuthStore();
 const { isOpen, isMobileOpen, toggle, closeMenu } = useSidebar();
 
@@ -25,12 +25,18 @@ const defaultSidebar = {
 const sidebarConfig = computed(() => {
   const role = authStore.user?.roles?.[0]?.name;
   switch (role) {
-    case "platform_admin": return platformAdmin;
-    case "hospital_admin": return hospitalAdmin;
-    case "doctor":         return doctor;
-    case "patient":        return patient;
-    case "receptionist":   return receptionist;
-    default:               return defaultSidebar;
+    case "platform_admin":
+      return platformAdmin;
+    case "hospital_admin":
+      return hospitalAdmin;
+    case "doctor":
+      return doctor;
+    case "patient":
+      return patient;
+    case "receptionist":
+      return receptionist;
+    default:
+      return defaultSidebar;
   }
 });
 
@@ -38,7 +44,7 @@ const menuItems = computed(() => {
   const role = authStore.user?.roles?.[0]?.name;
   if (!role) return [];
   return sidebarConfig.value.menu.filter(
-    (item) => item.roles?.includes(role) && item.action !== "logout"
+    (item) => item.roles?.includes(role) && item.action !== "logout",
   );
 });
 
@@ -78,47 +84,52 @@ function handleMenuClick(item) {
       isOpen ? 'w-48' : 'lg:w-[52px] w-48',
     ]"
   >
-    <!-- Brand header -->
-    <div class="h-16 border-b border-gray-100 dark:border-slate-700 flex items-center flex-shrink-0 px-2 gap-1">
-
-      <!-- SC logo — smaller when collapsed -->
-      <div
-        :class="isOpen ? 'w-7 h-7 rounded-md' : 'w-6 h-6 rounded'"
-        class="bg-[#004795] flex items-center justify-center flex-shrink-0 transition-all duration-300"
-      >
-        <span :class="isOpen ? 'text-[10px]' : 'text-[9px]'" class="font-bold text-white leading-none">SC</span>
-      </div>
-
-      <!-- Expanded: title + hamburger -->
+    <div
+      class="h-16 border-b border-gray-100 dark:border-slate-700 flex items-center flex-shrink-0 px-2"
+    >
+      <!-- Expanded -->
       <template v-if="isOpen">
-        <div class="flex-1 min-w-0 pl-1.5 overflow-hidden">
-          <p class="text-[11px] font-bold text-[#0A3D80] dark:text-blue-400 truncate leading-tight">
+        <!-- SC Logo -->
+        <div
+          class="w-7 h-7 rounded-md bg-[#004795] flex items-center justify-center flex-shrink-0"
+        >
+          <span class="text-[10px] font-bold text-white leading-none">SC</span>
+        </div>
+
+        <!-- Title -->
+        <div class="flex-1 min-w-0 pl-2 overflow-hidden">
+          <p
+            class="text-[11px] font-bold text-[#0A3D80] dark:text-blue-400 truncate leading-tight"
+          >
             {{ sidebarConfig.theme.title }}
           </p>
-          <p class="text-[9px] text-gray-400 dark:text-slate-500 truncate leading-tight">
+          <p
+            class="text-[9px] text-gray-400 dark:text-slate-500 truncate leading-tight"
+          >
             {{ sidebarConfig.theme.subtitle }}
           </p>
         </div>
+
+        <!-- Toggle -->
         <button
           @click="toggle"
-          class="w-6 h-6 flex items-center justify-center rounded text-gray-400 dark:text-slate-500
-                 hover:bg-gray-100 dark:hover:bg-slate-700 transition flex-shrink-0"
+          class="w-6 h-6 flex items-center justify-center rounded text-gray-400 dark:text-slate-500 hover:bg-gray-100 dark:hover:bg-slate-700 transition"
           aria-label="Collapse sidebar"
         >
-          <Menu class="w-3.5 h-3.5" />
+          <PanelLeft class="w-4 h-4" />
         </button>
       </template>
 
-      <!-- Collapsed (desktop): small hamburger next to SC -->
-      <button
-        v-else
-        @click="toggle"
-        class="hidden lg:flex w-6 h-6 items-center justify-center rounded text-gray-400
-               dark:text-slate-500 hover:bg-gray-100 dark:hover:bg-slate-700 transition flex-shrink-0"
-        aria-label="Expand sidebar"
-      >
-        <Menu class="w-3.5 h-3.5" />
-      </button>
+      <!-- Collapsed -->
+      <template v-else>
+        <button
+          @click="toggle"
+          class="mx-auto w-6 h-6 flex items-center justify-center rounded text-gray-400 dark:text-slate-500 hover:bg-gray-100 dark:hover:bg-slate-700 transition"
+          aria-label="Expand sidebar"
+        >
+          <PanelLeft class="w-4 h-4" />
+        </button>
+      </template>
     </div>
 
     <!-- Scrollable nav -->
@@ -133,13 +144,19 @@ function handleMenuClick(item) {
           route.path === item.route
             ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400'
             : 'hover:bg-gray-100 dark:hover:bg-slate-800 text-gray-500 dark:text-slate-400 hover:text-gray-800 dark:hover:text-slate-100',
-          isOpen ? 'gap-2.5 px-2.5 py-2' : 'lg:justify-center lg:px-0 lg:py-2 gap-2.5 px-2.5 py-2',
+          isOpen
+            ? 'gap-2.5 px-2.5 py-2'
+            : 'lg:justify-center lg:px-0 lg:py-2 gap-2.5 px-2.5 py-2',
         ]"
       >
         <component :is="item.icon" class="w-[18px] h-[18px] flex-shrink-0" />
         <span
           class="text-xs font-medium whitespace-nowrap transition-all duration-300 overflow-hidden"
-          :class="isOpen ? 'opacity-100 max-w-[120px]' : 'lg:opacity-0 lg:max-w-0 lg:pointer-events-none opacity-100 max-w-[120px]'"
+          :class="
+            isOpen
+              ? 'opacity-100 max-w-[120px]'
+              : 'lg:opacity-0 lg:max-w-0 lg:pointer-events-none opacity-100 max-w-[120px]'
+          "
         >
           {{ itemLabel(item) }}
         </span>
@@ -147,9 +164,7 @@ function handleMenuClick(item) {
         <!-- Tooltip when collapsed (desktop) -->
         <div
           v-if="!isOpen"
-          class="hidden lg:block absolute left-full ml-2 px-2 py-1 bg-gray-800 dark:bg-slate-700
-                 text-white text-xs rounded-md whitespace-nowrap
-                 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50"
+          class="hidden lg:block absolute left-full ml-2 px-2 py-1 bg-gray-800 dark:bg-slate-700 text-white text-xs rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50"
         >
           {{ itemLabel(item) }}
         </div>
@@ -159,9 +174,21 @@ function handleMenuClick(item) {
 </template>
 
 <style scoped>
-.fade-enter-active, .fade-leave-active { transition: opacity 0.2s; }
-.fade-enter-from, .fade-leave-to { opacity: 0; }
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
 
-.fade-text-enter-active, .fade-text-leave-active { transition: opacity 0.15s; }
-.fade-text-enter-from, .fade-text-leave-to { opacity: 0; }
+.fade-text-enter-active,
+.fade-text-leave-active {
+  transition: opacity 0.15s;
+}
+.fade-text-enter-from,
+.fade-text-leave-to {
+  opacity: 0;
+}
 </style>

@@ -38,10 +38,12 @@ class AppointmentToQueueService
                 ->orderBy('scheduled_time')
                 ->get();
 
-            // 3. Fetch existing walk-in entries (no appointment_id)
+            // 3. Fetch existing walk-in entries (no appointment_id) that are
+            //    still active — never re-queue completed or skipped walk-ins.
             $walkins = Queue::where('doctor_id', $doctorId)
                 ->whereRaw('queue_date = ?', [$dateStr])
                 ->whereNull('appointment_id')
+                ->whereIn('status', ['waiting', 'in_consultation'])
                 ->get();
 
             // 4. Build prioritised list
@@ -52,7 +54,10 @@ class AppointmentToQueueService
                 $scheduled = Carbon::parse($appointment->scheduled_time);
                 $diff      = $scheduled->diffInMinutes($now, false);
 
-                if ($diff < -5) {
+                // Urgent appointments always get the highest priority (100)
+                if ($appointment->visit_type === 'urgent') {
+                    $priority = 100;
+                } elseif ($diff < -5) {
                     $priority = 80; // on time or early
                 } elseif ($diff <= $this->graceMinutes) {
                     $priority = 60; // slightly late but within grace
@@ -109,6 +114,7 @@ class AppointmentToQueueService
                         'hospital_id'    => $appt->hospital_id,
                         'queue_date'     => $dateStr,
                         'queue_number'   => $queueNumber++,
+                        'priority'       => $item['priority'],
                         'status'         => 'waiting',
                     ]);
                 }

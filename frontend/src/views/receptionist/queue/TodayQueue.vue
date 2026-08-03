@@ -260,13 +260,14 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, onUnmounted } from "vue";
 import {
   Stethoscope, UserPlus, ListOrdered, X, AlertCircle,
   Loader2, Search, CheckCircle2,
 } from "lucide-vue-next";
 import { useReceptionistStore } from "../../../stores/receptionistStore";
 import queueApi from "../../../api/queueApi";
+import { echo } from "../../../plugins/echo";
 
 const store = useReceptionistStore();
 
@@ -419,6 +420,21 @@ function statusClass(status) {
 
 onMounted(async () => {
   await store.fetchDoctors();
+
+  // ── WebSocket: live queue updates for receptionist ─────────────────────
+  try {
+    echo.private("reception.queue")
+      .listen(".queue.updated", () => {
+        // Refresh the current doctor's queue when any queue entry changes
+        if (selectedDoctorId.value) loadQueue();
+      });
+  } catch {
+    /* WebSocket unavailable */
+  }
+});
+
+onUnmounted(() => {
+  try { echo.leave("reception.queue"); } catch { /* noop */ }
 });
 </script>
 

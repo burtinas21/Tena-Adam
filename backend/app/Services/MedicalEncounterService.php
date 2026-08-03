@@ -373,18 +373,32 @@ public function completeEncounter(string $encounterId): MedicalEncounter
             }
             $encounter->load('appointment.queue');
             $appointment = $encounter->appointment;
-            $queue = $appointment->queue;       
 
+            // Walk-in encounters have no appointment — complete queue via doctor_id + date
             if (!$appointment) {
+                $encounter->update(['status' => 'completed']);
 
-                throw ValidationException::withMessages([
-                    'appointment' => [
-                        'Appointment not found.'
-                    ]
-                ]);
+                // Find the in_consultation queue entry for this doctor today
+                $queue = Queue::where('doctor_id', $encounter->doctor_id)
+                    ->where('status', 'in_consultation')
+                    ->whereDate('started_at', now()->toDateString())
+                    ->where(function ($q) use ($encounter) {
+                        if ($encounter->walk_in_patient_name) {
+                            $q->where('walk_in_patient_name', $encounter->walk_in_patient_name);
+                        }
+                    })
+                    ->first();
 
+                if ($queue) {
+                    $queue->update(['status' => 'completed', 'ended_at' => now()]);
+                }
+
+                $encounter = $this->loadRelations($encounter->fresh());
+                $this->notificationService->sendMedicalEncounterNotification($encounter, 'completed');
+                return $encounter;
             }
-            // $queue = $appointment->queue;
+
+            $queue = $appointment->queue;
 
             if (!$queue) {
 

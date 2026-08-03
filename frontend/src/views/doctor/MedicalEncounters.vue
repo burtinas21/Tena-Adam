@@ -108,13 +108,13 @@
           <PatientHeaderCard
             v-if="selectedEncounter"
             :name="patientName(selectedEncounter)"
-            :patient-id="selectedEncounter.patient?.id?.slice(-8)?.toUpperCase() ?? ''"
+            :patient-id="selectedEncounter.patient?.id?.slice(-8)?.toUpperCase() ?? 'Walk-in'"
             :age="calcAge(selectedEncounter.patient?.date_of_birth)"
             :dob="formatDate(selectedEncounter.patient?.date_of_birth)"
             :gender="selectedEncounter.patient?.gender ?? ''"
             :blood-type="selectedEncounter.patient?.blood_type ?? ''"
             :allergies="selectedEncounter.patient?.allergies ?? ''"
-            :phone="selectedEncounter.patient?.phone ?? ''"
+            :phone="selectedEncounter.patient?.phone ?? selectedEncounter.walk_in_phone ?? ''"
             :contact-name="emergencyContact?.contact_name ?? ''"
             :contact-relation="emergencyContact?.relationship ?? ''"
             :contact-phone="emergencyContact?.phone ?? ''"
@@ -122,7 +122,7 @@
           />
 
           <!-- Patient Medical Profile Edit (doctor fills blood_type / allergies / medical_history) -->
-          <div v-if="selectedEncounter && selectedEncounter.status === 'in_progress'" class="bg-white border border-slate-200 rounded-xl shadow-sm">
+          <div v-if="selectedEncounter && selectedEncounter.status === 'in_progress' && selectedEncounter.patient?.id" class="bg-white border border-slate-200 rounded-xl shadow-sm">
             <button
               @click="showMedicalProfileForm = !showMedicalProfileForm"
               class="w-full flex items-center justify-between px-6 py-3.5 text-left hover:bg-slate-50/60 transition rounded-xl"
@@ -509,7 +509,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, onUnmounted } from "vue";
 import {
   AlertCircle, Search, ClipboardList, FileEdit,
   Pill, Plus, Save, FileArchive, Upload, Paperclip, FileText, UserCog,
@@ -523,10 +523,13 @@ import EncounterForm       from "../../components/emr/doctor/EncounterForm.vue";
 import { useMedicalEncounterStore }  from "../../stores/medicalEncounterStore";
 import { usePrescriptionStore }      from "../../stores/prescriptionStore";
 import { useMedicalDocumentStore }   from "../../stores/medicalDocumentStore";
+import { useAuthStore }              from "../../stores/authStore";
+import { echo }                      from "../../plugins/echo";
 
 const encounterStore    = useMedicalEncounterStore();
 const prescriptionStore = usePrescriptionStore();
 const documentStore     = useMedicalDocumentStore();
+const authStore         = useAuthStore();
 
 const search               = ref("");
 const selectedEncounter    = ref(null);
@@ -559,6 +562,36 @@ const docForm = ref({
 
 onMounted(async () => {
   await encounterStore.fetchAll();
+
+  // ── WebSocket: auto-refresh when doctor calls next patient ────────────
+  // When a queue entry moves to in_consultation, the backend fires
+  // QueueUpdated on queue.{doctor_id}. We listen here so the encounters
+  // list refreshes immediately without requiring a manual page reload.
+  const doctorId = authStore.user?.id
+    ?? authStore.user?.healthcare_provider?.id
+    ?? authStore.user?.healthcareProvider?.id;
+
+  if (doctorId) {
+    try {
+      echo.private(`queue.${doctorId}`)
+        .listen(".queue.updated", async (e) => {
+          if (e.queue?.status === "in_consultation" || e.queue?.status === "completed") {
+            await encounterStore.fetchAll();
+          }
+        });
+    } catch {
+      /* WebSocket unavailable — encounters refresh on navigation */
+    }
+  }
+});
+
+onUnmounted(() => {
+  const doctorId = authStore.user?.id
+    ?? authStore.user?.healthcare_provider?.id
+    ?? authStore.user?.healthcareProvider?.id;
+  if (doctorId) {
+    try { echo.leave(`queue.${doctorId}`); } catch { /* noop */ }
+  }
 });
 
 /* ── Computed ─────────────────────────────────────────────── */
@@ -719,9 +752,11 @@ function storageUrl(path) {
 }
 
 function patientName(enc) {
+  // Walk-in patient: no registered patient record
+  if (enc.walk_in_patient_name) return enc.walk_in_patient_name;
   const p = enc.patient;
-  if (!p) return "—";
-  return `${p.first_name ?? ""} ${p.last_name ?? ""}`.trim() || "—";
+  if (!p) return "Walk-in Patient";
+  return `${p.first_name ?? ""} ${p.last_name ?? ""}`.trim() || "Walk-in Patient";
 }
 function formatDate(dt) {
   if (!dt) return "—";

@@ -23,6 +23,7 @@ class Queue extends Model
         'hospital_id',
         'queue_date',
         'queue_number',
+        'priority',
         'status',
         'called_at',
         'started_at',

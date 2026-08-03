@@ -56,17 +56,20 @@ class QueueService
 
     /**
      * Returns all queue entries for a doctor on a given date,
-     * ordered by queue_number, with appointment → patient eager-loaded.
+     * ordered by priority DESC then queue_number ASC so urgent/walk-in
+     * patients always appear at the top of the list.
      */
     public function getDoctorQueue(string $doctorId, string $date): Collection
     {
         return Queue::where('doctor_id', $doctorId)
             ->whereRaw('queue_date = ?', [$this->dateString($date)])
+            ->orderByDesc('priority')
             ->orderBy('queue_number')
             ->with(['appointment.patient'])
             ->get([
                 'id',
                 'queue_number',
+                'priority',
                 'status',
                 'called_at',
                 'started_at',
@@ -96,6 +99,9 @@ class QueueService
                 'hospital_id'          => $data['hospital_id'],
                 'queue_date'           => $dateStr,
                 'queue_number'         => $this->nextQueueNumber($data['doctor_id'], $dateStr),
+                // Walk-ins added by the doctor get highest priority so they
+                // appear at the top of the queue (served before normal patients).
+                'priority'             => 100,
                 'status'               => 'waiting',
                 'walk_in_patient_name' => $data['walk_in_patient_name'] ?? null,
                 'walk_in_phone'        => $data['walk_in_phone'] ?? null,
@@ -143,6 +149,7 @@ if ($entry->appointment) {
             $found = Queue::where('doctor_id', $doctorId)
                 ->whereRaw('queue_date = ?', [$dateStr])
                 ->where('status', 'waiting')
+                ->orderByDesc('priority')
                 ->orderBy('queue_number', 'asc')
                 ->lockForUpdate()
                 ->first();
@@ -156,9 +163,11 @@ if ($entry->appointment) {
                 ]);
 
                 // ── Auto-create Medical Encounter ──────────────────────────
-                // If this queue entry is linked to an appointment, create the
-                // encounter immediately so the doctor sees the patient in EMR.
+                // Create an encounter as soon as a patient is called so the
+                // doctor immediately sees them in the Medical Encounters worklist.
+                // This works for both appointment-based and walk-in patients.
                 if ($found->appointment_id) {
+                    // Appointment-based patient: link to their registered record
                     $appt = \App\Models\Appointment::find($found->appointment_id);
 
                     if ($appt && !MedicalEncounter::where('appointment_id', $appt->id)->exists()) {
@@ -169,6 +178,26 @@ if ($entry->appointment) {
                             'appointment_id'=> $appt->id,
                             'encounter_date'=> now(),
                             'status'        => 'in_progress',
+                        ]);
+                    }
+                } else {
+                    // Walk-in patient: no registered patient record — store name/phone directly
+                    $existingWalkIn = MedicalEncounter::where('doctor_id', $found->doctor_id)
+                        ->where('walk_in_patient_name', $found->walk_in_patient_name)
+                        ->whereDate('encounter_date', now()->toDateString())
+                        ->where('status', 'in_progress')
+                        ->exists();
+
+                    if (!$existingWalkIn) {
+                        MedicalEncounter::create([
+                            'patient_id'           => null,
+                            'doctor_id'            => $found->doctor_id,
+                            'hospital_id'          => $found->hospital_id,
+                            'appointment_id'       => null,
+                            'walk_in_patient_name' => $found->walk_in_patient_name,
+                            'walk_in_phone'        => $found->walk_in_phone,
+                            'encounter_date'       => now(),
+                            'status'               => 'in_progress',
                         ]);
                     }
                 }
@@ -298,6 +327,9 @@ if ($entry->appointment) {
                 'hospital_id'          => $original->hospital_id,
                 'queue_date'           => $dateStr,
                 'queue_number'         => $this->nextQueueNumber($original->doctor_id, $dateStr),
+                // Skipped patients lose their priority boost — they go to
+                // the back of the normal queue (priority 0).
+                'priority'             => 0,
                 'status'               => 'waiting',
                 'walk_in_patient_name' => $original->walk_in_patient_name,
                 'walk_in_phone'        => $original->walk_in_phone,
