@@ -7,41 +7,35 @@ use App\Models\Queue;
 
 class QueuePolicy
 {
-        public function generateQueue(User $user): bool
+    public function generateQueue(User $user): bool
     {
-        return $user->hasAnyRole([
-            'hospital_admin',
-            'platform_admin',
-            'receptionist'
-        ]);
+        return $user->hasPermission('manage_queue');
     }
-        public function callNext(User $user, Queue $queue = null): bool
+
+    public function callNext(User $user, Queue $queue = null): bool
     {
-        return $user->hasRole('doctor')
-            || $user->hasAnyRole(['hospital_admin', 'platform_admin']);
+        return $user->hasPermission('call_next_patient')
+            || $user->hasPermission('manage_queue');
     }
-        public function complete(User $user, Queue $queue): bool
+
+    public function complete(User $user, Queue $queue): bool
     {
-        return $user->hasRole('doctor')
-            || $user->hasAnyRole(['hospital_admin', 'platform_admin']);
+        return $user->hasPermission('manage_queue');
     }
-        public function skip(User $user, Queue $queue): bool
+
+    public function skip(User $user, Queue $queue): bool
     {
-        return $user->hasRole('doctor')
-            || $user->hasAnyRole(['hospital_admin', 'platform_admin']);
+        return $user->hasPermission('manage_queue');
     }
-        public function recall(User $user, Queue $queue): bool
+
+    public function recall(User $user, Queue $queue): bool
     {
-        return $user->hasRole('doctor')
-            || $user->hasAnyRole(['hospital_admin', 'platform_admin']);
+        return $user->hasPermission('manage_queue');
     }
-        public function view(User $user, Queue $queue = null): bool
+
+    public function view(User $user, Queue $queue = null): bool
     {
-        return $user->hasAnyRole([
-            'doctor',
-            'hospital_admin',
-            'platform_admin',
-            'receptionist'
-        ]);
+        return $user->hasPermission('view_queue')
+            || $user->hasPermission('manage_queue');
     }
 }

@@ -1,16 +1,53 @@
-import { ref } from "vue";
+import { ref, computed } from "vue";
 
-// Shared singleton state so Sidebar and TopNavbar both see the same value
-const isOpen = ref(true);      // desktop: show full sidebar
-const isMobileOpen = ref(false); // mobile: overlay open
+// Desktop state
+const isOpen = ref(true);
+
+// Mobile state
+const isMobileOpen = ref(false);
+
+// Enable hover only after collapsing
+const hoverEnabled = ref(false);
+
+// Mouse is currently over the sidebar
+const isHovering = ref(false);
+
+// Sidebar should appear expanded if:
+// 1. User explicitly opened it
+// OR
+// 2. It is collapsed but currently hovered
+const expanded = computed(() => {
+  return isOpen.value || (hoverEnabled.value && isHovering.value);
+});
 
 export function useSidebar() {
   function toggle() {
-    // On mobile (< lg), toggle overlay; on desktop, collapse/expand
     if (window.innerWidth < 1024) {
       isMobileOpen.value = !isMobileOpen.value;
+      return;
+    }
+
+    if (isOpen.value) {
+      // Collapse
+      isOpen.value = false;
+      hoverEnabled.value = true;
     } else {
-      isOpen.value = !isOpen.value;
+      // Expand permanently
+      isOpen.value = true;
+      hoverEnabled.value = false;
+      isHovering.value = false;
+    }
+  }
+
+  function mouseEnter() {
+    if (hoverEnabled.value) {
+      isHovering.value = true;
+    }
+  }
+
+  function mouseLeave() {
+    if (hoverEnabled.value) {
+      isHovering.value = false;
     }
   }
 
@@ -18,5 +55,15 @@ export function useSidebar() {
     isMobileOpen.value = false;
   }
 
-  return { isOpen, isMobileOpen, toggle, closeMenu };
+  return {
+    isOpen,
+    expanded,
+    isMobileOpen,
+    hoverEnabled,
+    isHovering,
+    toggle,
+    mouseEnter,
+    mouseLeave,
+    closeMenu,
+  };
 }

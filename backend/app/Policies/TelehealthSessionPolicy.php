@@ -9,15 +9,13 @@ class TelehealthSessionPolicy
 {
     public function view(User $user, TelehealthSession $session): bool
     {
-        if ($user->hasAnyRole([
-            'platform_admin',
-            'hospital_admin',
-        ])) {
+        if ($user->hasAnyRole(['platform_admin', 'hospital_admin'])) {
             return true;
         }
 
         if (
             $user->hasRole('doctor') &&
+            $user->hasPermission('create_telehealth_session') &&
             $user->healthcareProvider &&
             $user->healthcareProvider->id === $session->appointment->doctor_id
         ) {
@@ -26,6 +24,7 @@ class TelehealthSessionPolicy
 
         if (
             $user->hasRole('patient') &&
+            $user->hasPermission('join_telehealth_session') &&
             $user->patient &&
             $user->patient->id === $session->appointment->patient_id
         ) {
@@ -34,30 +33,24 @@ class TelehealthSessionPolicy
 
         return false;
     }
+
     public function create(User $user): bool
     {
-        return $user->hasRole('doctor')
-            || $user->hasAnyRole([
-                'hospital_admin',
-                'platform_admin',
-            ]);
+        return $user->hasPermission('create_telehealth_session');
     }
 
-   
     public function update(User $user, TelehealthSession $session): bool
     {
         if (
             $user->hasRole('doctor') &&
+            $user->hasPermission('create_telehealth_session') &&
             $user->healthcareProvider &&
             $user->healthcareProvider->id === $session->appointment->doctor_id
         ) {
             return true;
         }
 
-        return $user->hasAnyRole([
-            'hospital_admin',
-            'platform_admin',
-        ]);
+        return $user->hasAnyRole(['hospital_admin', 'platform_admin']);
     }
 
     public function start(User $user, TelehealthSession $session): bool
@@ -70,7 +63,6 @@ class TelehealthSessionPolicy
         return $this->update($user, $session);
     }
 
-
     public function cancel(User $user, TelehealthSession $session): bool
     {
         return $this->update($user, $session);
@@ -78,9 +70,6 @@ class TelehealthSessionPolicy
 
     public function delete(User $user, TelehealthSession $session): bool
     {
-        return $user->hasAnyRole([
-            'hospital_admin',
-            'platform_admin',
-        ]);
+        return $user->hasAnyRole(['hospital_admin', 'platform_admin']);
     }
 }

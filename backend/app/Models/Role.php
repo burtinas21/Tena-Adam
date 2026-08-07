@@ -19,6 +19,7 @@ class Role extends Model
         'name',
         'description',
         'is_default',
+        'hospital_id',
 
     ];
 

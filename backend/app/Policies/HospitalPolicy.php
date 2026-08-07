@@ -7,91 +7,36 @@ use App\Models\User;
 
 class HospitalPolicy
 {
-
     public function viewAny(User $user): bool
     {
-
-        if ($user->hasRole('platform_admin')) {
-
-            return true;
-
-        }
-         if ($user->hasRole('patient')) {
-
-            return true;
-
-        }
-
-        return $user->hospitals()->exists();
-
+        return $user->hasPermission('view_hospitals');
     }
 
+    public function view(User $user, Hospital $hospital): bool
+    {
+        if (!$user->hasPermission('view_hospitals')) {
+            return false;
+        }
 
-
-    public function view(
-        User $user,
-        Hospital $hospital
-    ): bool {
-
-        // Platform admins and patients can view any hospital
-        if ($user->hasRole('platform_admin')) {
+        if ($user->hasRole('platform_admin') || $user->hasRole('patient')) {
             return true;
         }
 
-        if ($user->hasRole('patient')) {
-            return true;
-        }
-
-        // Hospital admins and doctors can only view their own hospital
-        return $user->hospitals()
-            ->where('hospital_id', $hospital->id)
-            ->exists();
-
+        return $user->hospitals()->where('hospital_id', $hospital->id)->exists();
     }
-
-
 
     public function create(User $user): bool
     {
-
-        return $user->hasRole(
-            'platform_admin'
-        );
-
+        return $user->hasPermission('create_hospitals');
     }
 
-
-
-    public function update(
-        User $user,
-        Hospital $hospital
-    ): bool
+    public function update(User $user, Hospital $hospital): bool
     {
-
-
-        if ($user->hasRole('platform_admin')) {
-
-            return true;
-
-        }
-
-
-        return false;
-
+        return $user->hasPermission('update_hospitals');
     }
 
-
-
-    public function delete(
-        User $user,
-        Hospital $hospital
-    ): bool
+    public function delete(User $user, Hospital $hospital): bool
     {
-
-        return $user->hasRole(
-            'platform_admin'
-        );
-
+        return $user->hasPermission('delete_hospitals');
     }
-
 }

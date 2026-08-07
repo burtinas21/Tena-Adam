@@ -12,6 +12,7 @@ import {
   Stethoscope,
   FileBarChart,
   CalendarX2,
+  ShieldCheck,
 } from "lucide-vue-next";
 
 export default {
@@ -111,6 +112,13 @@ export default {
       title: "Symptoms",
       route: "/hospital-admin/symptoms",
       icon: Stethoscope,
+      roles: ["hospital_admin"],
+    },
+    {
+      titleKey: "nav.roles_permissions",
+      title: "Roles & Permissions",
+      route: "/hospital-admin/role",
+      icon: ShieldCheck,
       roles: ["hospital_admin"],
     },
   ],

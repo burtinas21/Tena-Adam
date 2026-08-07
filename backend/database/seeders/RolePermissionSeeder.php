@@ -149,7 +149,15 @@ class RolePermissionSeeder extends Seeder
             'create_operating_hours',
             'update_operating_hours',
             'delete_operating_hours',
-            'view_hospitals'
+            'view_hospitals',
+
+            // Role & permission management (scoped — cannot touch platform_admin)
+            'view_roles',
+            'create_roles',
+            'update_roles',
+            'delete_roles',
+            'view_permissions',
+            'assign_permissions',
         ];
 
         foreach ($hospitalAdminPermissions as $permission) {

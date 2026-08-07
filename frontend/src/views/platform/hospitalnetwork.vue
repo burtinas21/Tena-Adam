@@ -7,6 +7,9 @@
           Manage and monitor all healthcare facilities across the platform.
         </p>
       </div>
+      <div>
+        <p></p>
+      </div>
       <button @click="openCreate"
         class="bg-[#004795] hover:bg-[#003670] text-white font-bold text-xs py-2.5 px-4 rounded-lg flex items-center gap-2 transition shadow-sm flex-shrink-0">
         <Plus class="w-3.5 h-3.5" /> Add Hospital
@@ -266,8 +269,6 @@ import { useHospitalStore } from "../../stores/hospitalStore";
 import HospitalForm from "../../components/hospital/HospitalForm.vue";
 
 const store = useHospitalStore();
-
-// ── Dropdown menu ─────────────────────────────────────────────────────────
 const openMenuId = ref(null);
 function toggleMenu(id) { openMenuId.value = openMenuId.value === id ? null : id; }
 function closeMenu() { openMenuId.value = null; }
@@ -277,8 +278,6 @@ onMounted(() => {
 });
 import { onUnmounted } from "vue";
 onUnmounted(() => document.removeEventListener("click", closeMenu));
-
-// ── Filters ──────────────────────────────────────────────────────────────
 const search       = ref("");
 const statusFilter = ref("");
 const regionFilter = ref("");

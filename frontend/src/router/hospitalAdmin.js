@@ -101,6 +101,13 @@ export default [
 
         component: () => import("../views/hospital-admin/Symptoms.vue"),
       },
+      {
+        path: "role",
+
+        name: "hospital-role",
+
+        component: () => import("../views/hospital-admin/RolesandPermission.vue"),
+      }
     ],
   },
 ];

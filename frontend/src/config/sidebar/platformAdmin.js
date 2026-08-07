@@ -70,6 +70,13 @@ export default {
       roles: ["platform_admin"],
     },
     {
+      titleKey: "nav.roles_permissions",
+      title: "Roles & Permissions",
+      route: "/platform/role",
+      icon: ShieldCheck,
+      roles: ["platform_admin"],
+    },
+    {
       titleKey: "nav.appointments",
       title: "Appointments",
       route: "/platform/appointments",

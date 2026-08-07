@@ -7,7 +7,8 @@
         <p class="text-xs text-gray-500 font-medium mt-0.5">
           Register and manage hospitals on the platform.
         </p>
-      </div>
+      </div> 
+      
       <button
         @click="openCreate"
         class="bg-[#004795] hover:bg-[#003670] text-white font-bold text-xs py-2.5 px-4 rounded-lg flex items-center gap-x-2 transition shadow-sm"

@@ -31,8 +31,8 @@ export const useAuthStore = defineStore("auth", {
         if (savedLang && savedLang !== langStore.currentLanguage) {
           await langStore.changeLanguage(savedLang);
         } else {
-          // Ensure current locale translations are loaded
-          await langStore.loadTranslations(langStore.currentLanguage);
+          // Force-fetch translations with the now-available auth token
+          await langStore.loadTranslations(langStore.currentLanguage, { force: true });
         }
 
         return response;

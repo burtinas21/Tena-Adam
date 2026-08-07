@@ -9,34 +9,27 @@ class DoctorSchedulePolicy
 {
     public function viewAny(User $user): bool
     {
-        return
-            $user->hasRole('platform_admin') ||
-            $user->hasRole('hospital_admin') ||
-            $user->hasRole('doctor')         ||
-            $user->hasRole('receptionist');
+        return $user->hasPermission('manage_schedule')
+            || $user->hasPermission('view_doctors');
     }
 
-    public function view(
-        User $user,
-        DoctorSchedule $schedule
-    ): bool {
+    public function view(User $user, DoctorSchedule $schedule): bool
+    {
+        if (!$user->hasPermission('manage_schedule') && !$user->hasPermission('view_doctors')) {
+            return false;
+        }
 
         if ($user->hasRole('platform_admin')) {
             return true;
         }
 
         if ($user->hasRole('hospital_admin')) {
-
             return $user->hospitalStaff()
-                ->where(
-                    'hospital_id',
-                    $schedule->doctor->hospital_id
-                )
+                ->where('hospital_id', $schedule->doctor->hospital_id)
                 ->exists();
         }
 
         if ($user->hasRole('doctor')) {
-
             return $schedule->doctor_id === $user->id;
         }
 
@@ -45,49 +38,45 @@ class DoctorSchedulePolicy
 
     public function create(User $user): bool
     {
-        return
-            $user->hasRole('hospital_admin') ||
-            $user->hasRole('doctor');
+        return $user->hasPermission('manage_schedule');
     }
 
     public function update(User $user, DoctorSchedule $schedule): bool
     {
+        if (!$user->hasPermission('manage_schedule')) {
+            return false;
+        }
+
         if ($user->hasRole('platform_admin')) {
             return true;
         }
 
-       if ($user->hasRole('hospital_admin')) {
+        if ($user->hasRole('hospital_admin')) {
+            return $user->hospitalStaff()
+                ->where('hospital_id', $schedule->doctor->hospital_id)
+                ->exists();
+        }
 
-    return $user->hospitalStaff()
-        ->where(
-            'hospital_id',
-            $schedule->doctor->hospital_id
-        )
-        ->exists();
-}
-
-        // doctor can update ONLY own schedule
-        return $user->hasRole('doctor')
-            && $schedule->doctor_id === $user->id;
+        // Doctor can update only their own schedule
+        return $user->hasRole('doctor') && $schedule->doctor_id === $user->id;
     }
 
     public function delete(User $user, DoctorSchedule $schedule): bool
-{
-    if ($user->hasRole('platform_admin')) {
-        return true;
+    {
+        if (!$user->hasPermission('manage_schedule')) {
+            return false;
+        }
+
+        if ($user->hasRole('platform_admin')) {
+            return true;
+        }
+
+        if ($user->hasRole('hospital_admin')) {
+            return $user->hospitalStaff()
+                ->where('hospital_id', $schedule->doctor->hospital_id)
+                ->exists();
+        }
+
+        return $user->hasRole('doctor') && $schedule->doctor_id === $user->id;
     }
-
-  if ($user->hasRole('hospital_admin')) {
-
-    return $user->hospitalStaff()
-        ->where(
-            'hospital_id',
-            $schedule->doctor->hospital_id
-        )
-        ->exists();
-}
-
-    return $user->hasRole('doctor')
-        && $schedule->doctor_id === $user->id;
-}
 }

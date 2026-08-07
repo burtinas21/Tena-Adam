@@ -7,86 +7,48 @@ use App\Models\User;
 
 class HospitalOperatingHourPolicy
 {
-
-public function viewAny(User $user): bool
-{
-    return $user->hasRole('platform_admin')
-        || $user->hasRole('hospital_admin');
-}
-   
-public function view(User $user, HospitalOperatingHour $hour  ): bool
+    public function viewAny(User $user): bool
     {
+        return $user->hasPermission('view_operating_hours');
+    }
 
-
-        if ($user->hasRole('platform_admin')) {
-
-            return true;
-
+    public function view(User $user, HospitalOperatingHour $hour): bool
+    {
+        if (!$user->hasPermission('view_operating_hours')) {
+            return false;
         }
 
-
-        return $user->hospitals()
-            ->where(
-                'hospital_id',
-                $hour->hospital_id
-            )
-            ->exists();
-
-    }
-
-
-
-
-
-public function create(User $user): bool
-{
-    return $user->hasRole('platform_admin')
-        || $user->hasRole('hospital_admin');
-}
-
-
-
-
-
-    public function update(
-        User $user,
-        HospitalOperatingHour $hour
-    ): bool
-    {
-
-
         if ($user->hasRole('platform_admin')) {
-
             return true;
-
         }
 
+        return $user->hospitals()
+            ->where('hospital_id', $hour->hospital_id)
+            ->exists();
+    }
+
+    public function create(User $user): bool
+    {
+        return $user->hasPermission('create_operating_hours');
+    }
+
+    public function update(User $user, HospitalOperatingHour $hour): bool
+    {
+        if (!$user->hasPermission('update_operating_hours')) {
+            return false;
+        }
+
+        if ($user->hasRole('platform_admin')) {
+            return true;
+        }
 
         return $user->hospitals()
-            ->where(
-                'hospital_id',
-                $hour->hospital_id
-            )
+            ->where('hospital_id', $hour->hospital_id)
             ->exists();
-
     }
 
-
-
-
-
-    public function delete(
-        User $user,
-        HospitalOperatingHour $hour
-    ): bool
+    public function delete(User $user, HospitalOperatingHour $hour): bool
     {
-
-
-        return $this->update(
-            $user,
-            $hour
-        );
-
+        return $this->update($user, $hour);
     }
-
 }

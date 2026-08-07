@@ -7,25 +7,17 @@ use App\Models\User;
 
 class PrescriptionPolicy
 {
-    /**
-     * View any prescriptions
-     */
     public function viewAny(User $user): bool
     {
-        return $user->hasAnyRole([
-            'platform_admin',
-            'hospital_admin',
-            'doctor',
-            'patient',
-            'receptionist'
-        ]);
+        return $user->hasPermission('view_prescription');
     }
 
-    /**
-     * View a specific prescription
-     */
     public function view(User $user, Prescription $prescription): bool
     {
+        if (!$user->hasPermission('view_prescription')) {
+            return false;
+        }
+
         if ($user->hasRole('platform_admin')) return true;
 
         if ($user->hasRole('hospital_admin') || $user->hasRole('receptionist')) {
@@ -46,10 +38,15 @@ class PrescriptionPolicy
 
     public function create(User $user): bool
     {
-        return $user->hasRole('doctor');
+        return $user->hasPermission('create_prescription');
     }
+
     public function update(User $user, Prescription $prescription): bool
     {
+        if (!$user->hasPermission('create_prescription')) {
+            return false;
+        }
+
         if ($user->hasRole('platform_admin')) return true;
 
         if ($user->hasRole('doctor')) {
@@ -59,8 +56,13 @@ class PrescriptionPolicy
 
         return false;
     }
+
     public function delete(User $user, Prescription $prescription): bool
     {
+        if (!$user->hasPermission('create_prescription')) {
+            return false;
+        }
+
         if ($user->hasRole('platform_admin')) return true;
 
         if ($user->hasRole('doctor')) {
@@ -71,11 +73,12 @@ class PrescriptionPolicy
         return false;
     }
 
-    /**
-     * Complete a prescription (mark as dispensed/finished).
-     */
     public function complete(User $user, Prescription $prescription): bool
     {
+        if (!$user->hasPermission('create_prescription')) {
+            return false;
+        }
+
         if ($user->hasRole('platform_admin')) return true;
 
         if ($user->hasRole('doctor')) {

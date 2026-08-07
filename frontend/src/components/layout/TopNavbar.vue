@@ -12,6 +12,7 @@ import {
   PanelLeft,
   CheckCheck,
 } from "lucide-vue-next";
+import { Maximize, Minimize } from "lucide-vue-next";
 import { useAuthStore } from "../../stores/authStore";
 import { useNotificationStore } from "../../stores/notificationStore";
 import { useSidebar } from "../../composables/useSidebar";
@@ -36,6 +37,23 @@ const fullName = computed(() => {
   if (!user.value) return "User";
   return `${user.value.first_name ?? ""} ${user.value.last_name ?? ""}`.trim();
 });
+const isFullscreen = ref(false);
+
+async function toggleFullscreen() {
+  try {
+    if (!document.fullscreenElement) {
+      await document.documentElement.requestFullscreen();
+    } else {
+      await document.exitFullscreen();
+    }
+  } catch (error) {
+    console.error("Fullscreen error:", error);
+  }
+}
+
+function updateFullscreenState() {
+  isFullscreen.value = !!document.fullscreenElement;
+}
 
 const initials = computed(() => {
   const f = user.value?.first_name?.[0] ?? "";
@@ -174,7 +192,10 @@ function goToAllNotifications() {
 
 onMounted(async () => {
   fetchDoctorPhoto();
+
   if (authStore.user) startPolling();
+
+  document.addEventListener("fullscreenchange", updateFullscreenState);
 });
 
 // Also start polling if user becomes available after mount (e.g. after login redirect)
@@ -189,6 +210,8 @@ watch(
 onUnmounted(() => {
   if (pollInterval) clearInterval(pollInterval);
   if (fullPollInterval) clearInterval(fullPollInterval);
+
+  document.removeEventListener("fullscreenchange", updateFullscreenState);
 });
 
 const searchPlaceholder = computed(() => {
@@ -263,12 +286,11 @@ function timeAgo(dateStr) {
   >
     <!-- Mobile-only hamburger (sidebar is hidden on mobile so we need this) -->
     <button
-  @click="toggle"
-  class="lg:hidden w-10 h-10 flex items-center justify-center rounded-lg
-         hover:bg-gray-100 dark:hover:bg-slate-700 transition"
->
-  <PanelLeft class="w-5 h-5 text-gray-600 dark:text-slate-300" />
-</button>
+      @click="toggle"
+      class="lg:hidden w-10 h-10 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 transition"
+    >
+      <PanelLeft class="w-5 h-5 text-gray-600 dark:text-slate-300" />
+    </button>
 
     <!-- Search bar -->
     <div class="flex-1 max-w-md relative">
@@ -290,7 +312,14 @@ function timeAgo(dateStr) {
       <!-- Theme toggle -->
       <ThemeToggle />
       <LanguageSwitcher />
-
+      <button
+        @click="toggleFullscreen"
+        class="hidden lg:flex p-2 rounded-lg items-center justify-center text-gray-500 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800 transition"
+        :aria-label="isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'"
+      >
+        <Minimize v-if="isFullscreen" class="w-5 h-5" />
+        <Maximize v-else class="w-4 h-4" />
+      </button>
       <!-- Notification bell -->
       <div class="relative">
         <button

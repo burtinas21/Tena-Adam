@@ -10,19 +10,44 @@ export const useLanguageStore = defineStore("language", () => {
 
   /**
    * Load translations for a locale from the backend and register with vue-i18n.
-   * Skips the fetch if that locale was already loaded.
+   * Always fetches from backend (skips only if already loaded AND messages are non-empty).
+   * Pass force=true to force a re-fetch even if already cached (used after login).
    */
-  async function loadTranslations(lang) {
+  async function loadTranslations(lang, { force = false } = {}) {
     const locale = lang ?? currentLanguage.value;
 
-    if (loaded.value.has(locale)) {
-      i18n.global.locale.value = locale;
-      return;
+    // Only skip the fetch if already loaded AND messages are actually present
+    if (!force && loaded.value.has(locale)) {
+      const existing = i18n.global.getLocaleMessage(locale);
+      if (existing && Object.keys(existing).length > 0) {
+        i18n.global.locale.value = locale;
+        currentLanguage.value = locale;
+        return;
+      }
     }
 
     const messages = await translationService.fetchTranslations(locale);
+
+    // If fetch returned empty (e.g. network error, 401), fall back to English
+    // but don't overwrite a previously loaded locale with empty messages
+    if (!messages || Object.keys(messages).length === 0) {
+      const existing = i18n.global.getLocaleMessage(locale);
+      const hasExisting = existing && Object.keys(existing).length > 0;
+      if (!hasExisting) {
+        // Nothing cached either — keep locale but don't wipe it
+        i18n.global.locale.value = locale;
+        currentLanguage.value = locale;
+        return;
+      }
+      // Keep the cached messages, just activate the locale
+      i18n.global.locale.value = locale;
+      currentLanguage.value = locale;
+      return;
+    }
+
     i18n.global.setLocaleMessage(locale, messages);
     i18n.global.locale.value = locale;
+    currentLanguage.value = locale;
     loaded.value.add(locale);
   }
 
@@ -33,7 +58,8 @@ export const useLanguageStore = defineStore("language", () => {
   async function changeLanguage(lang) {
     currentLanguage.value = lang;
     localStorage.setItem("language", lang);
-    await loadTranslations(lang);
+    // Force re-fetch to ensure fresh translations when user explicitly switches
+    await loadTranslations(lang, { force: true });
 
     // Persist to backend for authenticated users (fire-and-forget)
     try {

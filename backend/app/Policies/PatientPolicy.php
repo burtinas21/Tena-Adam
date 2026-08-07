@@ -9,28 +9,20 @@ class PatientEmergencyContactPolicy
 {
     public function viewAny(User $user): bool
     {
-        return
-            $user->hasRole('patient') ||
-            $user->hasRole('hospital_admin') ||
-            $user->hasRole('platform_admin');
+        return $user->hasPermission('view_patients');
     }
 
-    public function view(
-        User $user,
-        PatientEmergencyContact $contact
-    ): bool {
+    public function view(User $user, PatientEmergencyContact $contact): bool
+    {
+        if (!$user->hasPermission('view_patients')) {
+            return false;
+        }
 
-        if ($user->hasRole('platform_admin')) {
+        if ($user->hasRole('platform_admin') || $user->hasRole('hospital_admin')) {
             return true;
         }
 
-        if ($user->hasRole('hospital_admin')) {
-            return true;
-        }
-
-        return
-            $user->hasRole('patient')
-            && $contact->patient_id === $user->id;
+        return $user->hasRole('patient') && $contact->patient_id === $user->id;
     }
 
     public function create(User $user): bool
@@ -38,31 +30,21 @@ class PatientEmergencyContactPolicy
         return $user->hasRole('patient');
     }
 
-    public function update(
-        User $user,
-        PatientEmergencyContact $contact
-    ): bool {
-
-        if ($user->hasRole('platform_admin')) {
+    public function update(User $user, PatientEmergencyContact $contact): bool
+    {
+        if ($user->hasRole('platform_admin') && $user->hasPermission('update_patients')) {
             return true;
         }
 
-        return
-            $user->hasRole('patient')
-            && $contact->patient_id === $user->id;
+        return $user->hasRole('patient') && $contact->patient_id === $user->id;
     }
 
-    public function delete(
-        User $user,
-        PatientEmergencyContact $contact
-    ): bool {
-
-        if ($user->hasRole('platform_admin')) {
+    public function delete(User $user, PatientEmergencyContact $contact): bool
+    {
+        if ($user->hasRole('platform_admin') && $user->hasPermission('delete_patients')) {
             return true;
         }
 
-        return
-            $user->hasRole('patient')
-            && $contact->patient_id === $user->id;
+        return $user->hasRole('patient') && $contact->patient_id === $user->id;
     }
 }

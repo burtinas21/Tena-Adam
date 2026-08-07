@@ -16,6 +16,7 @@ use App\Models\Patient;
 use App\Models\Queue;
 use App\Models\Role;
 use App\Models\User;
+use App\Services\HospitalService;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
@@ -28,11 +29,13 @@ class EthiopiaHospitalSeeder extends Seeder
     {
         DB::transaction(function () {
 
+            $hospitalService = new HospitalService();
+
             // ================================================================
-            // 1. HOSPITALS
+            // 1. HOSPITALS  (use service so scoped roles are auto-created)
             // ================================================================
 
-            $hospitalA = Hospital::create([
+            $hospitalA = $hospitalService->create([
                 'name'                => 'Tikur Anbessa Specialized Hospital',
                 'code'                => 'TASH-001',
                 'address'             => 'Lideta Sub-city, Addis Ababa',
@@ -47,7 +50,7 @@ class EthiopiaHospitalSeeder extends Seeder
                 'longitude'           => 38.74875231172921,
             ]);
 
-            $hospitalB = Hospital::create([
+            $hospitalB = $hospitalService->create([
                 'name'                => 'St. Paul\'s Hospital Millennium Medical College',
                 'code'                => 'SPHMMC-002',
                 'address'             => 'Gulele Sub-city, Addis Ababa',
@@ -151,9 +154,10 @@ class EthiopiaHospitalSeeder extends Seeder
             // 5. HOSPITAL ADMIN USERS
             // ================================================================
 
-            $hospitalAdminRole = Role::where('name', 'hospital_admin')->first();
-            $doctorRole        = Role::where('name', 'doctor')->first();
-            $patientRole       = Role::where('name', 'patient')->first();
+            // Global role for attaching to the user (user_roles pivot uses global role id)
+            $hospitalAdminRole = Role::whereNull('hospital_id')->where('name', 'hospital_admin')->first();
+            $doctorRole        = Role::whereNull('hospital_id')->where('name', 'doctor')->first();
+            $patientRole       = Role::whereNull('hospital_id')->where('name', 'patient')->first();
 
             $adminA = User::create([
                 'first_name' => 'Belay',

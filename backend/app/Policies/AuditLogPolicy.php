@@ -9,11 +9,12 @@ class AuditLogPolicy
 {
     /**
      * View all audit logs.
+     * Checks the actual permission so that removing view_audit_logs
+     * from a role via the Roles & Permissions panel is honoured.
      */
     public function viewAny(User $user): bool
     {
-        return $user->hasRole('platform_admin')
-            || $user->hasRole('hospital_admin');
+        return $user->hasPermission('view_audit_logs');
     }
 
     /**
@@ -21,8 +22,7 @@ class AuditLogPolicy
      */
     public function view(User $user, AuditLog $auditLog): bool
     {
-        return $user->hasRole('platform_admin')
-            || $user->hasRole('hospital_admin');
+        return $user->hasPermission('view_audit_logs');
     }
 
     public function create(User $user): bool

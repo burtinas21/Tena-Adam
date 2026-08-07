@@ -15,7 +15,15 @@ const router = useRouter();
 const route = useRoute();
 const { t } = useI18n();
 const authStore = useAuthStore();
-const { isOpen, isMobileOpen, toggle, closeMenu } = useSidebar();
+const {
+  isOpen,
+  expanded,
+  isMobileOpen,
+  toggle,
+  mouseEnter,
+  mouseLeave,
+  closeMenu,
+} = useSidebar();
 
 const defaultSidebar = {
   theme: { title: "", subtitle: "", background: "bg-white" },
@@ -75,20 +83,22 @@ function handleMenuClick(item) {
   <!-- Sidebar panel -->
   <!-- expanded: w-48 (192px) | collapsed: w-[52px] -->
   <aside
+    @mouseenter="mouseEnter"
+    @mouseleave="mouseLeave"
     :class="[
       sidebarConfig.theme.background,
       'fixed lg:relative inset-y-0 left-0 z-40 lg:z-auto',
       'flex flex-col h-screen border-r border-gray-100 dark:border-slate-700',
       'transition-[width] duration-300 ease-in-out flex-shrink-0 dark:bg-slate-800',
       isMobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
-      isOpen ? 'w-48' : 'lg:w-[52px] w-48',
+      expanded ? 'lg:w-48 w-48' : 'lg:w-[52px] w-48',
     ]"
   >
     <div
       class="h-16 border-b border-gray-100 dark:border-slate-700 flex items-center flex-shrink-0 px-2"
     >
       <!-- Expanded -->
-      <template v-if="isOpen">
+      <template v-if="expanded">
         <!-- SC Logo -->
         <div
           class="w-7 h-7 rounded-md bg-[#004795] flex items-center justify-center flex-shrink-0"
@@ -138,13 +148,13 @@ function handleMenuClick(item) {
         v-for="item in menuItems"
         :key="item.titleKey || item.title"
         @click="handleMenuClick(item)"
-        :title="!isOpen ? itemLabel(item) : ''"
+        :title="!expanded ? itemLabel(item) : ''"
         class="flex items-center rounded-lg cursor-pointer transition-colors group relative"
         :class="[
           route.path === item.route
             ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400'
             : 'hover:bg-gray-100 dark:hover:bg-slate-800 text-gray-500 dark:text-slate-400 hover:text-gray-800 dark:hover:text-slate-100',
-          isOpen
+          expanded
             ? 'gap-2.5 px-2.5 py-2'
             : 'lg:justify-center lg:px-0 lg:py-2 gap-2.5 px-2.5 py-2',
         ]"
@@ -153,7 +163,7 @@ function handleMenuClick(item) {
         <span
           class="text-xs font-medium whitespace-nowrap transition-all duration-300 overflow-hidden"
           :class="
-            isOpen
+            expanded
               ? 'opacity-100 max-w-[120px]'
               : 'lg:opacity-0 lg:max-w-0 lg:pointer-events-none opacity-100 max-w-[120px]'
           "
@@ -163,7 +173,7 @@ function handleMenuClick(item) {
 
         <!-- Tooltip when collapsed (desktop) -->
         <div
-          v-if="!isOpen"
+          v-if="!expanded"
           class="hidden lg:block absolute left-full ml-2 px-2 py-1 bg-gray-800 dark:bg-slate-700 text-white text-xs rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50"
         >
           {{ itemLabel(item) }}

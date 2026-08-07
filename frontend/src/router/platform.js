@@ -39,6 +39,11 @@ export default [
         name: "platform-notifications",
         component: () => import("../views/platform/Notifications.vue"),
       },
+      {
+        path: "role",
+        name: "platform-role",
+        component: () => import("../views/platform/RolesandPermission.vue"),
+      },
        {
         path: "users",
         name: "platform-users",

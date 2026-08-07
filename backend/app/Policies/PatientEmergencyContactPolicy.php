@@ -9,13 +9,20 @@ class PatientEmergencyContactPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->hasRole('patient');
+        return $user->hasPermission('view_patients');
     }
 
     public function view(User $user, PatientEmergencyContact $contact): bool
     {
-        return $user->hasRole('patient')
-            && $user->patient?->id === $contact->patient_id;
+        if (!$user->hasPermission('view_patients')) {
+            return false;
+        }
+
+        if ($user->hasRole('platform_admin') || $user->hasRole('hospital_admin')) {
+            return true;
+        }
+
+        return $user->hasRole('patient') && $user->patient?->id === $contact->patient_id;
     }
 
     public function create(User $user): bool
@@ -25,13 +32,19 @@ class PatientEmergencyContactPolicy
 
     public function update(User $user, PatientEmergencyContact $contact): bool
     {
-        return $user->hasRole('patient')
-            && $user->patient?->id === $contact->patient_id;
+        if ($user->hasRole('platform_admin') && $user->hasPermission('update_patients')) {
+            return true;
+        }
+
+        return $user->hasRole('patient') && $user->patient?->id === $contact->patient_id;
     }
 
     public function delete(User $user, PatientEmergencyContact $contact): bool
     {
-        return $user->hasRole('patient')
-            && $user->patient?->id === $contact->patient_id;
+        if ($user->hasRole('platform_admin') && $user->hasPermission('delete_patients')) {
+            return true;
+        }
+
+        return $user->hasRole('patient') && $user->patient?->id === $contact->patient_id;
     }
 }

@@ -62,7 +62,9 @@ Route::get('/translations/all', [TranslationController::class, 'all']);
 Route::middleware(['auth:sanctum'])->group(function () {
     // Save authenticated user's language preference
     Route::put('/user/language', [TranslationController::class, 'saveUserLanguage']);
+});
 
+Route::middleware(['auth:sanctum', 'permission:view_audit_logs'])->group(function () {
     Route::get(
         '/audit-logs',
         [AuditLogController::class, 'index']
@@ -96,30 +98,52 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 });
 Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/medical-documents', [MedicalDocumentController::class, 'index']);
-    Route::post('/medical-documents', [MedicalDocumentController::class, 'store']);
-    Route::post('/medical-documents/{medicalDocument}', [MedicalDocumentController::class, 'update']);
-    Route::put('/medical-documents/{medicalDocument}', [MedicalDocumentController::class, 'update']);
-    Route::delete('/medical-documents/{medicalDocument}', [MedicalDocumentController::class, 'destroy']);
-    Route::get('/patients/{patientId}/medical-documents', [MedicalDocumentController::class, 'patientDocuments']);
-    Route::get('/encounters/{encounterId}/medical-documents', [MedicalDocumentController::class, 'encounterDocuments']);
-    Route::get('/medical-documents/{medicalDocument}/download', [MedicalDocumentController::class, 'download']);
+    Route::get('/medical-documents', [MedicalDocumentController::class, 'index'])
+        ->middleware('permission:view_emr');
+    Route::post('/medical-documents', [MedicalDocumentController::class, 'store'])
+        ->middleware('permission:create_emr');
+    Route::post('/medical-documents/{medicalDocument}', [MedicalDocumentController::class, 'update'])
+        ->middleware('permission:update_emr');
+    Route::put('/medical-documents/{medicalDocument}', [MedicalDocumentController::class, 'update'])
+        ->middleware('permission:update_emr');
+    Route::delete('/medical-documents/{medicalDocument}', [MedicalDocumentController::class, 'destroy'])
+        ->middleware('permission:update_emr');
+    Route::get('/patients/{patientId}/medical-documents', [MedicalDocumentController::class, 'patientDocuments'])
+        ->middleware('permission:view_emr');
+    Route::get('/encounters/{encounterId}/medical-documents', [MedicalDocumentController::class, 'encounterDocuments'])
+        ->middleware('permission:view_emr');
+    Route::get('/medical-documents/{medicalDocument}/download', [MedicalDocumentController::class, 'download'])
+        ->middleware('permission:view_emr');
 });
 Route::middleware('auth:sanctum')->prefix('reports')->group(function () {
-    Route::get('/patients', [ReportController::class, 'getPatientStatistics']);
-    Route::get('/appointments', [ReportController::class, 'getAppointmentReport']);
-    Route::get('/doctors/workload', [ReportController::class, 'getDoctorWorkload']);
-    Route::get('/departments/performance', [ReportController::class, 'getDepartmentPerformance']);
-    Route::get('/telehealth', [ReportController::class, 'getTelehealthStatistics']);
-    Route::get('/trends', [ReportController::class, 'getHealthcareTrends']);
-    Route::get('/hospitals/top', [ReportController::class, 'getTopHospitalsByVolume']);
-    Route::get('/doctors/activity-heatmap', [ReportController::class, 'getDoctorActivityHeatmap']);
-    Route::post('/custom/{reportId}', [ReportController::class, 'generateCustomReport']);
-    Route::post('/', [ReportController::class, 'store']);
-    Route::get('/doctor-ratings', [ReportController::class, 'getDoctorRatingStatistics']);
- Route::get('/export/excel/{type}', [ReportController::class, 'exportExcel']);
-    Route::get('/export/csv/{type}', [ReportController::class, 'exportCsv']);
-    Route::get('/export/pdf/{type}', [ReportController::class, 'exportPdf']);
+    Route::get('/patients', [ReportController::class, 'getPatientStatistics'])
+        ->middleware('permission:view_reports');
+    Route::get('/appointments', [ReportController::class, 'getAppointmentReport'])
+        ->middleware('permission:view_reports');
+    Route::get('/doctors/workload', [ReportController::class, 'getDoctorWorkload'])
+        ->middleware('permission:view_reports');
+    Route::get('/departments/performance', [ReportController::class, 'getDepartmentPerformance'])
+        ->middleware('permission:view_reports');
+    Route::get('/telehealth', [ReportController::class, 'getTelehealthStatistics'])
+        ->middleware('permission:view_reports');
+    Route::get('/trends', [ReportController::class, 'getHealthcareTrends'])
+        ->middleware('permission:view_reports');
+    Route::get('/hospitals/top', [ReportController::class, 'getTopHospitalsByVolume'])
+        ->middleware('permission:view_reports');
+    Route::get('/doctors/activity-heatmap', [ReportController::class, 'getDoctorActivityHeatmap'])
+        ->middleware('permission:view_reports');
+    Route::post('/custom/{reportId}', [ReportController::class, 'generateCustomReport'])
+        ->middleware('permission:view_reports');
+    Route::post('/', [ReportController::class, 'store'])
+        ->middleware('permission:view_reports');
+    Route::get('/doctor-ratings', [ReportController::class, 'getDoctorRatingStatistics'])
+        ->middleware('permission:view_reports');
+    Route::get('/export/excel/{type}', [ReportController::class, 'exportExcel'])
+        ->middleware('permission:export_reports');
+    Route::get('/export/csv/{type}', [ReportController::class, 'exportCsv'])
+        ->middleware('permission:export_reports');
+    Route::get('/export/pdf/{type}', [ReportController::class, 'exportPdf'])
+        ->middleware('permission:export_reports');
 });
 Route::middleware('auth:sanctum')->group(function () {
 
@@ -129,41 +153,64 @@ Route::middleware('auth:sanctum')->group(function () {
     |--------------------------------------------------------------------------
     */
 
-    Route::get('/notifications', [NotificationController::class, 'index']);
-    Route::post('/notifications', [NotificationController::class, 'store']);
-    Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);
-    Route::patch('/notifications/mark-all-read', [NotificationController::class, 'markAllRead']);
-    Route::get('/notifications/{notification}', [NotificationController::class, 'show']);
-    Route::patch('/notifications/{notification}', [NotificationController::class, 'update']);
-    Route::patch('/notifications/{notification}/retry', [NotificationController::class, 'retry']);
-    Route::delete('/notifications/{notification}', [NotificationController::class, 'destroy']);
+    Route::get('/notifications', [NotificationController::class, 'index'])
+        ->middleware('permission:view_notifications');
+    Route::post('/notifications', [NotificationController::class, 'store'])
+        ->middleware('permission:send_notifications');
+    Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount'])
+        ->middleware('permission:view_notifications');
+    Route::patch('/notifications/mark-all-read', [NotificationController::class, 'markAllRead'])
+        ->middleware('permission:view_notifications');
+    Route::get('/notifications/{notification}', [NotificationController::class, 'show'])
+        ->middleware('permission:view_notifications');
+    Route::patch('/notifications/{notification}', [NotificationController::class, 'update'])
+        ->middleware('permission:view_notifications');
+    Route::patch('/notifications/{notification}/retry', [NotificationController::class, 'retry'])
+        ->middleware('permission:send_notifications');
+    Route::delete('/notifications/{notification}', [NotificationController::class, 'destroy'])
+        ->middleware('permission:view_notifications');
 
     // User notification preferences
-    Route::get('/notification-preferences', [NotificationController::class, 'getPreferences']);
-    Route::put('/notification-preferences', [NotificationController::class, 'updatePreferences']);
+    Route::get('/notification-preferences', [NotificationController::class, 'getPreferences'])
+        ->middleware('permission:view_notifications');
+    Route::put('/notification-preferences', [NotificationController::class, 'updatePreferences'])
+        ->middleware('permission:view_notifications');
 
 });
 
 // Notification Templates (platform_admin only)
 Route::middleware('auth:sanctum')->prefix('notification-templates')->group(function () {
-    Route::get('/', [NotificationTemplateController::class, 'index']);
-    Route::post('/', [NotificationTemplateController::class, 'store']);
-    Route::get('/{notificationTemplate}', [NotificationTemplateController::class, 'show']);
-    Route::put('/{notificationTemplate}', [NotificationTemplateController::class, 'update']);
-    Route::delete('/{notificationTemplate}', [NotificationTemplateController::class, 'destroy']);
+    Route::get('/', [NotificationTemplateController::class, 'index'])
+        ->middleware('permission:view_notifications');
+    Route::post('/', [NotificationTemplateController::class, 'store'])
+        ->middleware('permission:send_notifications');
+    Route::get('/{notificationTemplate}', [NotificationTemplateController::class, 'show'])
+        ->middleware('permission:view_notifications');
+    Route::put('/{notificationTemplate}', [NotificationTemplateController::class, 'update'])
+        ->middleware('permission:send_notifications');
+    Route::delete('/{notificationTemplate}', [NotificationTemplateController::class, 'destroy'])
+        ->middleware('permission:send_notifications');
 });
 
 Route::middleware('auth:sanctum')->prefix('symptoms')->group(function () {
-    Route::get('/', [SymptomController::class, 'index']);           // everyone
-    Route::get('/{id}', [SymptomController::class, 'show']);        // everyone
-    Route::post('/', [SymptomController::class, 'store']);          // admin only
-    Route::put('/{id}', [SymptomController::class, 'update']);      // admin only
-    Route::delete('/{id}', [SymptomController::class, 'destroy']);  // admin only
+    Route::get('/', [SymptomController::class, 'index'])
+        ->middleware('permission:use_symptom_checker');
+    Route::get('/{id}', [SymptomController::class, 'show'])
+        ->middleware('permission:use_symptom_checker');
+    Route::post('/', [SymptomController::class, 'store'])
+        ->middleware('permission:manage_symptoms');
+    Route::put('/{id}', [SymptomController::class, 'update'])
+        ->middleware('permission:manage_symptoms');
+    Route::delete('/{id}', [SymptomController::class, 'destroy'])
+        ->middleware('permission:manage_symptoms');
 });
 Route::middleware('auth:sanctum')->prefix('symptom-analytics')->group(function () {
-    Route::post('/', [SymptomAnalyticsController::class, 'store']); // Patients log analytics
-    Route::get('/', [SymptomAnalyticsController::class, 'index']); // Admins/Doctors view all
-    Route::get('/top-symptoms', [SymptomAnalyticsController::class, 'topSymptoms']); // Admins/Doctors view top 10
+    Route::post('/', [SymptomAnalyticsController::class, 'store'])
+        ->middleware('permission:use_symptom_checker');
+    Route::get('/', [SymptomAnalyticsController::class, 'index'])
+        ->middleware('permission:use_symptom_checker');
+    Route::get('/top-symptoms', [SymptomAnalyticsController::class, 'topSymptoms'])
+        ->middleware('permission:use_symptom_checker');
 });
 Route::middleware('auth:sanctum')->prefix('symptom-mappings')->group(function () {
     Route::get('/recommendations-with-appointment/{symptomId}', [SymptomDepartmentMappingController::class, 'recommendationsWithAppointment']);
@@ -186,21 +233,34 @@ Route::get(
 );
 
 Route::middleware('auth:sanctum')->prefix('telehealth-sessions/{sessionId}/attendance')->group(function () {
-    Route::get('/', [TelehealthAttendanceController::class, 'index']); // list attendance
-    Route::post('/', [TelehealthAttendanceController::class, 'store']); // join session
-    Route::put('/{userId}', [TelehealthAttendanceController::class, 'update']); // leave session
+    Route::get('/', [TelehealthAttendanceController::class, 'index'])
+        ->middleware('permission:join_telehealth_session');
+    Route::post('/', [TelehealthAttendanceController::class, 'store'])
+        ->middleware('permission:join_telehealth_session');
+    Route::put('/{userId}', [TelehealthAttendanceController::class, 'update'])
+        ->middleware('permission:join_telehealth_session');
 });
 Route::middleware('auth:sanctum')->prefix('telehealth-sessions')->group(function () {
-    Route::post('/', [TelehealthSessionController::class, 'store']);
-    Route::get('/my-sessions', [TelehealthSessionController::class, 'mySessions']);
-    Route::get('/appointment/{appointmentId}', [TelehealthSessionController::class, 'byAppointment']);
-    Route::get('/{id}', [TelehealthSessionController::class, 'show']);
-    Route::put('/{id}', [TelehealthSessionController::class, 'update']);
-    Route::post('/{id}/start', [TelehealthSessionController::class, 'start']);
-    Route::post('/{id}/complete', [TelehealthSessionController::class, 'complete']);
-    Route::post('/{id}/cancel', [TelehealthSessionController::class, 'cancel']);
-    Route::post('/{id}/reschedule', [TelehealthSessionController::class, 'reschedule']);
-    Route::post('/google-meet', [TelehealthSessionController::class, 'storeGoogleMeet']);
+    Route::post('/', [TelehealthSessionController::class, 'store'])
+        ->middleware('permission:create_telehealth_session');
+    Route::get('/my-sessions', [TelehealthSessionController::class, 'mySessions'])
+        ->middleware('permission:join_telehealth_session');
+    Route::get('/appointment/{appointmentId}', [TelehealthSessionController::class, 'byAppointment'])
+        ->middleware('permission:join_telehealth_session');
+    Route::get('/{id}', [TelehealthSessionController::class, 'show'])
+        ->middleware('permission:join_telehealth_session');
+    Route::put('/{id}', [TelehealthSessionController::class, 'update'])
+        ->middleware('permission:create_telehealth_session');
+    Route::post('/{id}/start', [TelehealthSessionController::class, 'start'])
+        ->middleware('permission:create_telehealth_session');
+    Route::post('/{id}/complete', [TelehealthSessionController::class, 'complete'])
+        ->middleware('permission:create_telehealth_session');
+    Route::post('/{id}/cancel', [TelehealthSessionController::class, 'cancel'])
+        ->middleware('permission:create_telehealth_session');
+    Route::post('/{id}/reschedule', [TelehealthSessionController::class, 'reschedule'])
+        ->middleware('permission:create_telehealth_session');
+    Route::post('/google-meet', [TelehealthSessionController::class, 'storeGoogleMeet'])
+        ->middleware('permission:create_telehealth_session');
 });
 Route::middleware('auth:sanctum')
     ->prefix('vitals')
@@ -209,22 +269,22 @@ Route::middleware('auth:sanctum')
         Route::post(
             '/',
             [VitalController::class, 'store']
-        );
+        )->middleware('permission:create_emr');
 
         Route::get(
             '/{vital}',
             [VitalController::class, 'show']
-        );
+        )->middleware('permission:view_emr');
 
         Route::put(
             '/{vital}',
             [VitalController::class, 'update']
-        );
+        )->middleware('permission:update_emr');
 
         Route::delete(
             '/{vital}',
             [VitalController::class, 'destroy']
-        );
+        )->middleware('permission:update_emr');
 
     });
 Route::middleware('auth:sanctum')
@@ -234,32 +294,32 @@ Route::middleware('auth:sanctum')
         Route::get(
             '/',
             [PrescriptionController::class, 'index']
-        );
+        )->middleware('permission:view_prescription');
 
         Route::post(
             '/',
             [PrescriptionController::class, 'store']
-        );
+        )->middleware('permission:create_prescription');
 
         Route::get(
             '/{prescription}',
             [PrescriptionController::class, 'show']
-        );
+        )->middleware('permission:view_prescription');
 
         Route::put(
             '/{prescription}',
             [PrescriptionController::class, 'update']
-        );
+        )->middleware('permission:create_prescription');
 
         Route::patch(
             '/{prescription}/complete',
             [PrescriptionController::class, 'complete']
-        );
+        )->middleware('permission:create_prescription');
 
         Route::patch(
             '/{prescription}/cancel',
             [PrescriptionController::class, 'cancel']
-        );
+        )->middleware('permission:create_prescription');
 
     });
 Route::middleware('auth:sanctum')->group(function () {
@@ -274,18 +334,21 @@ Route::middleware('auth:sanctum')->group(function () {
     ]);
 
     // List encounters for the authenticated doctor or patient
-    Route::get('/medical-encounters', [MedicalEncounterController::class, 'index']);
+    Route::get('/medical-encounters', [MedicalEncounterController::class, 'index'])
+        ->middleware('permission:view_emr');
 
     Route::patch(
         '/medical-encounters/{medicalEncounter}/complete',
         [MedicalEncounterController::class, 'complete']
-    );
+    )->middleware('permission:update_emr');
 
     // Doctor: get full encounter history for a specific patient
-    Route::get('/medical-encounters/patient/{patientId}', [MedicalEncounterController::class, 'patientHistory']);
+    Route::get('/medical-encounters/patient/{patientId}', [MedicalEncounterController::class, 'patientHistory'])
+        ->middleware('permission:view_emr');
 
     // Doctor: update patient persistent medical profile (blood_type, allergies, medical_history)
-    Route::patch('/medical-encounters/{encounterId}/patient-medical', [MedicalEncounterController::class, 'updatePatientMedical']);
+    Route::patch('/medical-encounters/{encounterId}/patient-medical', [MedicalEncounterController::class, 'updatePatientMedical'])
+        ->middleware('permission:update_emr');
 
 });
 Route::middleware('auth:sanctum')->group(function () {
@@ -365,31 +428,30 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get(
         '/doctor-schedules',
         [DoctorScheduleController::class, 'index']
-    );
+    )->middleware('permission:manage_schedule');
 
     Route::post(
         '/doctor-schedules',
         [DoctorScheduleController::class, 'store']
-    );
+    )->middleware('permission:manage_schedule');
 
     Route::put(
         '/doctor-schedules/{doctorSchedule}',
         [DoctorScheduleController::class, 'update']
-    );
+    )->middleware('permission:manage_schedule');
 
     Route::delete(
         '/doctor-schedules/{doctorSchedule}',
         [DoctorScheduleController::class, 'destroy']
-    );
+    )->middleware('permission:manage_schedule');
 
    Route::get(
     '/doctor-schedules/{doctorSchedule}',
     [DoctorScheduleController::class, 'show']
-);
+)->middleware('permission:manage_schedule');
 });
 Route::middleware('auth:sanctum')
 ->group(function(){
-
 
 Route::get(
 '/healthcare-providers',
@@ -397,9 +459,7 @@ Route::get(
 HealthcareProviderController::class,
 'index'
 ]
-);
-
-
+)->middleware('permission:view_doctors');
 
 Route::post(
 '/healthcare-providers',
@@ -407,9 +467,7 @@ Route::post(
 HealthcareProviderController::class,
 'store'
 ]
-);
-
-
+)->middleware('permission:create_doctors');
 
 Route::put(
 '/healthcare-providers/{provider}',
@@ -417,18 +475,51 @@ Route::put(
 HealthcareProviderController::class,
 'update'
 ]
-);
-Route::get('/healthcare-providers/{provider}',[HealthcareProviderController::class,'show']);
+)->middleware('permission:update_doctors');
+
+Route::get('/healthcare-providers/{provider}',[HealthcareProviderController::class,'show'])
+    ->middleware('permission:view_doctors');
+
 Route::delete(
 '/healthcare-providers/{provider}',
 [
 HealthcareProviderController::class,
 'destroy'
 ]
-);
+)->middleware('permission:delete_doctors');
 
+});
 
+// ── Roles & Permissions ───────────────────────────────────────────────────────
+Route::middleware(['auth:sanctum'])->group(function () {
 
+    // Permissions — read only (both platform_admin and hospital_admin)
+    Route::get('/permissions', [\App\Http\Controllers\Api\PermissionController::class, 'index'])
+        ->middleware('permission:view_permissions');
+
+    // Roles CRUD
+    Route::get('/roles', [\App\Http\Controllers\Api\RoleController::class, 'index'])
+        ->middleware('permission:view_roles');
+
+    Route::post('/roles', [\App\Http\Controllers\Api\RoleController::class, 'store'])
+        ->middleware('permission:create_roles');
+
+    Route::get('/roles/{role}', [\App\Http\Controllers\Api\RoleController::class, 'show'])
+        ->middleware('permission:view_roles');
+
+    Route::put('/roles/{role}', [\App\Http\Controllers\Api\RoleController::class, 'update'])
+        ->middleware('permission:update_roles');
+
+    Route::delete('/roles/{role}', [\App\Http\Controllers\Api\RoleController::class, 'destroy'])
+        ->middleware('permission:delete_roles');
+
+    // Assign / sync permissions on a role
+    Route::put('/roles/{role}/permissions', [\App\Http\Controllers\Api\RoleController::class, 'syncPermissions'])
+        ->middleware('permission:assign_permissions');
+
+    // List users attached to a role
+    Route::get('/roles/{role}/users', [\App\Http\Controllers\Api\RoleController::class, 'users'])
+        ->middleware('permission:view_roles');
 });
 
 Route::post('/register', [AuthController::class, 'register']);
@@ -612,88 +703,107 @@ Route::middleware('auth:sanctum')->group(function () {
 
 Route::middleware('auth:sanctum')->group(function () {
 
-    Route::get('/appointments', [AppointmentController::class, 'index']);
+    Route::get('/appointments', [AppointmentController::class, 'index'])
+        ->middleware('permission:view_appointments');
 
-    Route::post('/appointments', [AppointmentController::class, 'store']);
+    Route::post('/appointments', [AppointmentController::class, 'store'])
+        ->middleware('permission:book_appointment');
 
     // Hospital-admin: list available doctors+slots for a given hospital/department/date
     // IMPORTANT: must be defined before {appointment} wildcard routes
     Route::get(
         '/appointments/available-doctor-slots',
         [AppointmentController::class, 'availableDoctorSlots']
-    );
+    )->middleware('permission:view_appointments');
 
-    Route::get('/appointments/{appointment}', [AppointmentController::class, 'show']);
+    Route::get('/appointments/{appointment}', [AppointmentController::class, 'show'])
+        ->middleware('permission:view_appointments');
 
-    Route::put('/appointments/{appointment}', [AppointmentController::class, 'update']);
+    Route::put('/appointments/{appointment}', [AppointmentController::class, 'update'])
+        ->middleware('permission:reschedule_appointment');
 
-    Route::delete('/appointments/{appointment}', [AppointmentController::class, 'destroy']);
-    Route::patch('/appointments/{appointment}/hide', [AppointmentController::class, 'hideFromPatient']);
+    Route::delete('/appointments/{appointment}', [AppointmentController::class, 'destroy'])
+        ->middleware('permission:cancel_appointment');
+
+    Route::patch('/appointments/{appointment}/hide', [AppointmentController::class, 'hideFromPatient'])
+        ->middleware('permission:view_appointments');
+
     Route::put(
-    '/appointments/{appointment}/reschedule',
-    [AppointmentController::class, 'reschedule']
-);
+        '/appointments/{appointment}/reschedule',
+        [AppointmentController::class, 'reschedule']
+    )->middleware('permission:reschedule_appointment');
 
     // Hospital-admin: reassign a leave-affected appointment to a different doctor
     Route::put(
         '/appointments/{appointment}/admin-reschedule',
         [AppointmentController::class, 'adminReschedule']
-    );
+    )->middleware('permission:reschedule_appointment');
 
     // ── Appointment referrals ─────────────────────────────────────────────
     Route::post('/appointments/{appointment}/refer',
-        [\App\Http\Controllers\Api\AppointmentReferralController::class, 'refer']);
+        [\App\Http\Controllers\Api\AppointmentReferralController::class, 'refer'])
+        ->middleware('permission:view_appointments');
 
     Route::get('/appointments/{appointment}/referrals',
-        [\App\Http\Controllers\Api\AppointmentReferralController::class, 'forAppointment']);
+        [\App\Http\Controllers\Api\AppointmentReferralController::class, 'forAppointment'])
+        ->middleware('permission:view_appointments');
 
     Route::get('/appointment-referrals/incoming',
-        [\App\Http\Controllers\Api\AppointmentReferralController::class, 'incoming']);
+        [\App\Http\Controllers\Api\AppointmentReferralController::class, 'incoming'])
+        ->middleware('permission:view_appointments');
 
     Route::patch('/appointment-referrals/{referral}/respond',
-        [\App\Http\Controllers\Api\AppointmentReferralController::class, 'respond']);
+        [\App\Http\Controllers\Api\AppointmentReferralController::class, 'respond'])
+        ->middleware('permission:view_appointments');
 
 });
 Route::middleware('auth:sanctum')->group(function () {
 Route::get(
     '/doctor-leaves',
     [DoctorLeaveController::class, 'index']
-);
+)->middleware('permission:manage_leave');
 
 Route::get(
     '/doctor-leaves/{doctorLeave}',
     [DoctorLeaveController::class, 'show']
-);
+)->middleware('permission:manage_leave');
 
 Route::post(
     '/doctor-leaves',
     [DoctorLeaveController::class, 'store']
-);
+)->middleware('permission:manage_leave');
 
 Route::put(
     '/doctor-leaves/{doctorLeave}',
     [DoctorLeaveController::class, 'update']
-);
+)->middleware('permission:manage_leave');
 
 Route::delete(
     '/doctor-leaves/{doctorLeave}',
     [DoctorLeaveController::class, 'destroy']
-);
+)->middleware('permission:manage_leave');
 
 Route::patch(
     '/doctor-leaves/{doctorLeave}/approve',
     [DoctorLeaveController::class, 'approve']
-);
+)->middleware('permission:manage_leave');
 });
 Route::middleware('auth:sanctum')->prefix('queue')->group(function () {
 
-    Route::post('/generate', [QueueController::class, 'generate']);
-    Route::post('/init', [QueueController::class, 'init']);
-    Route::post('/call-next', [QueueController::class, 'callNext']);
-    Route::post('/skip', [QueueController::class, 'skip']);
-    Route::post('/complete', [QueueController::class, 'complete']);
-    Route::post('/recall', [QueueController::class, 'recall']);
-    Route::get('/doctor/{doctorId}', [QueueController::class, 'doctorQueue']);
+    Route::post('/generate', [QueueController::class, 'generate'])
+        ->middleware('permission:manage_queue');
+    Route::post('/init', [QueueController::class, 'init'])
+        ->middleware('permission:manage_queue');
+    Route::post('/call-next', [QueueController::class, 'callNext'])
+        ->middleware('permission:call_next_patient');
+    Route::post('/skip', [QueueController::class, 'skip'])
+        ->middleware('permission:manage_queue');
+    Route::post('/complete', [QueueController::class, 'complete'])
+        ->middleware('permission:manage_queue');
+    Route::post('/recall', [QueueController::class, 'recall'])
+        ->middleware('permission:manage_queue');
+    Route::get('/doctor/{doctorId}', [QueueController::class, 'doctorQueue'])
+        ->middleware('permission:view_queue');
 });
 Route::middleware('auth:sanctum')->group(function () {
     Route::post(

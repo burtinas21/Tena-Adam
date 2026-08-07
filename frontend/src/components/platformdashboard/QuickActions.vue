@@ -11,7 +11,7 @@
       </RouterLink>
 
       <RouterLink
-        to="/platform/users"
+        to="/platform/hospital-admins"
         class="bg-[#E6F9F2] hover:bg-[#D5F5E9] transition-colors p-4 rounded-xl flex flex-col items-center justify-center gap-y-2 text-center group"
       >
         <UserPlus2 class="w-6 h-6 text-[#00A36C] group-hover:scale-105 transition-transform" />
