@@ -57,9 +57,13 @@ export const useDoctorStore = defineStore("doctor", {
       try {
         this.loading = true;
         this.error = null;
+        this.warning = null;
         const res = await doctorApi.create(data);
         const created = res.data?.data ?? res.data;
         this.doctors.push(created);
+        if (res.data?.warning) {
+          this.warning = res.data.warning;
+        }
         return created;
       } catch (err) {
         this.error = err.response?.data?.message || "Failed to create doctor";

@@ -110,7 +110,7 @@
                     v-if="openMenuId === s.id"
                     :class="[
                       'absolute right-0 w-36 bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-1',
-                      index < 3 ? 'top-full mt-1' : 'bottom-full mb-1',
+                      index < 1 ? 'top-full mt-1' : 'bottom-full mb-1',
                     ]"
                   >
                     <button

@@ -19,10 +19,27 @@ class AuditLogPolicy
 
     /**
      * View a single audit log.
+     *
+     * Platform admins can view any log.
+     * Hospital admins can only view logs that belong to their own hospital.
      */
     public function view(User $user, AuditLog $auditLog): bool
     {
-        return $user->hasPermission('view_audit_logs');
+        if (! $user->hasPermission('view_audit_logs')) {
+            return false;
+        }
+
+        // Platform admins see everything
+        if ($user->hasRole('platform_admin')) {
+            return true;
+        }
+
+        // Hospital admins: the log must belong to their active hospital
+        $hospitalId = $user->hospitalStaff()
+            ->where('is_active', true)
+            ->value('hospital_id');
+
+        return $hospitalId !== null && $auditLog->hospital_id === $hospitalId;
     }
 
     public function create(User $user): bool

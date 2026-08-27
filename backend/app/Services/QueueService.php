@@ -65,7 +65,7 @@ class QueueService
             ->whereRaw('queue_date = ?', [$this->dateString($date)])
             ->orderByDesc('priority')
             ->orderBy('queue_number')
-            ->with(['appointment.patient'])
+            ->with(['appointment.patient.user'])
             ->get([
                 'id',
                 'queue_number',

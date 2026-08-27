@@ -11,9 +11,41 @@ use App\Services\NotificationService;
 class DoctorScheduleService
 {
     public function __construct(
-    private NotificationService $notificationService
-) {
-}
+        private NotificationService $notificationService
+    ) {}
+
+    /**
+     * Normalize a time value to H:i (24-hour) format.
+     * Handles "08:30", "08:30:00", "08:30 AM", "4:30 PM", etc.
+     */
+    private function normalizeTime(?string $time): ?string
+    {
+        if (!$time) return null;
+
+        $time = trim($time);
+
+        // Already HH:MM or HH:MM:SS
+        if (preg_match('/^(\d{1,2}):(\d{2})(?::\d{2})?$/', $time, $m)) {
+            return str_pad($m[1], 2, '0', STR_PAD_LEFT) . ':' . $m[2];
+        }
+
+        // 12-hour with AM/PM: "8:30 AM", "04:30 PM"
+        if (preg_match('/^(\d{1,2}):(\d{2})(?::\d{2})?\s*(AM|PM)$/i', $time, $m)) {
+            $hour   = (int) $m[1];
+            $minute = $m[2];
+            $period = strtoupper($m[3]);
+
+            if ($period === 'AM') {
+                $hour = ($hour === 12) ? 0 : $hour;
+            } else {
+                $hour = ($hour !== 12) ? $hour + 12 : 12;
+            }
+
+            return str_pad($hour, 2, '0', STR_PAD_LEFT) . ':' . $minute;
+        }
+
+        return substr($time, 0, 5);
+    }
     public function create(array $data)
 {
     return DB::transaction(function () use ($data) {
@@ -75,11 +107,11 @@ class DoctorScheduleService
        $schedule = DoctorSchedule::create([
     'doctor_id'         => $doctorId,
     'day_of_week'       => $data['day_of_week'],
-    'start_time'        => $data['start_time'],
-    'end_time'          => $data['end_time'],
+    'start_time'        => $this->normalizeTime($data['start_time']),
+    'end_time'          => $this->normalizeTime($data['end_time']),
     'slot_duration_min' => $data['slot_duration_min'] ?? 30,
-    'lunch_start'       => $data['lunch_start'] ?? null,
-    'lunch_end'         => $data['lunch_end'] ?? null,
+    'lunch_start'       => $this->normalizeTime($data['lunch_start'] ?? null),
+    'lunch_end'         => $this->normalizeTime($data['lunch_end'] ?? null),
     'is_available'      => $data['is_available'] ?? true,
 ]);
 
@@ -126,7 +158,12 @@ return $schedule;
         $allowed = [];
         foreach (['start_time', 'end_time', 'slot_duration_min', 'lunch_start', 'lunch_end', 'is_available'] as $field) {
             if (array_key_exists($field, $data)) {
-                $allowed[$field] = $data[$field];
+                $value = $data[$field];
+                // Normalize time fields to H:i (24-hour) format
+                if (in_array($field, ['start_time', 'end_time', 'lunch_start', 'lunch_end'])) {
+                    $value = $this->normalizeTime($value);
+                }
+                $allowed[$field] = $value;
             }
         }
 

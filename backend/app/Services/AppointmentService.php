@@ -67,7 +67,7 @@ public function __construct(
     {
         $user  = auth()->user();
         $query = Appointment::with([
-            'patient',
+            'patient.user',
             'doctor.user',
             'hospital',
             'department',

@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Appointment;
 use App\Models\AppointmentReferral;
 use App\Models\HealthcareProvider;
+use App\Models\Queue;
+use App\Services\AppointmentToQueueService;
 use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -14,7 +16,8 @@ use Illuminate\Validation\ValidationException;
 class AppointmentReferralController extends Controller
 {
     public function __construct(
-        private NotificationService $notificationService
+        private NotificationService $notificationService,
+        private AppointmentToQueueService $queueService,
     ) {}
 
     /**
@@ -65,6 +68,10 @@ class AppointmentReferralController extends Controller
                     'doctor_id' => $data['referred_to_doctor_id'],
                     'status'    => 'pending',   // reset so new doctor must confirm
                 ]);
+
+                // Remove any existing queue entry for this appointment so the
+                // patient no longer appears in Doctor A's queue.
+                Queue::where('appointment_id', $appointment->id)->delete();
 
                 // Notify the new doctor
                 $newDoctor = HealthcareProvider::with('user')->find($data['referred_to_doctor_id']);
@@ -151,6 +158,13 @@ class AppointmentReferralController extends Controller
                     'approved_at' => now(),
                 ]);
 
+                // Create a queue entry for Doctor B so the referred patient
+                // appears in Doctor B's queue immediately after acceptance.
+                $this->queueService->generate(
+                    $referral->referred_to_doctor_id,
+                    $appointment->scheduled_time->toDateString()
+                );
+
                 $this->notificationService->sendAppointmentNotification(
                     $appointment->patient->user,
                     'Referred Appointment Accepted',
@@ -162,8 +176,11 @@ class AppointmentReferralController extends Controller
                     'status'           => 'rejected',
                     'rejection_reason' => $data['rejection_reason'],
                 ]);
-                // Revert appointment back to original doctor if rejected
-                $appointment->update(['status' => 'pending']);
+                // Revert appointment back to original doctor (Doctor A) if rejected
+                $appointment->update([
+                    'doctor_id' => $referral->referred_by,
+                    'status'    => 'pending',
+                ]);
 
                 $this->notificationService->sendAppointmentNotification(
                     $appointment->patient->user,

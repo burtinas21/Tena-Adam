@@ -34,6 +34,8 @@ class AuditLog extends Model
 
         'user_id',
 
+        'hospital_id',
+
         'action',
 
         'target_table',
@@ -81,6 +83,15 @@ class AuditLog extends Model
 
         return $this->belongsTo(
             User::class
+        );
+
+    }
+
+    public function hospital(): BelongsTo
+    {
+
+        return $this->belongsTo(
+            Hospital::class
         );
 
     }

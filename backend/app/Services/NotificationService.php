@@ -508,19 +508,33 @@ public function sendDoctorLeaveNotification(
 
     if ($action === 'submitted') {
 
-        // Notify only hospital admins who manage this doctor's hospital
-        $doctorHospitalId = $leave->doctor->hospital_id ?? null;
+        // Resolve the doctor's hospital_id from HealthcareProvider
+        $doctorHospitalId = $leave->doctor?->hospital_id ?? null;
 
-        $admins = User::whereHas('roles', fn ($q) => $q->where('name', 'hospital_admin'))
-            ->when($doctorHospitalId, function ($q) use ($doctorHospitalId) {
-                $q->whereHas('hospitalStaff', fn ($hs) => $hs->where('hospital_id', $doctorHospitalId));
-            })
-            ->get();
+        // Find hospital admins scoped to the doctor's hospital (active staff records)
+        $admins = collect();
+        if ($doctorHospitalId) {
+            $admins = User::whereHas('roles', fn ($q) => $q->where('name', 'hospital_admin'))
+                ->whereHas('hospitalStaff', fn ($hs) =>
+                    $hs->where('hospital_id', $doctorHospitalId)
+                       ->where('is_active', true)
+                )
+                ->get();
+        }
 
-        // Fallback: if no scoped admins found (e.g. data mismatch), notify all hospital admins
+        // Fallback: if no scoped admins found, notify all hospital admins
         if ($admins->isEmpty()) {
             $admins = User::whereHas('roles', fn ($q) => $q->where('name', 'hospital_admin'))->get();
         }
+
+        $doctorName = trim(
+            ($leave->doctor?->user?->first_name ?? '') . ' ' .
+            ($leave->doctor?->user?->last_name ?? '')
+        ) ?: 'A doctor';
+
+        $leaveDate = $leave->leave_date instanceof \Carbon\Carbon
+            ? $leave->leave_date->toDateString()
+            : (string) $leave->leave_date;
 
         foreach ($admins as $admin) {
             try {
@@ -530,11 +544,11 @@ public function sendDoctorLeaveNotification(
                     'channel'      => 'doctor_leave',
                     'reference_id' => (string) $leave->id,
                     'subject'      => 'New Leave Request',
-                    'content'      => ($leave->doctor->user->first_name ?? '') . ' ' .
-                                      ($leave->doctor->user->last_name ?? '') .
-                                      ' submitted a leave request for ' . $leave->leave_date . '.',
+                    'content'      => "{$doctorName} submitted a leave request for {$leaveDate}.",
                 ]);
-            } catch (\Throwable) { /* silent */ }
+            } catch (\Throwable $e) {
+                \Log::warning('Failed to send leave notification to admin ' . $admin->id . ': ' . $e->getMessage());
+            }
         }
 
         return;

@@ -346,6 +346,9 @@ import { useNotificationStore } from "../../stores/notificationStore";
 import { useAuthStore } from "../../stores/authStore";
 import notificationApi from "../../api/notificationApi";
 import api from "../../api/axios";
+import { useToast } from "../../composables/useToast";
+
+const { showToast } = useToast();
 
 const router = useRouter();
 const store = useNotificationStore();
@@ -444,9 +447,14 @@ async function handleSend() {
     await store.send(sendForm.value);
     closeSendModal();
     await store.fetchAll();
+    showToast("Notification sent successfully", "success");
   } catch (err) {
     const errors = err.response?.data?.errors;
-    sendError.value = errors ? Object.values(errors).flat().join(" ") : err.response?.data?.message || "Failed to send.";
+    const msg = errors
+      ? Object.values(errors).flat().join(" ")
+      : err.response?.data?.message || "Failed to send notification.";
+    sendError.value = msg;
+    showToast(msg, "error");
   } finally {
     sendSaving.value = false;
   }
@@ -465,8 +473,15 @@ const prefFields = [
 
 async function savePrefs() {
   prefsSaving.value = true;
-  try { await store.savePreferences(store.preferences); }
-  finally { prefsSaving.value = false; }
+  try {
+    await store.savePreferences(store.preferences);
+    showToast("Preferences saved successfully", "success");
+  } catch (err) {
+    const msg = err.response?.data?.message || "Failed to save preferences.";
+    showToast(msg, "error");
+  } finally {
+    prefsSaving.value = false;
+  }
 }
 
 // ── Templates ─────────────────────────────────────────────────────────────
@@ -507,14 +522,20 @@ async function handleSaveTemplate() {
   try {
     if (editingTemplate.value) {
       await notificationApi.updateTemplate(editingTemplate.value.id, templateForm.value);
+      showToast("Template updated successfully", "success");
     } else {
       await notificationApi.createTemplate(templateForm.value);
+      showToast("Template created successfully", "success");
     }
     showTemplateModal.value = false;
     await loadTemplates();
   } catch (err) {
     const errors = err.response?.data?.errors;
-    templateError.value = errors ? Object.values(errors).flat().join(" ") : err.response?.data?.message || "Failed to save template.";
+    const msg = errors
+      ? Object.values(errors).flat().join(" ")
+      : err.response?.data?.message || "Failed to save template.";
+    templateError.value = msg;
+    showToast(msg, "error");
   } finally {
     templateSaving.value = false;
   }
@@ -524,7 +545,11 @@ async function deleteTemplate(id) {
   try {
     await notificationApi.destroyTemplate(id);
     templates.value = templates.value.filter((t) => t.id !== id);
-  } catch { /* silent */ }
+    showToast("Template deleted successfully", "success");
+  } catch (err) {
+    const msg = err.response?.data?.message || "Failed to delete template.";
+    showToast(msg, "error");
+  }
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────

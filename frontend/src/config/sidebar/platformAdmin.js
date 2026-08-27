@@ -10,6 +10,7 @@ import {
   CalendarDays,
   Video,
   CalendarX2,
+  Stethoscope,
 } from "lucide-vue-next";
 
 export default {
@@ -90,13 +91,13 @@ export default {
       icon: Video,
       roles: ["platform_admin"],
     },
-    {
-      titleKey: "nav.doctor_leaves",
-      title: "Doctor Leaves",
-      route: "/platform/doctor-leaves",
-      icon: CalendarX2,
-      roles: ["platform_admin"],
-    },
+    // {
+    //   titleKey: "nav.doctor_leaves",
+    //   title: "Doctor Leaves",
+    //   route: "/platform/doctor-leaves",
+    //   icon: CalendarX2,
+    //   roles: ["platform_admin"],
+    // },
     {
       titleKey: "nav.notifications",
       title: "Notifications",
@@ -104,5 +105,12 @@ export default {
       icon: Bell,
       roles: ["platform_admin"],
     },
+    // {
+    //   titleKey: "nav.profile",
+    //   title: "Profile",
+    //   route: "/platform/profile",
+    //   icon: Stethoscope,
+    //   roles: ["platform_admin"],
+    // },
   ],
 };

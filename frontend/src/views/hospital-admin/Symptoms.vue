@@ -356,6 +356,9 @@ import { ref, computed, onMounted } from "vue";
 import { Plus, Search, AlertCircle, X, Loader2 } from "lucide-vue-next";
 import { useSymptomStore } from "../../stores/symptomStore";
 import departmentApi from "../../api/departmentApi";
+import { useToast } from "../../composables/useToast";
+
+const { showToast } = useToast();
 
 const store = useSymptomStore();
 
@@ -404,18 +407,23 @@ function openEdit(symptom) {
 async function handleSave() {
   formError.value = null;
   formSaving.value = true;
+  const isEdit = !!editing.value;
   try {
-    if (editing.value) {
+    if (isEdit) {
       await store.update(editing.value.id, form.value);
+      showToast("Symptom updated successfully", "success");
     } else {
       await store.create(form.value);
+      showToast("Symptom created successfully", "success");
     }
     showForm.value = false;
   } catch (err) {
     const errors = err.response?.data?.errors;
-    formError.value = errors
+    const msg = errors
       ? Object.values(errors).flat().join(" ")
       : err.response?.data?.message || "Failed to save symptom.";
+    formError.value = msg;
+    showToast(msg, "error");
   } finally {
     formSaving.value = false;
   }
@@ -433,11 +441,14 @@ function confirmDelete(symptom) {
 
 async function handleDelete() {
   deleteSaving.value = true;
+  const name = deleteTarget.value?.name;
   try {
     await store.destroy(deleteTarget.value.id);
     showDeleteConfirm.value = false;
-  } catch {
-    /* store.error shows it */
+    showToast(`Symptom "${name}" deleted successfully`, "success");
+  } catch (err) {
+    const msg = err.response?.data?.message || "Failed to delete symptom.";
+    showToast(msg, "error");
   } finally {
     deleteSaving.value = false;
   }
@@ -474,19 +485,28 @@ async function handleAddMapping() {
     });
     mappingForm.value = { department_id: "", relevance_score: 70, is_primary: false, evidence_level: "medium" };
     await store.fetchMappingsBySymptom(mappingSymptom.value.id);
+    showToast("Department mapping added successfully", "success");
   } catch (err) {
     const errors = err.response?.data?.errors;
-    mappingError.value = errors
+    const msg = errors
       ? Object.values(errors).flat().join(" ")
       : err.response?.data?.message || "Failed to add mapping.";
+    mappingError.value = msg;
+    showToast(msg, "error");
   } finally {
     mappingSaving.value = false;
   }
 }
 
 async function deleteMapping(id) {
-  await store.destroyMapping(id);
-  await store.fetchMappingsBySymptom(mappingSymptom.value.id);
+  try {
+    await store.destroyMapping(id);
+    await store.fetchMappingsBySymptom(mappingSymptom.value.id);
+    showToast("Mapping deleted successfully", "success");
+  } catch (err) {
+    const msg = err.response?.data?.message || "Failed to delete mapping.";
+    showToast(msg, "error");
+  }
 }
 
 function evidenceClass(level) {

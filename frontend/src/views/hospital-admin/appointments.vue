@@ -186,6 +186,9 @@ import {
 import { useAppointmentStore } from "../../stores/appointmentStore";
 import { usePagination } from "../../composables/usePagination";
 import TablePagination from "../../components/common/TablePagination.vue";
+import { useToast } from "../../composables/useToast";
+
+const { showToast } = useToast();
 
 const store = useAppointmentStore();
 const search       = ref("");
@@ -269,6 +272,13 @@ function statusDotClass(status) {
 }
 
 async function handleAction(id, status) {
-  try { await store.updateStatus(id, status); } catch { /* store.error shows it */ }
+  const labels = { confirmed: "confirmed", completed: "completed", cancelled: "cancelled" };
+  try {
+    await store.updateStatus(id, status);
+    showToast(`Appointment ${labels[status] ?? status} successfully`, "success");
+  } catch (err) {
+    const msg = err.response?.data?.message || `Failed to update appointment status.`;
+    showToast(msg, "error");
+  }
 }
 </script>

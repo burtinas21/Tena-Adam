@@ -248,14 +248,6 @@
       </div>
     </div>
 
-    <!-- Success toast -->
-    <Transition name="toast">
-      <div v-if="successToast"
-        class="fixed bottom-6 right-6 z-50 flex items-center gap-3 bg-emerald-500 text-white text-sm font-semibold px-4 py-3 rounded-xl shadow-lg">
-        <CheckCircle2 class="w-4 h-4" />
-        Patient added to queue!
-      </div>
-    </Transition>
   </main>
 </template>
 
@@ -263,13 +255,15 @@
 import { ref, computed, onMounted, onUnmounted } from "vue";
 import {
   Stethoscope, UserPlus, ListOrdered, X, AlertCircle,
-  Loader2, Search, CheckCircle2,
+  Loader2, Search,
 } from "lucide-vue-next";
 import { useReceptionistStore } from "../../../stores/receptionistStore";
+import { useToast } from "../../../composables/useToast";
 import queueApi from "../../../api/queueApi";
 import { echo } from "../../../plugins/echo";
 
 const store = useReceptionistStore();
+const { showToast } = useToast();
 
 const selectedDoctorId = ref("");
 const selectedDate     = ref(new Date().toISOString().slice(0, 10));
@@ -307,7 +301,6 @@ const walkInType   = ref("new");
 const walkInForm   = ref({ walk_in_patient_name: "", walk_in_phone: "" });
 const walkInError  = ref(null);
 const addingWalkIn = ref(false);
-const successToast = ref(false);
 
 // Patient search for registered walk-in
 const patientSearch             = ref("");
@@ -384,13 +377,13 @@ async function handleAddWalkIn() {
     await queueApi.generate(payload);
     closeWalkIn();
     await loadQueue();
-    successToast.value = true;
-    setTimeout(() => (successToast.value = false), 3000);
+    showToast("Walk-in patient added to queue successfully", "success");
   } catch (err) {
     const errors = err.response?.data?.errors;
     walkInError.value = errors
       ? Object.values(errors).flat().join(" ")
       : err.response?.data?.message || "Failed to add to queue.";
+    showToast(walkInError.value, "error");
   } finally {
     addingWalkIn.value = false;
   }
@@ -438,7 +431,4 @@ onUnmounted(() => {
 });
 </script>
 
-<style scoped>
-.toast-enter-active, .toast-leave-active { transition: all 0.3s ease; }
-.toast-enter-from, .toast-leave-to { opacity: 0; transform: translateY(10px); }
-</style>
+

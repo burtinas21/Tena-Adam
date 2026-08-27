@@ -48,7 +48,7 @@ class RoleSeeder extends Seeder
 
             Role::updateOrCreate(
 
-                ['name' => $role['name']],
+                ['name' => $role['name'], 'hospital_id' => null],
 
                 [
                     'id' => Str::uuid(),

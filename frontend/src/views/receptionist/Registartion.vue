@@ -223,25 +223,19 @@
       </div>
     </div>
 
-    <!-- ── SUCCESS TOAST ───────────────────────────────────────────────────── -->
-    <Transition name="toast">
-      <div v-if="successToast"
-        class="fixed bottom-6 right-6 z-50 flex items-center gap-3 bg-emerald-500 text-white text-sm font-semibold px-4 py-3 rounded-xl shadow-lg">
-        <CheckCircle2 class="w-4 h-4" />
-        Patient registered successfully!
-      </div>
-    </Transition>
   </main>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from "vue";
 import {
-  UserPlus, Search, Users, X, AlertCircle, Loader2, Info, CheckCircle2,
+  UserPlus, Search, Users, X, AlertCircle, Loader2, Info,
 } from "lucide-vue-next";
 import { useReceptionistStore } from "../../stores/receptionistStore";
+import { useToast } from "../../composables/useToast";
 
 const store = useReceptionistStore();
+const { showToast } = useToast();
 
 // ── Search ────────────────────────────────────────────────────────────────────
 const searchQuery = ref("");
@@ -263,10 +257,9 @@ const displayedPatients = computed(() =>
 );
 
 // ── Form ──────────────────────────────────────────────────────────────────────
-const showForm    = ref(false);
-const formError   = ref(null);
-const successToast = ref(false);
-const form = ref({});
+const showForm  = ref(false);
+const formError = ref(null);
+const form      = ref({});
 
 function openForm() {
   formError.value = null;
@@ -288,13 +281,14 @@ async function handleSubmit() {
   try {
     await store.registerPatient(form.value);
     closeForm();
-    successToast.value = true;
-    setTimeout(() => (successToast.value = false), 3000);
+    showToast("Patient registered successfully", "success");
   } catch (err) {
     const errors = err.response?.data?.errors;
-    formError.value = errors
+    const msg = errors
       ? Object.values(errors).flat().join(" ")
       : err.response?.data?.message || "Something went wrong.";
+    formError.value = msg;
+    showToast(msg, "error");
   }
 }
 
@@ -318,8 +312,3 @@ function statusClass(status) {
 
 onMounted(() => store.fetchPatients());
 </script>
-
-<style scoped>
-.toast-enter-active, .toast-leave-active { transition: all 0.3s ease; }
-.toast-enter-from, .toast-leave-to { opacity: 0; transform: translateY(10px); }
-</style>

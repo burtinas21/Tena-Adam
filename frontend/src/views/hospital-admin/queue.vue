@@ -5,11 +5,14 @@ import { useAuthStore } from "../../stores/authStore";
 import doctorApi from "../../api/doctorApi";
 import queueApi from "../../api/queueApi";
 import hospitalApi from "../../api/hospitalApi";
+import { useToast } from "../../composables/useToast";
 
 import QueueMetrics from "../../components/hospital-admin/queue/QueueMetrics.vue";
 import LiveRegistry from "../../components/hospital-admin/queue/LiveRegistry.vue";
 import DepartmentLoad from "../../components/hospital-admin/queue/DepartmentLoad.vue";
 import ActiveConsultations from "../../components/hospital-admin/queue/ActiveConsultations.vue";
+
+const { showToast } = useToast();
 
 const authStore = useAuthStore();
 
@@ -109,11 +112,15 @@ async function handleWalkIn() {
       walk_in_patient_name: walkInForm.value.name,
       walk_in_phone:        walkInForm.value.phone || null,
     });
+    const patientName = walkInForm.value.name;
     walkInForm.value = { name: "", phone: "", doctor_id: "", hospital_id: "" };
     showWalkIn.value = false;
     await load();
+    showToast(`Walk-in patient "${patientName}" added to queue successfully`, "success");
   } catch (err) {
-    walkInError.value = err.response?.data?.message || "Failed to add walk-in.";
+    const msg = err.response?.data?.message || "Failed to add walk-in.";
+    walkInError.value = msg;
+    showToast(msg, "error");
   } finally {
     walkInSaving.value = false;
   }

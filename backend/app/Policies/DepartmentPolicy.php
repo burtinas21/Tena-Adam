@@ -28,7 +28,7 @@ class DepartmentPolicy
             ->exists();
     }
 
-    public function create(User $user, Department $department): bool
+    public function create(User $user): bool
     {
         if (!$user->hasPermission('create_departments')) {
             return false;
@@ -38,9 +38,8 @@ class DepartmentPolicy
             return true;
         }
 
-        return $user->hospitals()
-            ->where('hospitals.id', $department->hospital_id)
-            ->exists();
+        // Hospital admin must belong to at least one hospital
+        return $user->hospitals()->exists();
     }
 
     public function update(User $user, Department $department): bool

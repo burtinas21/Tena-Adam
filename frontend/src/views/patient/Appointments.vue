@@ -1022,6 +1022,7 @@ import {
   XCircle,
 } from "lucide-vue-next";
 import { useAppointmentStore } from "../../stores/appointmentStore";
+import { useToast } from "../../composables/useToast";
 import doctorApi from "../../api/doctorApi";
 import slotApi from "../../api/slotApi";
 import api from "../../api/axios";
@@ -1032,6 +1033,7 @@ import paymentApi from "../../api/paymentApi";
 const baseUrl = api.defaults.baseURL;
 
 const store = useAppointmentStore();
+const { showToast } = useToast();
 const route = useRoute();
 const doctors = ref([]);
 const hospitals = ref([]);
@@ -1189,7 +1191,7 @@ async function downloadDoc(doc) {
   try {
     await medicalDocumentApi.download(doc.id, doc.file_name);
   } catch (e) {
-    alert("Download failed: " + (e.message || "Unknown error"));
+    showToast("Download failed: " + (e.message || "Unknown error"), "error");
   } finally {
     downloadingDoc.value[doc.id] = false;
   }
@@ -1251,11 +1253,14 @@ async function handleReschedule() {
       selectedRescheduleSlotId.value,
     );
     closeReschedule();
+    showToast("Appointment rescheduled successfully", "success");
   } catch (err) {
     const errors = err.response?.data?.errors;
-    rescheduleError.value = errors
+    const msg = errors
       ? Object.values(errors).flat().join(" ")
       : err.response?.data?.message || "Failed to reschedule.";
+    rescheduleError.value = msg;
+    showToast(msg, "error");
   } finally {
     rescheduleSaving.value = false;
   }
@@ -1391,19 +1396,24 @@ async function handleBook() {
     closeBook();
     // Redirect to Chapa payment page
     if (result?.checkoutUrl) {
+      showToast("Appointment booked! Redirecting to payment...", "success");
       window.location.href = result.checkoutUrl;
+    } else {
+      showToast("Appointment booked successfully", "success");
     }
   } catch (err) {
     const errors = err.response?.data?.errors;
-    bookError.value = errors
+    const msg = errors
       ? Object.values(errors).flat().join(" ")
       : err.response?.data?.message || "Something went wrong.";
+    bookError.value = msg;
+    showToast(msg, "error");
 
     // If the slot was taken, refresh available slots so the UI reflects
     // the current availability and the patient can pick another time
     if (
       err.response?.status === 422 &&
-      (errors?.appointment_time || bookError.value?.toLowerCase().includes("slot"))
+      (errors?.appointment_time || msg?.toLowerCase().includes("slot"))
     ) {
       bookForm.value.appointment_time = "";
       selectedSlotTime.value = "";
@@ -1440,11 +1450,12 @@ async function confirmHide() {
     await store.hideFromHistory(pendingHideId.value);
     showHideConfirm.value = false;
     pendingHideId.value = null;
+    showToast("Appointment removed from your history", "info");
   } catch (err) {
-    // Show error inline — no alert
-    store.error =
-      err.response?.data?.message || "Failed to remove appointment.";
+    const msg = err.response?.data?.message || "Failed to remove appointment.";
+    store.error = msg;
     showHideConfirm.value = false;
+    showToast(msg, "error");
   } finally {
     hidingId.value = null;
   }
@@ -1487,9 +1498,12 @@ async function confirmCancel() {
     await store.updateStatus(cancelTargetId.value, "cancelled");
     showCancelConfirm.value = false;
     cancelTargetId.value = null;
+    showToast("Appointment cancelled", "info");
   } catch (err) {
-    store.error = err.response?.data?.message || "Failed to cancel appointment.";
+    const msg = err.response?.data?.message || "Failed to cancel appointment.";
+    store.error = msg;
     showCancelConfirm.value = false;
+    showToast(msg, "error");
   } finally {
     cancelInProgress.value = false;
   }
@@ -1503,7 +1517,7 @@ async function retryPayment(appt) {
     const payment = res.data?.data ?? res.data;
 
     if (!payment?.id) {
-      alert("No pending payment found. Please contact support.");
+      showToast("No pending payment found. Please contact support.", "error");
       return;
     }
 
@@ -1512,15 +1526,16 @@ async function retryPayment(appt) {
     const checkoutUrl = reinitRes.data?.checkout_url;
 
     if (checkoutUrl) {
+      showToast("Redirecting to payment...", "info");
       window.location.href = checkoutUrl;
     } else {
-      alert("Payment link not available. Please contact support.");
+      showToast("Payment link not available. Please contact support.", "error");
     }
   } catch (err) {
     const msg =
       err.response?.data?.message ||
       "Unable to retrieve payment link. Please try again.";
-    alert(msg);
+    showToast(msg, "error");
   }
 }
 
@@ -1543,7 +1558,7 @@ async function downloadInvoice(appt) {
     );
 
     if (!invoice?.id) {
-      alert("Invoice not available yet. Payment may still be processing.");
+      showToast("Invoice not available yet. Payment may still be processing.", "warning");
       return;
     }
 
@@ -1561,8 +1576,9 @@ async function downloadInvoice(appt) {
     link.click();
     link.remove();
     window.URL.revokeObjectURL(url);
+    showToast("Invoice downloaded successfully", "success");
   } catch {
-    alert("Invoice download failed. Please try again.");
+    showToast("Invoice download failed. Please try again.", "error");
   } finally {
     downloadingInvoice.value[appt.id] = false;
   }

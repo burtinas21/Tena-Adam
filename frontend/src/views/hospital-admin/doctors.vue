@@ -7,7 +7,7 @@
         <div>
           <h1 class="text-2xl font-bold text-gray-800 tracking-tight">Doctors & Staff</h1>
           <p class="text-xs text-gray-500 font-medium mt-0.5">
-            Manage doctors, schedules, leave requests and receptionists.
+            Manage doctors, schedules and receptionists.
           </p>
         </div>
         <!-- Page-level tab toggle: Doctors | Receptionists -->
@@ -132,7 +132,7 @@
               </div>
 
               <!-- TAB: Leaves -->
-              <div v-if="activeTab === 'leaves'">
+              <!-- <div v-if="activeTab === 'leaves'">
                 <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
                   <div class="flex items-center justify-between mb-4">
                     <div>
@@ -179,7 +179,7 @@
                     </div>
                   </div>
                 </div>
-              </div>
+              </div> -->
             </div>
           </div>
         </div>
@@ -333,8 +333,16 @@
             </div>
             <div>
               <label class="block text-xs font-semibold text-gray-700 mb-1.5">Profile Picture</label>
-              <input type="file" accept="image/*" @change="onProfilePic"
-                class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-600 file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-[#004795]/10 file:text-[#004795] hover:file:bg-[#004795]/20 transition" />
+              <div class="flex items-center gap-3">
+                <div v-if="profilePicPreview" class="w-14 h-14 rounded-full overflow-hidden border-2 border-[#004795]/30 flex-shrink-0">
+                  <img :src="profilePicPreview" class="w-full h-full object-cover" alt="Preview" />
+                </div>
+                <div v-else class="w-14 h-14 rounded-full bg-[#004795]/10 flex items-center justify-center flex-shrink-0 border-2 border-dashed border-[#004795]/20">
+                  <UserPlus class="w-5 h-5 text-[#004795]/40" />
+                </div>
+                <input type="file" accept="image/*" @change="onProfilePic"
+                  class="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-600 file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-[#004795]/10 file:text-[#004795] hover:file:bg-[#004795]/20 transition" />
+              </div>
             </div>
           </template>
           <template v-else>
@@ -359,8 +367,8 @@
               <button type="button" @click="doctorForm.is_telehealth_available = !doctorForm.is_telehealth_available"
                 :class="doctorForm.is_telehealth_available ? 'bg-[#004795]' : 'bg-gray-200'"
                 class="relative w-10 h-5 rounded-full transition-colors duration-200">
-                <span :class="doctorForm.is_telehealth_available ? 'translate-x-5' : 'translate-x-0.5'"
-                  class="absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200" />
+                <span :class="doctorForm.is_telehealth_available ? 'translate-x-5' : 'translate-x-0'"
+                  class="absolute left-0.5 top-0.5 w-4 h-4 bg-white rounded-full shadow-md transform transition-transform duration-300" />
               </button>
               <span class="text-sm text-gray-700 font-medium">Telemedicine Available</span>
             </div>
@@ -554,6 +562,9 @@ import receptionistStaffApi   from "../../api/receptionistStaffApi";
 import DoctorProfileCard  from "../../components/hospital-admin/doctor/DoctorProfileCard.vue";
 import ScheduleGrid       from "../../components/hospital-admin/doctor/ScheduleGrid.vue";
 import ScheduleControls   from "../../components/hospital-admin/doctor/ScheduleControls.vue";
+import { useToast } from "../../composables/useToast";
+
+const { showToast } = useToast();
 
 const DAY_LABELS = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
 const DETAIL_TABS = [
@@ -577,6 +588,7 @@ const editingDoctor   = ref(null);
 const doctorFormError = ref(null);
 const doctorForm      = ref({});
 const profilePicFile  = ref(null);
+const profilePicPreview = ref(null);
 
 function openCreate() {
   editingDoctor.value   = null;
@@ -607,28 +619,40 @@ function closeDoctorForm() {
   editingDoctor.value   = null;
   doctorFormError.value = null;
   profilePicFile.value  = null;
+  profilePicPreview.value = null;
 }
 
 function onProfilePic(e) {
-  profilePicFile.value = e.target.files[0] ?? null;
+  const file = e.target.files[0] ?? null;
+  profilePicFile.value = file;
+  if (file) {
+    profilePicPreview.value = URL.createObjectURL(file);
+  } else {
+    profilePicPreview.value = null;
+  }
 }
 
 async function handleDoctorSubmit() {
   doctorFormError.value = null;
+  const isEdit = !!editingDoctor.value;
   try {
-    if (editingDoctor.value) {
+    if (isEdit) {
       await doctorStore.update(editingDoctor.value.id, doctorForm.value);
+      showToast("Doctor updated successfully", "success");
     } else {
       const payload = { ...doctorForm.value };
       if (profilePicFile.value) payload.profile_picture = profilePicFile.value;
       await doctorStore.create(payload);
+      showToast("Doctor added successfully", "success");
     }
     closeDoctorForm();
   } catch (err) {
     const errors = err.response?.data?.errors;
-    doctorFormError.value = errors
+    const msg = errors
       ? Object.values(errors).flat().join(" ")
       : err.response?.data?.message || "Something went wrong.";
+    doctorFormError.value = msg;
+    showToast(msg, "error");
   }
 }
 
@@ -642,12 +666,17 @@ function confirmDeleteDoctor(doctor) {
 }
 
 async function handleDeleteDoctor() {
+  const name = `Dr. ${doctorToDelete.value?.user?.first_name} ${doctorToDelete.value?.user?.last_name}`.trim();
   try {
     await doctorStore.destroy(doctorToDelete.value.id);
     showDeleteDoctor.value = false;
     doctorToDelete.value   = null;
     activeTab.value = "profile";
-  } catch { /* error shown by store */ }
+    showToast(`${name} removed successfully`, "success");
+  } catch (err) {
+    const msg = err.response?.data?.message || "Failed to remove doctor.";
+    showToast(msg, "error");
+  }
 }
 
 // ── Doctor selection ──────────────────────────────────────────────────────────
@@ -685,18 +714,23 @@ function closeScheduleForm() {
 
 async function handleScheduleSubmit(payload) {
   scheduleFormError.value = null;
+  const isEdit = !!editingSchedule.value;
   try {
-    if (editingSchedule.value) {
+    if (isEdit) {
       await doctorStore.updateSchedule(editingSchedule.value.id, payload);
+      showToast("Schedule updated successfully", "success");
     } else {
       await doctorStore.createSchedule(payload);
+      showToast("Schedule added successfully", "success");
     }
     closeScheduleForm();
   } catch (err) {
     const errors = err.response?.data?.errors;
-    scheduleFormError.value = errors
+    const msg = errors
       ? Object.values(errors).flat().join(" ")
       : err.response?.data?.message || "Something went wrong.";
+    scheduleFormError.value = msg;
+    showToast(msg, "error");
   }
 }
 
@@ -709,11 +743,16 @@ function confirmDeleteSchedule(schedule) {
 }
 
 async function handleDeleteSchedule() {
+  const day = DAY_LABELS[scheduleToDelete.value?.day_of_week] ?? "day";
   try {
     await doctorStore.destroySchedule(scheduleToDelete.value.id);
     showDeleteSchedule.value = false;
     scheduleToDelete.value   = null;
-  } catch { /* store.error shows it */ }
+    showToast(`${day} schedule deleted successfully`, "success");
+  } catch (err) {
+    const msg = err.response?.data?.message || "Failed to delete schedule.";
+    showToast(msg, "error");
+  }
 }
 
 // ── Leave helpers ─────────────────────────────────────────────────────────────
@@ -777,11 +816,14 @@ async function handleReceptionistSubmit() {
     const created = res.data?.user ?? res.data;
     receptionists.value.unshift(created);
     closeReceptionistForm();
+    showToast(`Receptionist "${created.first_name} ${created.last_name}" added successfully`, "success");
   } catch (err) {
     const errors = err.response?.data?.errors;
-    receptionistFormError.value = errors
+    const msg = errors
       ? Object.values(errors).flat().join(" ")
       : err.response?.data?.message || "Something went wrong.";
+    receptionistFormError.value = msg;
+    showToast(msg, "error");
   } finally {
     receptionistLoading.value = false;
   }
@@ -793,6 +835,7 @@ function confirmDeleteReceptionist(r) {
 }
 
 async function handleDeleteReceptionist() {
+  const name = `${receptionistToDelete.value?.first_name} ${receptionistToDelete.value?.last_name}`.trim();
   try {
     receptionistLoading.value = true;
     await receptionistStaffApi.destroy(receptionistToDelete.value.id);
@@ -801,8 +844,11 @@ async function handleDeleteReceptionist() {
     );
     showDeleteReceptionist.value = false;
     receptionistToDelete.value   = null;
+    showToast(`Receptionist "${name}" removed successfully`, "success");
   } catch (err) {
-    receptionistError.value = err.response?.data?.message || "Failed to delete receptionist";
+    const msg = err.response?.data?.message || "Failed to delete receptionist.";
+    receptionistError.value = msg;
+    showToast(msg, "error");
   } finally {
     receptionistLoading.value = false;
   }

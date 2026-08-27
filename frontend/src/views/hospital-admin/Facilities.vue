@@ -115,6 +115,9 @@ import { useFacilityStore } from "../../stores/facilityStore";
 import hospitalApi from "../../api/hospitalApi";
 import FacilityTable from "../../components/hospital/FacilityTable.vue";
 import FacilityForm from "../../components/hospital/FacilityForm.vue";
+import { useToast } from "../../composables/useToast";
+
+const { showToast } = useToast();
 
 const store = useFacilityStore();
 const hospitalId = ref("");
@@ -162,20 +165,23 @@ function closeForm() {
 
 async function handleFormSubmit(payload) {
   formError.value = null;
+  const isEdit = !!selectedFacility.value;
   try {
-    if (selectedFacility.value) {
+    if (isEdit) {
       await store.update(selectedFacility.value.id, payload);
+      showToast("Facility updated successfully", "success");
     } else {
       await store.create(payload);
+      showToast("Facility created successfully", "success");
     }
     closeForm();
   } catch (err) {
     const errors = err.response?.data?.errors;
-    if (errors) {
-      formError.value = Object.values(errors).flat().join(" ");
-    } else {
-      formError.value = err.response?.data?.message || "Something went wrong.";
-    }
+    const msg = errors
+      ? Object.values(errors).flat().join(" ")
+      : err.response?.data?.message || "Something went wrong.";
+    formError.value = msg;
+    showToast(msg, "error");
   }
 }
 
@@ -186,12 +192,15 @@ function confirmDelete(facility) {
 
 async function handleDelete() {
   if (!facilityToDelete.value) return;
+  const name = facilityToDelete.value.name;
   try {
     await store.destroy(facilityToDelete.value.id);
     showDeleteConfirm.value = false;
     facilityToDelete.value = null;
-  } catch {
-    // store.error shows it
+    showToast(`Facility "${name}" deleted successfully`, "success");
+  } catch (err) {
+    const msg = err.response?.data?.message || "Failed to delete facility.";
+    showToast(msg, "error");
   }
 }
 </script>

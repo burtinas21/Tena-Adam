@@ -31,12 +31,12 @@ class StoreDoctorScheduleRequest extends FormRequest
 
             'start_time' => [
                 'required',
-                'date_format:H:i',
+                'regex:/^\d{1,2}:\d{2}(:\d{2})?(\s?(AM|PM))?$/i',
             ],
 
             'end_time' => [
                 'required',
-                'date_format:H:i',
+                'regex:/^\d{1,2}:\d{2}(:\d{2})?(\s?(AM|PM))?$/i',
             ],
 
             'slot_duration_min' => [
@@ -48,12 +48,12 @@ class StoreDoctorScheduleRequest extends FormRequest
 
             'lunch_start' => [
                 'nullable',
-                'date_format:H:i',
+                'regex:/^\d{1,2}:\d{2}(:\d{2})?(\s?(AM|PM))?$/i',
             ],
 
             'lunch_end' => [
                 'nullable',
-                'date_format:H:i',
+                'regex:/^\d{1,2}:\d{2}(:\d{2})?(\s?(AM|PM))?$/i',
             ],
 
             'is_available' => [

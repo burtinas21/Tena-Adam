@@ -8,11 +8,11 @@ import {
   Users2,
   Video,
   Bell,
-  Settings,
   Stethoscope,
   FileBarChart,
   CalendarX2,
   ShieldCheck,
+  ScrollText,
 } from "lucide-vue-next";
 
 export default {
@@ -121,5 +121,19 @@ export default {
       icon: ShieldCheck,
       roles: ["hospital_admin"],
     },
+    {
+      titleKey: "nav.audit_logs",
+      title: "Audit Logs",
+      route: "/hospital-admin/audit",
+      icon: ScrollText,
+      roles: ["hospital_admin"],
+    },
+    // {
+    //   titleKey: "nav.profile",
+    //   title: "Profile",
+    //   route: "/hospital-admin/profile",
+    //   icon: Stethoscope,
+    //   roles: ["hospital_admin"],
+    // },
   ],
 };

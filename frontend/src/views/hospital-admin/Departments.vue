@@ -114,6 +114,9 @@ import { useDepartmentStore } from "../../stores/departmentStore";
 import hospitalApi from "../../api/hospitalApi";
 import DepartmentTable from "../../components/hospital/DepartmentTable.vue";
 import DepartmentForm from "../../components/hospital/DepartmentForm.vue";
+import { useToast } from "../../composables/useToast";
+
+const { showToast } = useToast();
 
 const store = useDepartmentStore();
 
@@ -168,22 +171,23 @@ function closeForm() {
 
 async function handleFormSubmit(payload) {
   formError.value = null;
+  const isEdit = !!selectedDepartment.value;
   try {
-    if (selectedDepartment.value) {
+    if (isEdit) {
       await store.update(selectedDepartment.value.id, payload);
+      showToast("Department updated successfully", "success");
     } else {
       await store.create(payload);
+      showToast("Department created successfully", "success");
     }
     closeForm();
   } catch (err) {
     const errors = err.response?.data?.errors;
-    if (errors) {
-      formError.value = Object.values(errors).flat().join(" ");
-    } else {
-      formError.value =
-        err.response?.data?.message ||
-        "Something went wrong. Please try again.";
-    }
+    const msg = errors
+      ? Object.values(errors).flat().join(" ")
+      : err.response?.data?.message || "Something went wrong. Please try again.";
+    formError.value = msg;
+    showToast(msg, "error");
   }
 }
 
@@ -194,12 +198,15 @@ function confirmDelete(dept) {
 
 async function handleDelete() {
   if (!departmentToDelete.value) return;
+  const name = departmentToDelete.value.name;
   try {
     await store.destroy(departmentToDelete.value.id);
     showDeleteConfirm.value = false;
     departmentToDelete.value = null;
-  } catch {
-    // error is surfaced via store.error
+    showToast(`Department "${name}" deleted successfully`, "success");
+  } catch (err) {
+    const msg = err.response?.data?.message || "Failed to delete department.";
+    showToast(msg, "error");
   }
 }
 </script>

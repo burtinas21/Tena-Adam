@@ -106,8 +106,23 @@ export default [
 
         name: "hospital-role",
 
-        component: () => import("../views/hospital-admin/RolesandPermission.vue"),
-      }
+        component: () =>
+          import("../views/hospital-admin/RolesandPermission.vue"),
+      },
+      {
+        path: "audit",
+
+        name: "audit",
+
+        component: () => import("../views/hospital-admin/AuditLogs.vue"),
+      },
+      {
+        path: "profile",
+
+        name: "profile",
+
+        component: () => import("../views/hospital-admin/Profile.vue"),
+      },
     ],
   },
 ];

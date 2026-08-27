@@ -71,7 +71,8 @@ class DoctorLeaveService
                 'status' => 'pending',
 
             ]);
-            $leave = $leave->load('doctor.user');
+            // Load doctor with user AND hospital so notification service can resolve hospital admins
+            $leave->load('doctor.user', 'doctor.hospital');
 
 $this->notificationService->sendDoctorLeaveNotification(
     $leave,

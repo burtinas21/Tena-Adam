@@ -281,27 +281,20 @@
       </div>
     </div>
 
-    <!-- Success toast -->
-    <Transition name="toast">
-      <div v-if="successToast"
-        class="fixed bottom-6 right-6 z-50 flex items-center gap-3 bg-emerald-500 text-white text-sm font-semibold px-4 py-3 rounded-xl shadow-lg">
-        <CheckCircle2 class="w-4 h-4" />
-        Appointment booked successfully!
-      </div>
-    </Transition>
   </main>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from "vue";
 import {
-  CalendarPlus, CalendarDays, Search, X, AlertCircle,
-  Loader2, CheckCircle2,
+  CalendarPlus, CalendarDays, Search, X, AlertCircle, Loader2,
 } from "lucide-vue-next";
 import { useReceptionistStore } from "../../../stores/receptionistStore";
+import { useToast } from "../../../composables/useToast";
 import receptionistApi from "../../../api/receptionistApi";
 
 const store = useReceptionistStore();
+const { showToast } = useToast();
 
 // ── Appointment list filters ──────────────────────────────────────────────────
 const loadingAppts = ref(false);
@@ -338,10 +331,9 @@ const filteredAppointments = computed(() => {
 });
 
 // ── Book appointment modal ────────────────────────────────────────────────────
-const showBookModal   = ref(false);
-const bookError       = ref(null);
-const bookingLoading  = ref(false);
-const successToast    = ref(false);
+const showBookModal  = ref(false);
+const bookError      = ref(null);
+const bookingLoading = ref(false);
 
 // Doctor schedules for selected doctor (keyed by day_of_week 0-6)
 const doctorSchedules = ref([]);
@@ -485,13 +477,15 @@ async function submitBooking() {
     });
     closeBookModal();
     await store.fetchAppointments();
-    successToast.value = true;
-    setTimeout(() => (successToast.value = false), 3000);
+    const name = `${selectedPatient.value.first_name} ${selectedPatient.value.last_name}`.trim();
+    showToast(`Appointment booked for ${name}`, "success");
   } catch (err) {
     const errors = err.response?.data?.errors;
-    bookError.value = errors
+    const msg = errors
       ? Object.values(errors).flat().join(" ")
       : err.response?.data?.message || "Failed to book appointment.";
+    bookError.value = msg;
+    showToast(msg, "error");
   } finally {
     bookingLoading.value = false;
   }
@@ -536,8 +530,3 @@ onMounted(async () => {
   loadingAppts.value = false;
 });
 </script>
-
-<style scoped>
-.toast-enter-active, .toast-leave-active { transition: all 0.3s ease; }
-.toast-enter-from, .toast-leave-to { opacity: 0; transform: translateY(10px); }
-</style>

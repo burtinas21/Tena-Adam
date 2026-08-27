@@ -372,6 +372,7 @@ import {
 } from "lucide-vue-next";
 import { useAuthStore } from "../../../stores/authStore";
 import { useQueueStore } from "../../../stores/queueStore";
+import { useToast } from "../../../composables/useToast";
 import { echo } from "../../../plugins/echo";
 
 // ── Tiny inline components ────────────────────────────────────────────────
@@ -443,6 +444,7 @@ const StatusBadge = defineComponent({
 // ── State ─────────────────────────────────────────────────────────────────
 const authStore = useAuthStore();
 const store = useQueueStore();
+const { showToast } = useToast();
 
 const doctorId = computed(() => authStore.user?.id);
 
@@ -542,22 +544,41 @@ async function handleCallNext() {
     const result = await store.callNext(doctorId.value, selectedDate.value);
     if (result?.message && !result.current_patient) {
       store.error = result.message;
+      showToast(result.message, "warning");
+    } else {
+      showToast("Next patient called", "success");
     }
-  } catch {
-    /* store.error set by store */
+  } catch (err) {
+    const msg = err.response?.data?.message || "Failed to call next patient";
+    showToast(msg, "error");
   }
 }
 
 async function handleComplete(entry) {
-  await store.complete(entry.id, doctorId.value, selectedDate.value);
+  try {
+    await store.complete(entry.id, doctorId.value, selectedDate.value);
+    showToast(`${patientName(entry)} marked as completed`, "success");
+  } catch (err) {
+    showToast(err.response?.data?.message || "Failed to complete consultation", "error");
+  }
 }
 
 async function handleSkip(entry) {
-  await store.skip(entry.id, doctorId.value, selectedDate.value);
+  try {
+    await store.skip(entry.id, doctorId.value, selectedDate.value);
+    showToast(`${patientName(entry)} skipped`, "info");
+  } catch (err) {
+    showToast(err.response?.data?.message || "Failed to skip patient", "error");
+  }
 }
 
 async function handleRecall(entry) {
-  await store.recall(entry.id, doctorId.value, selectedDate.value);
+  try {
+    await store.recall(entry.id, doctorId.value, selectedDate.value);
+    showToast(`${patientName(entry)} recalled to queue`, "success");
+  } catch (err) {
+    showToast(err.response?.data?.message || "Failed to recall patient", "error");
+  }
 }
 
 async function handleWalkIn() {
@@ -575,11 +596,13 @@ async function handleWalkIn() {
       walk_in_patient_name: walkInForm.value.name,
       walk_in_phone: walkInForm.value.phone || null,
     });
+    showToast(`Walk-in patient "${walkInForm.value.name}" added to queue`, "success");
     walkInForm.value = { name: "", phone: "" };
     showWalkIn.value = false;
   } catch (err) {
-    walkInError.value =
-      err.response?.data?.message || "Failed to add walk-in patient.";
+    const msg = err.response?.data?.message || "Failed to add walk-in patient.";
+    walkInError.value = msg;
+    showToast(msg, "error");
   }
 }
 

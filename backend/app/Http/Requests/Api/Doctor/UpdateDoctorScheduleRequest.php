@@ -16,12 +16,12 @@ class UpdateDoctorScheduleRequest extends FormRequest
         return [
             'start_time' => [
                 'sometimes',
-                'date_format:H:i',
+                'regex:/^\d{1,2}:\d{2}(:\d{2})?(\s?(AM|PM))?$/i',
             ],
 
             'end_time' => [
                 'sometimes',
-                'date_format:H:i',
+                'regex:/^\d{1,2}:\d{2}(:\d{2})?(\s?(AM|PM))?$/i',
             ],
 
             'slot_duration_min' => [
@@ -33,18 +33,28 @@ class UpdateDoctorScheduleRequest extends FormRequest
 
             'lunch_start' => [
                 'nullable',
-                'date_format:H:i',
+                'regex:/^\d{1,2}:\d{2}(:\d{2})?(\s?(AM|PM))?$/i',
             ],
 
             'lunch_end' => [
                 'nullable',
-                'date_format:H:i',
+                'regex:/^\d{1,2}:\d{2}(:\d{2})?(\s?(AM|PM))?$/i',
             ],
 
             'is_available' => [
                 'sometimes',
                 'boolean',
             ],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'start_time.regex'   => 'The start time must be a valid time (e.g. 08:30 or 08:30 AM).',
+            'end_time.regex'     => 'The end time must be a valid time (e.g. 16:30 or 04:30 PM).',
+            'lunch_start.regex'  => 'The lunch start must be a valid time.',
+            'lunch_end.regex'    => 'The lunch end must be a valid time.',
         ];
     }
 }

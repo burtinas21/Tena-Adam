@@ -255,6 +255,9 @@ import leaveApi       from "../../api/leaveApi";
 import appointmentApi from "../../api/appointmentApi";
 import { usePagination }  from "../../composables/usePagination";
 import TablePagination    from "../../components/common/TablePagination.vue";
+import { useToast } from "../../composables/useToast";
+
+const { showToast } = useToast();
 
 // ── State ────────────────────────────────────────────────────────────────────
 const leaves       = ref([]);
@@ -316,12 +319,19 @@ async function processLeave(leave, status) {
     const res = await leaveApi.approve(leave.id, status);
     const idx = leaves.value.findIndex((l) => l.id === leave.id);
     if (idx !== -1) leaves.value[idx] = { ...leaves.value[idx], ...res.data.data };
+    const doctorName = `Dr. ${leave.doctor?.user?.first_name ?? ""} ${leave.doctor?.user?.last_name ?? ""}`.trim();
+    showToast(
+      `Leave request for ${doctorName} ${status === "approved" ? "approved" : "rejected"} successfully`,
+      status === "approved" ? "success" : "info"
+    );
     const affectedAppointments = res.data.appointments ?? [];
     if (status === "approved" && res.data.appointments_to_reschedule > 0 && affectedAppointments.length > 0) {
       openReassignModal(res.data.data, affectedAppointments);
     }
   } catch (e) {
-    error.value = e.response?.data?.message ?? "Failed to process leave request.";
+    const msg = e.response?.data?.message ?? "Failed to process leave request.";
+    error.value = msg;
+    showToast(msg, "error");
   } finally {
     processing.value = null;
   }
@@ -364,11 +374,15 @@ async function doReassign(appt) {
   try {
     await appointmentApi.adminReschedule(appt.id, pick.slotId);
     reassignedIds.value = new Set([...reassignedIds.value, appt.id]);
+    const patientName = `${appt.patient?.first_name ?? ""} ${appt.patient?.last_name ?? ""}`.trim() || "Patient";
+    showToast(`Appointment for ${patientName} reassigned successfully`, "success");
   } catch (e) {
     const errs = e.response?.data?.errors;
-    reassignError[appt.id] = errs
+    const msg = errs
       ? Object.values(errs).flat().join(" ")
       : (e.response?.data?.message ?? "Reassignment failed.");
+    reassignError[appt.id] = msg;
+    showToast(msg, "error");
   } finally {
     submitting.value = null;
   }

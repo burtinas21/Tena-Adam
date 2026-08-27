@@ -1,6 +1,7 @@
 <script setup>
 import Sidebar from "../components/layout/Sidebar.vue";
 import TopNavbar from "../components/layout/TopNavbar.vue";
+import ToastContainer from "../components/common/ToastContainer.vue";
 </script>
 
 <template>
@@ -19,5 +20,8 @@ import TopNavbar from "../components/layout/TopNavbar.vue";
         <router-view />
       </div>
     </div>
+
+    <!-- Global toast notifications — renders into <body> via Teleport -->
+    <ToastContainer />
   </div>
 </template>

@@ -168,6 +168,7 @@ class HospitalStaffController extends Controller
         // Audit log
         \App\Models\AuditLog::create([
             'user_id'      => auth()->id(),
+            'hospital_id'  => $hospitalId,
             'action'       => 'invitation_sent',
             'target_table' => 'users',
             'target_id'    => $user->id,

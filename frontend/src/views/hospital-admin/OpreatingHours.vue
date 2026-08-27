@@ -113,6 +113,9 @@ import { useOperatingHourStore } from "../../stores/operatingHourStore";
 import hospitalApi from "../../api/hospitalApi";
 import OperatingHourTable from "../../components/hospital/OperatingHourTable.vue";
 import OperatingHourForm from "../../components/hospital/OperatingHourForm.vue";
+import { useToast } from "../../composables/useToast";
+
+const { showToast } = useToast();
 
 const DAY_LABELS = [
   "Sunday",
@@ -171,20 +174,23 @@ function closeForm() {
 
 async function handleFormSubmit(payload) {
   formError.value = null;
+  const isEdit = !!selectedHour.value;
   try {
-    if (selectedHour.value) {
+    if (isEdit) {
       await store.update(selectedHour.value.id, payload);
+      showToast("Operating hours updated successfully", "success");
     } else {
       await store.create(payload);
+      showToast("Operating hours added successfully", "success");
     }
     closeForm();
   } catch (err) {
     const errors = err.response?.data?.errors;
-    if (errors) {
-      formError.value = Object.values(errors).flat().join(" ");
-    } else {
-      formError.value = err.response?.data?.message || "Something went wrong.";
-    }
+    const msg = errors
+      ? Object.values(errors).flat().join(" ")
+      : err.response?.data?.message || "Something went wrong.";
+    formError.value = msg;
+    showToast(msg, "error");
   }
 }
 
@@ -195,12 +201,15 @@ function confirmDelete(hour) {
 
 async function handleDelete() {
   if (!hourToDelete.value) return;
+  const day = DAY_LABELS[hourToDelete.value.day_of_week] ?? "day";
   try {
     await store.destroy(hourToDelete.value.id);
     showDeleteConfirm.value = false;
     hourToDelete.value = null;
-  } catch {
-    // store.error shows it
+    showToast(`Operating hours for ${day} deleted successfully`, "success");
+  } catch (err) {
+    const msg = err.response?.data?.message || "Failed to delete operating hours.";
+    showToast(msg, "error");
   }
 }
 </script>

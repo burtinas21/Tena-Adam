@@ -333,9 +333,11 @@
 import { ref, computed, onMounted, onUnmounted } from "vue";
 import { CalendarClock, Radio, CheckCircle, Video, Play, Clock, ExternalLink, XCircle } from "lucide-vue-next";
 import { useTelehealthStore } from "../../stores/telehealthStore";
+import { useToast } from "../../composables/useToast";
 import StatusBadge from "../../components/telehealth/StatusBadge.vue";
 
 const store = useTelehealthStore();
+const { showToast } = useToast();
 
 const statusFilter = ref("");
 
@@ -406,17 +408,32 @@ function formatPlatform(p) {
 
 async function handleStart(session) {
   if (!confirm(`Start session for ${session.patient?.name}?`)) return;
-  try { await store.startSession(session.id); } catch { /* shown in banner */ }
+  try {
+    await store.startSession(session.id);
+    showToast(`Session started for ${session.patient?.name || "patient"}`, "success");
+  } catch (err) {
+    showToast(err.response?.data?.message || "Failed to start session", "error");
+  }
 }
 
 async function handleComplete(session) {
   if (!confirm("Mark this session as completed?")) return;
-  try { await store.completeSession(session.id); } catch { /* shown in banner */ }
+  try {
+    await store.completeSession(session.id);
+    showToast("Session marked as completed", "success");
+  } catch (err) {
+    showToast(err.response?.data?.message || "Failed to complete session", "error");
+  }
 }
 
 async function handleCancel(session) {
   if (!confirm("Cancel this telehealth session?")) return;
-  try { await store.cancelSession(session.id); } catch { /* shown in banner */ }
+  try {
+    await store.cancelSession(session.id);
+    showToast("Session cancelled", "info");
+  } catch (err) {
+    showToast(err.response?.data?.message || "Failed to cancel session", "error");
+  }
 }
 
 function openRescheduleModal(session) {
@@ -441,11 +458,14 @@ async function handleReschedule() {
   try {
     await store.rescheduleSession(rescheduleTarget.value.id, rescheduleMinutes.value);
     closeRescheduleModal();
+    showToast(`Session rescheduled by ${rescheduleMinutes.value} minute(s)`, "success");
   } catch (err) {
     const errs = err.response?.data?.errors;
-    rescheduleError.value = errs
+    const msg = errs
       ? Object.values(errs).flat().join(" ")
       : err.response?.data?.message || "Failed to reschedule.";
+    rescheduleError.value = msg;
+    showToast(msg, "error");
   }
 }
 </script>

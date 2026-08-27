@@ -5,13 +5,19 @@
   >
     <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg">
       <!-- Modal header -->
-      <div class="flex items-center justify-between px-6 pt-6 pb-4 border-b border-gray-100">
+      <div
+        class="flex items-center justify-between px-6 pt-6 pb-4 border-b border-gray-100"
+      >
         <div>
           <h3 class="text-base font-bold text-gray-800">
-            {{ isEditing ? 'Edit Department' : 'New Department' }}
+            {{ isEditing ? "Edit Department" : "New Department" }}
           </h3>
           <p class="text-xs text-gray-400 mt-0.5">
-            {{ isEditing ? 'Update department details.' : 'Fill in the details to create a department.' }}
+            {{
+              isEditing
+                ? "Update department details."
+                : "Fill in the details to create a department."
+            }}
           </p>
         </div>
         <button
@@ -66,16 +72,17 @@
           <button
             type="button"
             @click="form.is_active = !form.is_active"
-            :class="form.is_active ? 'bg-[#004795]' : 'bg-gray-200'"
-            class="relative w-10 h-5 rounded-full transition-colors duration-200 focus:outline-none"
+            :class="form.is_active ? 'bg-[#004795]' : 'bg-gray-300'"
+            class="relative w-10 h-5 rounded-full transition-colors duration-300 focus:outline-none"
           >
             <span
-              :class="form.is_active ? 'translate-x-5' : 'translate-x-0.5'"
-              class="absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200"
-            />
+              :class="form.is_active ? 'translate-x-5' : 'translate-x-0'"
+              class="absolute left-0.5 top-0.5 w-4 h-4 bg-white rounded-full shadow-md transform transition-transform duration-300"
+            ></span>
           </button>
+
           <span class="text-sm text-gray-700 font-medium">
-            {{ form.is_active ? 'Active' : 'Inactive' }}
+            {{ form.is_active ? "Active" : "Inactive" }}
           </span>
         </div>
 
@@ -94,7 +101,7 @@
             class="px-5 py-2 text-sm font-semibold text-white bg-[#004795] hover:bg-[#003670] rounded-lg transition disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-2"
           >
             <Loader2 v-if="loading" class="w-3.5 h-3.5 animate-spin" />
-            {{ isEditing ? 'Save Changes' : 'Create Department' }}
+            {{ isEditing ? "Save Changes" : "Create Department" }}
           </button>
         </div>
       </form>
@@ -147,7 +154,7 @@ watch(
       form.value = { name: "", description: "", is_active: true };
     }
   },
-  { immediate: true }
+  { immediate: true },
 );
 
 function handleSubmit() {

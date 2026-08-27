@@ -108,13 +108,20 @@ async function fetchDoctorPhoto() {
   }
 }
 
-// Poll unread count every 60s; refresh full list every 2 min
+// Poll unread count every 30s; refresh full list every 60s
 let pollInterval = null;
 let fullPollInterval = null;
 async function startPolling() {
   await notifStore.fetchUnreadCount();
-  pollInterval = setInterval(() => notifStore.fetchUnreadCount(), 60000);
-  fullPollInterval = setInterval(() => notifStore.fetchAll(), 120000);
+  pollInterval = setInterval(() => notifStore.fetchUnreadCount(), 30000);
+  fullPollInterval = setInterval(() => notifStore.fetchAll(), 60000);
+}
+
+// Refresh unread count whenever the tab becomes visible again
+function handleVisibilityChange() {
+  if (document.visibilityState === "visible") {
+    notifStore.fetchUnreadCount();
+  }
 }
 
 async function openNotifPanel() {
@@ -196,6 +203,7 @@ onMounted(async () => {
   if (authStore.user) startPolling();
 
   document.addEventListener("fullscreenchange", updateFullscreenState);
+  document.addEventListener("visibilitychange", handleVisibilityChange);
 });
 
 // Also start polling if user becomes available after mount (e.g. after login redirect)
@@ -212,6 +220,7 @@ onUnmounted(() => {
   if (fullPollInterval) clearInterval(fullPollInterval);
 
   document.removeEventListener("fullscreenchange", updateFullscreenState);
+  document.removeEventListener("visibilitychange", handleVisibilityChange);
 });
 
 const searchPlaceholder = computed(() => {

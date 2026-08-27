@@ -30,38 +30,55 @@
       <h1>Smart Care</h1>
       <p>Tena-Adam Healthcare Platform</p>
     </div>
+<div class="body">
+    <h2>Welcome, {{ $user->first_name }}!</h2>
 
-    <div class="body">
-      <h2>Welcome, {{ $user->first_name }}!</h2>
-      <p>
-        You have been invited to join <strong>Smart Care</strong> as a Hospital Administrator.
-        To get started, click the button below to activate your account and set your password.
-      </p>
+    <p>
+        You have been invited to join <strong>Smart Care</strong> as a
+        <strong>{{ $roleName }}</strong>.
+        To get started, click the button below to activate your account
+        and set your password.
+    </p>
 
-      <div class="info-box">
-        <p>Your login email: <span>{{ $user->email }}</span></p>
-      </div>
+    <div class="info-box">
+        <p>
+            Your login email:
+            <span>{{ $user->email }}</span>
+        </p>
+    </div>
 
-      <div class="btn-wrap">
-        <a href="{{ $activationUrl }}" class="btn">Activate My Account</a>
-      </div>
-      <p class="note">This invitation link expires in <strong>24 hours</strong>.</p>
+    <div class="btn-wrap">
+        <a href="{{ $activationUrl }}" class="btn">
+            Activate My Account
+        </a>
+    </div>
 
-      <hr class="divider" />
+    <p class="note">
+        This invitation link expires in <strong>24 hours</strong>.
+    </p>
 
-      <p>If the button above does not work, copy and paste the link below into your browser:</p>
-      <p class="fallback">{{ $activationUrl }}</p>
+    <hr class="divider" />
 
-      <hr class="divider" />
+    <p>
+        If the button above does not work, copy and paste the link below
+        into your browser:
+    </p>
 
-      <p style="margin:0; font-size:13px; color:#94a3b8;">
+    <p class="fallback">
+        {{ $activationUrl }}
+    </p>
+
+    <hr class="divider" />
+
+    <p style="margin:0; font-size:13px; color:#94a3b8;">
         If you did not expect this invitation, you can safely ignore this email.
-      </p>
-    </div>
+    </p>
+</div>
 
-    <div class="footer">
-      &copy; {{ date('Y') }} Smart Care – Tena-Adam &nbsp;|&nbsp; This is an automated message, please do not reply.
-    </div>
-  </div>
+<div class="footer">
+    &copy; {{ date('Y') }} Smart Care – Tena-Adam
+    &nbsp;|&nbsp;
+    This is an automated message, please do not reply.
+</div>
 </body>
 </html>

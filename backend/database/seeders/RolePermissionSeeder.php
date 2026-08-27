@@ -11,7 +11,7 @@ class RolePermissionSeeder extends Seeder
     public function run(): void
     {
 
-        $patient = Role::where('name', 'patient')->first();
+        $patient = Role::where('name', 'patient')->whereNull('hospital_id')->first();
 
         $patientPermissions = [
 
@@ -51,7 +51,7 @@ class RolePermissionSeeder extends Seeder
 
         }
 
-        $doctor = Role::where('name', 'doctor')->first();
+        $doctor = Role::where('name', 'doctor')->whereNull('hospital_id')->first();
 
         $doctorPermissions = [
 
@@ -107,7 +107,7 @@ class RolePermissionSeeder extends Seeder
 
         }
 
-        $hospitalAdmin = Role::where('name', 'hospital_admin')->first();
+        $hospitalAdmin = Role::where('name', 'hospital_admin')->whereNull('hospital_id')->first();
 
         $hospitalAdminPermissions = [
 
@@ -172,7 +172,7 @@ class RolePermissionSeeder extends Seeder
 
         }
 
-        $platformAdmin = Role::where('name', 'platform_admin')->first();
+        $platformAdmin = Role::where('name', 'platform_admin')->whereNull('hospital_id')->first();
 
         $allPermissions = Permission::all();
 
@@ -182,7 +182,7 @@ class RolePermissionSeeder extends Seeder
 
         // ----------------------------------------------------------------
         // Receptionist
-        $receptionist = Role::where('name', 'receptionist')->first();
+        $receptionist = Role::where('name', 'receptionist')->whereNull('hospital_id')->first();
 
         if ($receptionist) {
 

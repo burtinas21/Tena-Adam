@@ -39,9 +39,6 @@ use App\Http\Controllers\Api\InvoiceController;
 use App\Http\Controllers\Api\RefundController;
 Route::post('payments/callback', [PaymentController::class, 'callback'])->name('payments.callback');
 Route::post('payments/webhook',[PaymentController::class, 'webhook'])->name('payments.webhook');
-// Patient: look up pending payment by appointment, re-initialize Chapa for "Pay Now"
-// IMPORTANT: these explicit routes must be declared BEFORE apiResource to prevent
-// the {payment} wildcard from capturing "by-appointment" as a model ID.
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('payments/by-appointment', [PaymentController::class, 'byAppointment']);
     Route::post('payments/{payment}/reinitialize', [PaymentController::class, 'reinitialize']);

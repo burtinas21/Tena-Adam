@@ -45,15 +45,16 @@ export default [
         component: () => import("../views/platform/RolesandPermission.vue"),
       },
        {
-        path: "users",
-        name: "platform-users",
-        component: () => import("../views/platform/Users.vue"),
+        path: "profile",
+        name: "profile",
+        component: () => import("../views/platform/Profile.vue"),
       },
        {
         path: "auditlogs",
         name: "auditlogs",
         component: () => import("../views/platform/auditLogs.vue"),
       },
+      
 
       {
         path: "hospital-admins",

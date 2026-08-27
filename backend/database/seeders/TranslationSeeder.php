@@ -70,7 +70,7 @@ class TranslationSeeder extends Seeder
                 'ti' => 'ጠቕላላ ቆጸራታት',
             ],
             'dashboard.completed' => [
-                'en' => 'Completed',
+                'en' => 'Completed Appointemt',
                 'am' => 'የተጠናቀቀ',
                 'om' => 'Xumurame',
                 'ti' => 'ዝተወድአ',
@@ -117,20 +117,20 @@ class TranslationSeeder extends Seeder
                 'om' => 'Baga nagaan dhufte',
                 'ti' => 'ብደሓን መጻእካ',
             ],
-            'dashboard.upcoming' => [
-                'en' => 'Upcoming',
+            'dashboard.upcoming ' => [
+                'en' => 'Upcoming Appoitment',
                 'am' => 'መጪ',
                 'om' => 'Dhufaa Jiru',
                 'ti' => 'ዝመጽእ',
             ],
             'dashboard.active_rx' => [
-                'en' => 'Active Rx',
+                'en' => 'Active Prescription',
                 'am' => 'ንቁ ፕሬስክሪፕሽን',
                 'om' => 'Faarmaasii Hojjechaa Jiru',
                 'ti' => 'ንጡፍ መድሃኒት ትእዛዝ',
             ],
             'dashboard.records' => [
-                'en' => 'Records',
+                'en' => 'Medical Records',
                 'am' => 'መዝገቦች',
                 'om' => 'Galmeewwan',
                 'ti' => 'መዛግብቲ',

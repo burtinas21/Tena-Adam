@@ -654,12 +654,14 @@ import {
   Loader2,
 } from "lucide-vue-next";
 import { useAppointmentStore } from "../../stores/appointmentStore";
+import { useToast } from "../../composables/useToast";
 import doctorApi from "../../api/doctorApi";
 import departmentApi from "../../api/departmentApi";
 import medicalDocumentApi from "../../api/medicalDocumentApi";
 import api from "../../api/axios";
 
 const store = useAppointmentStore();
+const { showToast } = useToast();
 
 const search = ref("");
 const statusFilter = ref("");
@@ -718,13 +720,14 @@ const filtered = computed(() => {
 });
 
 function patientName(appt) {
-  const p = appt.patient;
-  return p ? `${p.first_name ?? ""} ${p.last_name ?? ""}`.trim() : "—";
+  // Names live on the User model, not Patient — use patient.user if available
+  const u = appt.patient?.user ?? appt.patient;
+  return u ? `${u.first_name ?? ""} ${u.last_name ?? ""}`.trim() || "—" : "—";
 }
 function patientInitials(appt) {
-  const p = appt.patient;
-  return p
-    ? ((p.first_name?.[0] ?? "") + (p.last_name?.[0] ?? "")).toUpperCase()
+  const u = appt.patient?.user ?? appt.patient;
+  return u
+    ? ((u.first_name?.[0] ?? "") + (u.last_name?.[0] ?? "")).toUpperCase() || "?"
     : "?";
 }
 function patientNameFromAppt(appt) {
@@ -774,19 +777,28 @@ async function doConfirm(id) {
   openApptMenuId.value = null;
   try {
     await store.updateStatus(id, "confirmed");
-  } catch {}
+    showToast("Appointment confirmed successfully", "success");
+  } catch (err) {
+    showToast(err.response?.data?.message || "Failed to confirm appointment", "error");
+  }
 }
 async function doComplete(id) {
   openApptMenuId.value = null;
   try {
     await store.updateStatus(id, "completed");
-  } catch {}
+    showToast("Appointment marked as completed", "success");
+  } catch (err) {
+    showToast(err.response?.data?.message || "Failed to complete appointment", "error");
+  }
 }
 async function doCancel(id) {
   openApptMenuId.value = null;
   try {
     await store.updateStatus(id, "cancelled");
-  } catch {}
+    showToast("Appointment cancelled", "info");
+  } catch (err) {
+    showToast(err.response?.data?.message || "Failed to cancel appointment", "error");
+  }
 }
 
 // ── File viewer ──────────────────────────────────────────────────────────
@@ -888,11 +900,14 @@ async function submitRefer() {
       reason: referForm.value.reason,
     });
     closeReferModal();
+    showToast("Patient referred successfully", "success");
   } catch (err) {
     const errors = err.response?.data?.errors;
-    referError.value = errors
+    const msg = errors
       ? Object.values(errors).flat().join(" ")
       : err.response?.data?.message || "Failed to refer.";
+    referError.value = msg;
+    showToast(msg, "error");
   } finally {
     referSaving.value = false;
   }
@@ -927,8 +942,11 @@ function openReferralResponse(ref_, action) {
 async function handleAccept(id) {
   try {
     await store.respondReferral(id, "accept");
+    showToast("Referral accepted successfully", "success");
   } catch (err) {
-    store.error = err.response?.data?.message || "Failed to accept.";
+    const msg = err.response?.data?.message || "Failed to accept.";
+    store.error = msg;
+    showToast(msg, "error");
   }
 }
 async function submitReject() {
@@ -941,8 +959,11 @@ async function submitReject() {
       rejectReason.value,
     );
     showRejectModal.value = false;
+    showToast("Referral rejected", "info");
   } catch (err) {
-    rejectError.value = err.response?.data?.message || "Failed to reject.";
+    const msg = err.response?.data?.message || "Failed to reject.";
+    rejectError.value = msg;
+    showToast(msg, "error");
   }
 }
 </script>

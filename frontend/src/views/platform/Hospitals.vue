@@ -92,6 +92,9 @@ import { Plus, AlertCircle, Trash2, Loader2 } from "lucide-vue-next";
 import { useHospitalStore } from "../../stores/hospitalStore";
 import HospitalTable from "../../components/hospital/HospitalTable.vue";
 import HospitalForm from "../../components/hospital/HospitalForm.vue";
+import { useToast } from "../../composables/useToast";
+
+const { showToast } = useToast();
 
 const store = useHospitalStore();
 const showForm = ref(false);
@@ -122,20 +125,23 @@ function closeForm() {
 
 async function handleFormSubmit(payload) {
   formError.value = null;
+  const isEdit = !!selectedHospital.value;
   try {
-    if (selectedHospital.value) {
+    if (isEdit) {
       await store.update(selectedHospital.value.id, payload);
+      showToast("Hospital updated successfully", "success");
     } else {
       await store.create(payload);
+      showToast("Hospital registered successfully", "success");
     }
     closeForm();
   } catch (err) {
     const errors = err.response?.data?.errors;
-    if (errors) {
-      formError.value = Object.values(errors).flat().join(" ");
-    } else {
-      formError.value = err.response?.data?.message || "Something went wrong.";
-    }
+    const msg = errors
+      ? Object.values(errors).flat().join(" ")
+      : err.response?.data?.message || "Something went wrong.";
+    formError.value = msg;
+    showToast(msg, "error");
   }
 }
 
@@ -146,12 +152,15 @@ function confirmDelete(hospital) {
 
 async function handleDelete() {
   if (!hospitalToDelete.value) return;
+  const name = hospitalToDelete.value.name;
   try {
     await store.destroy(hospitalToDelete.value.id);
     showDeleteConfirm.value = false;
     hospitalToDelete.value = null;
-  } catch {
-    // store.error shows it
+    showToast(`"${name}" deleted successfully`, "success");
+  } catch (err) {
+    const msg = err.response?.data?.message || "Failed to delete hospital.";
+    showToast(msg, "error");
   }
 }
 </script>

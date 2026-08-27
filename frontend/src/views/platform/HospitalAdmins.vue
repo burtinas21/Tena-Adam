@@ -14,17 +14,7 @@
       </button>
     </div>
 
-    <!-- Success -->
-    <div v-if="successMsg"
-      class="mb-4 flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-medium rounded-lg px-4 py-3">
-      <CheckCircle class="w-4 h-4 flex-shrink-0" />{{ successMsg }}
-    </div>
 
-    <!-- Error -->
-    <div v-if="adminStore.error && !showForm"
-      class="mb-4 flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 text-xs font-medium rounded-lg px-4 py-3">
-      <AlertCircle class="w-4 h-4 flex-shrink-0" />{{ adminStore.error }}
-    </div>
 
     <!-- Loading -->
     <div v-if="adminStore.loading && adminStore.admins.length === 0" class="space-y-3">
@@ -90,19 +80,20 @@
 
 <script setup>
 import { ref, onMounted } from "vue";
-import { Plus, AlertCircle, CheckCircle, Trash2, Loader2 } from "lucide-vue-next";
+import { Plus, Trash2, Loader2 } from "lucide-vue-next";
 import { useHospitalStore } from "../../stores/hospitalStore";
 import { useHospitalAdminStore } from "../../stores/hospitalAdminStore";
 import HospitalAdminTable from "../../components/hospital/HospitalAdminTable.vue";
 import HospitalAdminForm from "../../components/hospital/HospitalAdminForm.vue";
+import { useToast } from "../../composables/useToast";
 
+const { showToast } = useToast();
 const hospitalStore = useHospitalStore();
 const adminStore = useHospitalAdminStore();
 
 const showForm = ref(false);
 const selectedAdmin = ref(null);
 const formError = ref(null);
-const successMsg = ref(null);
 const showDeleteConfirm = ref(false);
 const adminToDelete = ref(null);
 
@@ -111,7 +102,6 @@ onMounted(() => Promise.all([hospitalStore.fetchAll(), adminStore.fetchAll()]));
 function openCreate() {
   selectedAdmin.value = null;
   formError.value = null;
-  successMsg.value = null;
   showForm.value = true;
 }
 
@@ -127,28 +117,25 @@ function closeForm() {
   formError.value = null;
 }
 
-function flash(msg) {
-  successMsg.value = msg;
-  setTimeout(() => { successMsg.value = null; }, 5000);
-}
-
 async function handleSubmit(payload) {
   formError.value = null;
   try {
     if (selectedAdmin.value) {
       await adminStore.update(selectedAdmin.value.id, payload);
-      flash("Admin updated successfully.");
+      showToast("Admin updated successfully", "success");
     } else {
       const result = await adminStore.create(payload);
       const user = result?.user ?? result;
-      flash(`Admin "${user.first_name} ${user.last_name}" created successfully.`);
+      showToast(`Admin "${user.first_name} ${user.last_name}" created successfully`, "success");
     }
     closeForm();
   } catch (err) {
     const errors = err.response?.data?.errors;
-    formError.value = errors
+    const msg = errors
       ? Object.values(errors).flat().join(" ")
       : err.response?.data?.message || "Something went wrong.";
+    formError.value = msg;
+    showToast(msg, "error");
   }
 }
 
@@ -158,11 +145,15 @@ function confirmDelete(admin) {
 }
 
 async function handleDelete() {
+  const name = `${adminToDelete.value?.first_name} ${adminToDelete.value?.last_name}`.trim();
   try {
     await adminStore.destroy(adminToDelete.value.id);
     showDeleteConfirm.value = false;
     adminToDelete.value = null;
-    flash("Admin deleted successfully.");
-  } catch { /* store.error handles it */ }
+    showToast(`Admin "${name}" deleted successfully`, "success");
+  } catch (err) {
+    const msg = err.response?.data?.message || "Failed to delete admin.";
+    showToast(msg, "error");
+  }
 }
 </script>

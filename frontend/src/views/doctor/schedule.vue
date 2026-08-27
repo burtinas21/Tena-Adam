@@ -210,6 +210,7 @@ import scheduleApi from "../../api/scheduleApi";
 import leaveApi    from "../../api/leaveApi";
 import doctorApi   from "../../api/doctorApi";
 import { useAuthStore } from "../../stores/authStore";
+import { useToast } from "../../composables/useToast";
 import ScheduleKPIs     from "../../components/doctor/schedule/ScheduleKPIs.vue";
 import CalendarGrid     from "../../components/doctor/schedule/CalendarGrid.vue";
 import ScheduleSettings from "../../components/doctor/schedule/ScheduleSettings.vue";
@@ -219,6 +220,7 @@ const DAY_LABELS = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday",
 
 const authStore = useAuthStore();
 const doctorId  = computed(() => authStore.user?.id ?? "");
+const { showToast } = useToast();
 
 const schedules          = ref([]);
 const telehealthEnabled  = ref(false);
@@ -288,17 +290,21 @@ async function handleSubmit(payload) {
       const updated = res.data?.data ?? res.data;
       const idx = schedules.value.findIndex((s) => s.id === updated.id);
       if (idx !== -1) schedules.value[idx] = updated;
+      showToast("Schedule updated successfully", "success");
     } else {
       const res = await scheduleApi.create(payload);
       const created = res.data?.data ?? res.data;
       schedules.value.push(created);
+      showToast("Schedule added successfully", "success");
     }
     closeForm();
   } catch (err) {
     const errors = err.response?.data?.errors;
-    formError.value = errors
+    const msg = errors
       ? Object.values(errors).flat().join(" ")
       : err.response?.data?.message || "Something went wrong.";
+    formError.value = msg;
+    showToast(msg, "error");
   } finally {
     saving.value = false;
   }
@@ -316,9 +322,12 @@ async function handleDelete() {
     await scheduleApi.destroy(scheduleToDelete.value.id);
     schedules.value     = schedules.value.filter((s) => s.id !== scheduleToDelete.value.id);
     showDeleteConfirm.value = false;
+    showToast("Schedule deleted successfully", "success");
     scheduleToDelete.value  = null;
   } catch (err) {
-    error.value = err.response?.data?.message || "Failed to delete schedule.";
+    const msg = err.response?.data?.message || "Failed to delete schedule.";
+    error.value = msg;
+    showToast(msg, "error");
   } finally {
     saving.value = false;
   }
@@ -380,11 +389,14 @@ async function handleLeaveSubmit() {
     const created = res.data?.data ?? res.data;
     myLeaves.value.unshift(created);
     closeLeaveForm();
+    showToast("Leave request submitted successfully", "success");
   } catch (err) {
     const errors = err.response?.data?.errors;
-    leaveFormError.value = errors
+    const msg = errors
       ? Object.values(errors).flat().join(" ")
       : err.response?.data?.message || "Something went wrong.";
+    leaveFormError.value = msg;
+    showToast(msg, "error");
   } finally {
     leaveSaving.value = false;
   }
@@ -394,8 +406,11 @@ async function handleDeleteLeave(id) {
   try {
     await leaveApi.destroy(id);
     myLeaves.value = myLeaves.value.filter((l) => l.id !== id);
+    showToast("Leave request cancelled", "info");
   } catch (err) {
-    error.value = err.response?.data?.message || "Failed to cancel leave.";
+    const msg = err.response?.data?.message || "Failed to cancel leave.";
+    error.value = msg;
+    showToast(msg, "error");
   }
 }
 </script>
